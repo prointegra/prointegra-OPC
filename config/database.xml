@@ -1,51 +1,15 @@
 <?xml version="1.0"?>
 
-<db name="test" qtdriver="QSQLITE" hostname="" dbName="./test.db" user="" password=""
-
-tables="1"
-Ntable="table1"
-tableTrigger="rTrigger"
-tableTriggerTime=""
-tableFields="13"
-NtableField1="ID"
-TtableField1="INTEGER PRIMARY KEY AUTOINCREMENT"
-VtableFiled1="sysNULL"
-NtableField2="FECHA"
-TtableField2="DATE"
-VtableFiled2="sysDate"
-NtableField3="HORA"
-TtableField3="TIME"
-VtableFiled3="sysTime"
-NtableField4="SILO_RECEPCION"
-TtableField4="INT"
-VtableFiled4="rSiloDestino"
-NtableField5="TIPO_DE_PRODUCTO"
-TtableField5="INT"
-VtableFiled5="rTipoProducto"
-NtableField6="KILOS"
-TtableField6="INT"
-VtableFiled6="rKilos"
-NtableField7="MATRICULA"
-TtableField7="TEXT"
-VtableFiled7="rMatricula"
-NtableField8="PROVEEDOR"
-TtableField8="INT"
-VtableFiled8="rProveedor"
-NtableField9="VACIO1"
-TtableField9="INT"
-VtableFiled9="rVacio1"
-NtableField10="VACIO2"
-TtableField10="INT"
-VtableFiled10="rVacio2"
-NtableField11="VACIO3"
-TtableField11="INT"
-VtableFiled11="rVacio3"
-NtableField12="VACIO4"
-TtableField12="INT"
-VtableFiled12="rVacio4"
-NtableField13="VACIO5"
-TtableField13="INT"
-VtableFiled13="rVacio5"
-
-/>
+<db name="test" qtdriver="QSQLITE" hostname="" dbName="./test.db" user="" password="" tables="1">
+	<table name="table1" tagTrigger="rTrigger1" timeTrigger="">
+		<tag name="fecha" tagName="_sysDate" type="DATE" />
+		<tag name="time" tagName="_sysTime" type="TIME" />
+        <tag name="readTest" tagName="readTest" type="INT" />
+	</table>
+	<table name="table2" tagTrigger="rTrigger2" timeTrigger="">
+		<tag name="fecha" tagName="_sysDate" type="DATE" />
+		<tag name="time" tagName="_sysTime" type="TIME" />
+        <tag name="readWriteTest" tagName="readWriteTest" type="INT" />
+	</table>
+</db>
 

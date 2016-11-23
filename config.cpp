@@ -186,168 +186,26 @@ databaseParameters configParser::retDBParams(int database)
   else
     return temp;
 }
-
-int configParser::retrieveTableAttrs(pugi::xml_node* db, tableParameters**,int nTables)
+/*! fucntion to retrieve all data from tables in db, and creating it in memory struct */
+int configParser::retrieveTableAttrs(pugi::xml_node* db, tableParameters** rtables,int nTables)
 {
+  tableParameters* tables;
+  char * dbInternalName;
+  char * tbName;
+  char * tbTrigger;
+  int tbTriggerTime;
+  int numFields;
+  char* field[3];
 
-  return 0;
-}
-
-/*!iterating data*/
-/*
-int configParser::IterateComms()
-{
-  char buffer[100];
-
-  //how many devices?
-  int i=0,j=0;
-  for (pugi::xml_node comm = doc.child("comm"); comm; comm = comm.next_sibling("comm"))
+  //pointer copy
+  //tables = *rtables;
+  int i=0;
+  for (pugi::xml_node table = db->child("table"); table; table = table.next_sibling("table"))
     {
       i++;
     }
-  ConfigSlaves = new mbSlaves[i];
-  nSlaves = i;
-  //configure device
-  i=0;
-  setModbusRTU(0);
-  setModbusTCP(0);
-  for (pugi::xml_node comm = doc.child("comm"); comm; comm = comm.next_sibling("comm"))
-    {
-      //slave id
-      ConfigSlaves[i].slaveId = comm.attribute("slave").as_int();
-      //communications type
-      if(!strcmp(comm.attribute("mailbox").value(),"modbus_rtu"))
-	{
-	  ConfigSlaves[i].commType = 1;
-	}
-      if(!strcmp(comm.attribute("mailbox").value(),"modbus_tcp"))
-	{
-	  ConfigSlaves[i].commType = 2;
-	}
-      //save by trigger or by rate time?
-      ConfigSlaves[i].mTime = comm.attribute("mTime").as_int();
-      //registers number
-      ConfigSlaves[i].nRegs = comm.attribute("registers").as_int(); 
-      ConfigSlaves[i].Registers = new mbReadData[ConfigSlaves[i].nRegs];
-      //
-      i++;
-      }
-  ///////
-  //**REGISTROS
- 
-  i=0;
-  j=0;
- for (pugi::xml_node comm = doc.child("comm"); comm; comm = comm.next_sibling("comm"))
-    {
-      i=0;
-      //checking type
-      for(int h=0;h<ntypes;h++)
-	{
-	  //cout << "DEBUG: comparando entre: " << comm.attribute("Tregister").value() << " y " << stypes[h] << endl;
-	  if(!strcmp(comm.attribute("Tregister").value(),stypes[h]))
-	    ConfigSlaves[j].Registers[i].Datatype = itypes[h];
-	}
-      ConfigSlaves[j].Registers[i].address = comm.attribute("Aregister").value();	 
-      for(i = 1; i <  ConfigSlaves[j].nRegs;i++)
-	{
-	  //cout << "slave: " << j << "register; " << i << endl;
-	  //cout << "numero de registros: " <<  ConfigSlaves[j].nRegs << endl;
-	  //cout << "EN EL FOR!!" << endl;
-	  sprintf(buffer,"Tregister%d",i+1);
-	  //cout << " DEBUG: " << comm.attribute(buffer).value() << endl;
-	  //checking type
-	  for(int h=0;h<ntypes;h++)
-	    {
-	      //cout << "DEBUG: comparando entre: " << comm.attribute(buffer).value() << " y " << stypes[h] << endl;
-	      if(!strcmp(comm.attribute(buffer).value(),stypes[h]))
-		ConfigSlaves[j].Registers[i].Datatype = itypes[h];
-	    }
-	  sprintf(buffer,"Aregister%d",i+1);
-	  //cout << " DEBUG: " << comm.attribute(buffer).value() << endl;
-	  ConfigSlaves[j].Registers[i].address = comm.attribute(buffer).value();
-
-	}
-      j++;
-      }
+  //tables = new tableParams[nTables];
+  std::cout << "TABLES DEFINED : " << i << std::endl;
+  
   return 0;
 }
-*/
-/*!debug show config information*//*
-int configParser::RetrieveConfig()
-{
-  int i=0,j=0;
-  cout << "number of slaves configured: " << nSlaves << endl;
-
-  for (i=0;i<nSlaves;i++)
-    {
-      cout << "************************************" << endl;
-      cout << "*** SLAVE "<< i+1 <<" ***" << endl;
-      cout << endl;
-   
-      cout << " ID = " << ConfigSlaves[i].slaveId << endl;
-      cout << " mTime = " << ConfigSlaves[i].mTime << endl;
-      cout << " registers = " << ConfigSlaves[i].nRegs << endl;
-
-      cout << "** REGISTROS **" << endl;
-      
-      for(j=0;j<ConfigSlaves[i].nRegs;j++)
-	{
-	   cout << " numero = " << j+1 << endl;
-	   cout << " tipo = " << ConfigSlaves[i].Registers[j].Datatype << endl;
-	   cout << " direccion = " << ConfigSlaves[i].Registers[j].address << endl;
-	   cout << endl;
-	   }
-	 
-    }
-
-  return 0;
-  }*/
-/*
-int configParser::getSlaveId(int id)
-{
-  if(id >=0 && id <nSlaves)
-    return ConfigSlaves[id].slaveId;
-  else
-    return -1;
-}
-*/
-/*
-int configParser::getSlaveMailbox(int id,rlDataAcquisition **mailBox)
-{
-  if(id >=0 && id <nSlaves)
-    *mailBox = ConfigSlaves[id].Mailbox;
-  else
-    return -1;
-  return 0;
-}
-*/
-/*
-int configParser::getSlavemTime(int id)
-{  
-  if(id >=0 && id <nSlaves)
-    return ConfigSlaves[id].mTime;
-  else
-    return -1;
-
-}
-*/
-/*
-int configParser::getSlavenRegs(int id)
-{
-  if(id >=0 && id <nSlaves)
-    return ConfigSlaves[id].nRegs;
-  else
-    return -1;
-
-}
-*/
-/*
-int configParser::getSlaveReadData(int id,mbReadData **rData)
-{
-  if(id >=0 && id <nSlaves)
-    *rData = ConfigSlaves[id].Registers;
-  else
-    return -1;
-  return 0;
-}
-*/
