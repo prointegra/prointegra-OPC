@@ -30,6 +30,9 @@ prointegra-OPC is a C++ application to take/send tags from/to industrial automat
 
 mail to: jcuellar (at) prointegra.com
 
+##TODO/ROADMAP
+[roadmap](./ROADMAP.md)
+
 
 ##Changelog
 

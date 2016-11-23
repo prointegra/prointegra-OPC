@@ -94,6 +94,7 @@ typedef struct
   char * dbInternalName;
   char * tbName;
   char * tbTrigger;
+  int tbTriggerTime;
   int numFields;
   char* field[3]; //field name, field type, field var
   
@@ -109,6 +110,7 @@ class configParser
   int retrieveDBParams();
   int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
   int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
+  int retrieveTableAttrs(pugi::xml_node* db, tableParameters**,int nTables);
   //check fucntions
   int checkDBParams(const char* name, const char* type, const char* hostname, const char* dbName, const char* user, const char* password, int nTables);
   int checkDBType(const char* type);
@@ -134,6 +136,7 @@ class configParser
   pugi::xml_document doc;
   //databases parameters
   databaseParameters* databaseParams;
+  tableParameters** tablesParams;
   int nDBs;
   //number of slaves and type
   mbSlaves* ConfigSlaves;

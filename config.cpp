@@ -62,6 +62,7 @@ int configParser::retrieveDBParams()
   nDBs = i;
   ////
   databaseParams = new databaseParameters[nDBs];
+  tablesParams = new tableParameters*[nDBs];
   i = 0;
   //capturing data from databases;
   for (pugi::xml_node db = doc.child("db"); db; db = db.next_sibling("db"))
@@ -84,6 +85,8 @@ int configParser::retrieveDBParams()
       if(!checkDBParams(name,type,hostname,dbName,user,password,nTables))
 	{
 	  databaseParams[i] = {  type,hostname,dbName,name,user,password,nTables };
+	  tablesParams[i]= new tableParameters;
+	  retrieveTableAttrs(&db,&tablesParams[i],nTables);
 	  i++;
 	}
     }
@@ -182,6 +185,12 @@ databaseParameters configParser::retDBParams(int database)
     }
   else
     return temp;
+}
+
+int configParser::retrieveTableAttrs(pugi::xml_node* db, tableParameters**,int nTables)
+{
+
+  return 0;
 }
 
 /*!iterating data*/

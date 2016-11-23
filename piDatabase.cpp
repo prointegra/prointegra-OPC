@@ -20,6 +20,22 @@
 #include "piDatabase.h"
 
 
+int DBInterface::setup(databaseParameters parameters)
+{
+  conParameters = parameters;
+  tables = new DBTable*[conParameters.numTables];
+
+  for(int i=0;i<conParameters.numTables;i++)
+    {
+
+      std::cout << "ERROR TODO" << std::endl;
+
+    }
+  
+  return 0;
+}
+
+
 int DBInterface::start()
 {
   //SQLSERVER EXAMPLE
@@ -87,14 +103,6 @@ int DBInterface::checkAndCreate()
     {
       std::cout << "ERROR CREATING TABLE julianos" << std::endl;
     } 
-  //julian test
-  //time_t     now;
-  //now = time(0);
-  //struct tm *ts;
-  //ts = localtime(&now);
-
-  //strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", ts);
-  //std::cout << "fecha original: " << buf << "   ,fecha juliana: " << gstTime2JulianI(&ts) << std::endl;
   std::cout << "DEBUG: Creating table \"producto\"" << std::endl;
   
   ret = query(NULL,"CREATE TABLE IF NOT EXISTS producto(ID INTEGER PRIMARY KEY AUTOINCREMENT,FECHA DATE,HORA TIME,JULIANO_ENVASADO INT,JULIANO_LIMPIA INT, TIPO_DE_PRODUCTO INT, SILO_LIMPIA INT,KILOS INT)");
@@ -106,45 +114,7 @@ int DBInterface::checkAndCreate()
   return 0;
 }
 
-//return juliano from tabe julianos
-int DBInterface::getJuliano(int silo)
-{
-  char sql[500];
-  int ret;
-  char resultado[500];
-  QSqlDatabase localdb = *db;
 
-  sprintf(sql,"SELECT juliano from julianos where (silo = %d)",silo);
-
-  // std::cout << sql  << std::endl;
-
-  QSqlQuery query(sql,localdb);
-  int idName = query.record().indexOf("juliano");
-  sprintf(resultado,query.value(idName).toString().toUtf8());
-  std::cout << resultado << std::endl;
-  query.first();
-  while (query.next())
-    {
-      sprintf(resultado,query.value(idName).toString().toUtf8());
-      std::cout << resultado << std::endl;
-    }
-
-  /* ret = query(NULL,sql);
-  if(ret != 0)
-    {
-      std::cout << "ERROR retrieving juliano from database" << std::endl;
-    }
-  std::cout << result.numRowsAffected() << std::endl;
-  result->last();
-  std::cout << result->last()+1 << std::endl; 
-  //  std::cout << "juliano :" <<  recordFieldValue(NULL, 0) << std::endl;
-  std::cout << (const char *) result->record().fieldName(0).toUtf8() << std::endl;
-  result->next();
-  std::cout << (const char *) result->record().fieldName(0).toUtf8() << std::endl; 
-  */
-  return 1;
-  
-}
 
 ///TABLE FUNCTIONS
 DBTable::DBTable()
