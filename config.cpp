@@ -25,7 +25,7 @@ configParser::configParser(char* path)
 {
   //initialization of file
   pugi::xml_parse_result result = doc.load_file(path); 
-  cout << "Load result: " << result.description()  << endl;
+  cout << "INFO: XML Load result: " << result.description()  << endl;
   return;   
 }
 /*! Destructor*/
@@ -67,38 +67,50 @@ int configParser::retrieveDBParams()
       retrieveCharAttr(&db,&databaseParams[i].pass,"password");
       //number of tables
       databaseParams[i].numTables = retrieveNumberofNodes(&db,"table");
-      //if everything's allright
+      //is everything ok? 
       if(!checkDBParams(i))
-	{
-	  std::cout << "DEBUG: processing tables from "<< databaseParams[i].internalName <<" database..." << std::endl;
-	  retrieveTableAttrs(&db,i,databaseParams[i].numTables);
-	  i++;
-	}
+	databaseParams[i].isValid = 1;
+      else
+	databaseParams[i].isValid = 0;
+      //
+      std::cout << "INFO: processing tables from "<< databaseParams[i].internalName <<" database..." << std::endl;
+      retrieveTablesParams(&db,i,databaseParams[i].numTables);
+      i++;      
     }
   //i = number of databases created 
   return 0;
 }
 
+/*!function to check Database parameters integrity 
+TODO: to improve the check!
+*/
 int configParser::checkDBParams(int i)
 {
+  int failed = -1;
   if (databaseParams[i].internalName != NULL)
     {
       if(!checkDBType(databaseParams[i].type))
 	{
-	  //if(!checkDBHostname(type,hostname, user, password))
-	  //  {
-	  //    if(!checkDBName(type,dbName)
-	  //	{
-
-	  return 0;
-		    
-		  //	}
-		//}
+	  failed = 0;		    
 	}
     }
-  return -1;
+  return failed;
 }
 
+/*!function to check table parameters integrity 
+TODO: to improve the check!
+*/
+int configParser::checkTableParams(int db, int table)
+{
+  int failed = -1;
+
+  //WORKAROUND: check must go here
+  failed = 0;
+  
+  return failed;
+}
+
+/*!(private) function to take a string attribute from XML parsing*/
 int configParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute)
 {
   char *newName;
@@ -199,7 +211,7 @@ int configParser::retrieveNumberofNodes(pugi::xml_document* master , const char*
 }
 
 /*! function to retrieve all data from table in database, and creating it in memory struct */
-int configParser::retrieveTableAttrs(pugi::xml_node* db, int dbNumber, int numTables)
+int configParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables)
 {
 
   int numFields;
@@ -210,7 +222,7 @@ int configParser::retrieveTableAttrs(pugi::xml_node* db, int dbNumber, int numTa
 
   //defining number of tables in db
   i = numTables;
-  std::cout << "number of tables = " << numTables << std::endl;
+  std::cout << "INFO: " << numTables << " tables found" << std::endl;
   tablesParams[dbNumber] = new tableParameters[i];
   //retrieving table parameters
   i=0;
@@ -221,34 +233,32 @@ int configParser::retrieveTableAttrs(pugi::xml_node* db, int dbNumber, int numTa
       retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeTrigger");
       //tags
       numFields = retrieveNumberofNodes(&table,"tag");
-      std::cout << "number of tablesfields in table = " << i << ", igual a " << numFields << std::endl;
       tablesParams[dbNumber][i].field = new char**[numFields];
       for(int j= 0; j < numFields ; j++)
 	tablesParams[dbNumber][i].field[j] = new char*[3];
       int k=0;
       for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
 	{
-	  std::cout << "retrieving data for tag = " << k+1 << std::endl;
 	  retrieveCharAttr(&tag,&fieldName,"name");
        	  retrieveCharAttr(&tag,&fieldTagName,"tagName");
 	  retrieveCharAttr(&tag,&fieldType,"type");
-	  std::cout << "copying data for tag = " << k+1 << std::endl;
 	  tablesParams[dbNumber][i].field[k][0] = new char[sizeof(fieldName)+1];
 	  strcpy(tablesParams[dbNumber][i].field[k][0],fieldName);
-	  std::cout << "name in database = " <<tablesParams[dbNumber][i].field[k][0] << std::endl;
 	  tablesParams[dbNumber][i].field[k][1] = new char[sizeof(fieldTagName)+1];
 	  strcpy(tablesParams[dbNumber][i].field[k][1],fieldTagName);
-	  std::cout << "name in communications = " <<tablesParams[dbNumber][i].field[k][1] << std::endl;
 	  tablesParams[dbNumber][i].field[k][2] = new char[sizeof(fieldType)+1];
 	  strcpy(tablesParams[dbNumber][i].field[k][2],fieldType);
-	  std::cout << "type = " <<tablesParams[dbNumber][i].field[k][2] << std::endl;
 	  
+	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
 	  k++;
 	}
-
+      
+      if(!checkTableParams(dbNumber,i))
+	tablesParams[dbNumber][i].isValid = 1;
+      else
+	tablesParams[dbNumber][i].isValid = 0;		  
       i++;
     } 
- 
    
   return 0;
 }

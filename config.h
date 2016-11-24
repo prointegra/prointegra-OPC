@@ -79,6 +79,7 @@ typedef struct
 //database parameters
 typedef struct
 {
+  int isValid = 0;
   char *type = NULL;
   char *host = NULL;
   char *dbName = NULL;
@@ -91,6 +92,7 @@ typedef struct
 //table parameters
 typedef struct
 {
+  int isValid = 0;
   char * tbName = NULL;
   char * tbTrigger = NULL;
   int tbTriggerTime;
@@ -107,17 +109,18 @@ class configParser
 
   //database Parsing
   int retrieveDBParams();
-  int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
-  int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
-  int retrieveTableAttrs(pugi::xml_node* db, int dbNumber, int numTables);
-  //check fucntions
+  //check functions
   int checkDBParams(int i);
+  int checkTableParams(int db, int table);
   int checkDBType(const char* type);
   //private members returning functions
   int retnDBs(){ return nDBs;}
   databaseParameters retDBParams(int database);
 
  private:
+  int retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables);
+  int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
+  int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
   int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
   int retrieveNumberofNodes(pugi::xml_node* master , const char* concept);
   /*

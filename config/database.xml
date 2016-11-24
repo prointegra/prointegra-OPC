@@ -13,7 +13,7 @@
 	</table>
 </db>
 
-<db name="test2" qtdriver="QSQLITE" hostname="" dbName="./test2.db" user="" password="">
+<db name="test2" qtdriver="QMYSQL" hostname="localhost" dbName="./test2.db" user="test" password="test">
 	<table name="table3" tagTrigger="rTrigger1" timeTrigger="">
 		<tag name="fecha" tagName="_sysDate" type="DATE" />
 		<tag name="time" tagName="_sysTime" type="TIME" />
