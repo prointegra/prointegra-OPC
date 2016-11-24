@@ -20,18 +20,22 @@
 #include "piDatabase.h"
 
 
-int DBInterface::setup(databaseParameters parameters)
+int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
-  conParameters = parameters;
-  tables = new DBTable*[conParameters.numTables];
-
-  for(int i=0;i<conParameters.numTables;i++)
+  //taking db parameters
+  conParameters = dbParams;
+  if(conParameters.isValid)
     {
+      //building tables instances
+      tables = new DBTable*[conParameters.numTables];
 
-      std::cout << "ERROR TODO" << std::endl;
+      for(int i=0;i<conParameters.numTables;i++)
+	{
 
+	  std::cout << "ERROR TODO: building table instance" << i << std::endl;
+
+	}
     }
-  
   return 0;
 }
 
@@ -43,7 +47,7 @@ int DBInterface::start()
   //SQLITE 
   if(qtDatabase::open(conParameters.type,conParameters.host,conParameters.dbName,conParameters.user,conParameters.pass))
     {
-      std::cout << "DEBUG:ERROR OPENING DATABASE " << std::endl;
+      std::cout << "ERROR!: CAN'T OPEN DATABASE " << conParameters.internalName << std::endl;
     }
 }
 

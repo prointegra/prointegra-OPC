@@ -113,10 +113,12 @@ class configParser
   int checkDBParams(int i);
   int checkTableParams(int db, int table);
   int checkDBType(const char* type);
+  
   //private members returning functions
   int retnDBs(){ return nDBs;}
   databaseParameters retDBParams(int database);
-
+  tableParameters* retDBTables(int database);
+  
  private:
   int retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables);
   int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);

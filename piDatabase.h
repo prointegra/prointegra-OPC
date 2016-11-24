@@ -44,7 +44,7 @@ class DBInterface : public qtDatabase
  public:
  DBInterface() : qtDatabase(){
   };
-  int setup(databaseParameters parameters);
+  int setup(databaseParameters dbParams,tableParameters* tablesParams);
   int start();
   int tCheckAndCreate();
   int checkAndCreate();

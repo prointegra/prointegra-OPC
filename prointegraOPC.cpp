@@ -33,7 +33,7 @@ ProintegraOPC::ProintegraOPC()
   for(int i=0;i<nDBs;i++)
     {
       hDatabase[i] = new DBInterface();
-      hDatabase[i]->setup(cDatabase->retDBParams(i));
+      hDatabase[i]->setup(cDatabase->retDBParams(i),cDatabase->retDBTables(i));
       hDatabase[i]->start();
     }
   //creating database tables

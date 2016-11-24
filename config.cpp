@@ -160,20 +160,9 @@ int configParser::checkDBType(const char* type)
   return -1;
 }
 
-
+/*!function for retuning a database parameters instance*/
 databaseParameters configParser::retDBParams(int database)
 {
-
-  char *type = NULL;
-  char *dbName = NULL;
-  char *name = NULL;
-  int saveMode;
-  int numTables;
-  char *tableName = NULL;
-  char *user = NULL;
-  char * password = NULL;
-  char *hostname = NULL;
-
   databaseParameters temp;
   
   if(database < nDBs && database >= 0)
@@ -183,6 +172,17 @@ databaseParameters configParser::retDBParams(int database)
   else
     return temp;
 }
+/*!function for retuning a table parameters instance array from a given database (by index)*/
+tableParameters* configParser::retDBTables(int database)
+{
+  tableParameters* temp = new tableParameters[0];
+  if(database < nDBs && database >= 0)
+    {
+      return tablesParams[database];
+    }
+  return temp;
+}
+
 /*!(private) number of child nodes in a master node of XML document*/
 int configParser::retrieveNumberofNodes(pugi::xml_node* master , const char* concept)
 {
