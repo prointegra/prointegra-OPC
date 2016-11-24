@@ -79,24 +79,23 @@ typedef struct
 //database parameters
 typedef struct
 {
-  char *type;
-  char *host;
-  char *dbName;
-  char *internalName;
-  char *user;
-  char *pass;
-  int numTables;
+  char *type = NULL;
+  char *host = NULL;
+  char *dbName = NULL;
+  char *internalName = NULL;
+  char *user = NULL;
+  char *pass = NULL;
+  int numTables = 0;
 } databaseParameters;
 
 //table parameters
 typedef struct
 {
-  char * dbInternalName;
-  char * tbName;
-  char * tbTrigger;
+  char * tbName = NULL;
+  char * tbTrigger = NULL;
   int tbTriggerTime;
   int numFields;
-  char* field[3]; //field name, field type, field var
+  char*** field; //field name, field type, field var
   
 } tableParameters;
 
@@ -110,13 +109,17 @@ class configParser
   int retrieveDBParams();
   int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
   int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
-  int retrieveTableAttrs(pugi::xml_node* db, tableParameters**,int nTables);
+  int retrieveTableAttrs(pugi::xml_node* db, int dbNumber, int numTables);
   //check fucntions
-  int checkDBParams(const char* name, const char* type, const char* hostname, const char* dbName, const char* user, const char* password, int nTables);
+  int checkDBParams(int i);
   int checkDBType(const char* type);
   //private members returning functions
   int retnDBs(){ return nDBs;}
   databaseParameters retDBParams(int database);
+
+ private:
+  int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
+  int retrieveNumberofNodes(pugi::xml_node* master , const char* concept);
   /*
   int IterateComms();
   int RetrieveConfig();

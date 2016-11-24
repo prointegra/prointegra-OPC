@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<db name="test" qtdriver="QSQLITE" hostname="" dbName="./test.db" user="" password="" tables="1">
+<db name="test" qtdriver="QSQLITE" hostname="" dbName="./test.db" user="" password="">
 	<table name="table1" tagTrigger="rTrigger1" timeTrigger="">
 		<tag name="fecha" tagName="_sysDate" type="DATE" />
 		<tag name="time" tagName="_sysTime" type="TIME" />
@@ -13,3 +13,15 @@
 	</table>
 </db>
 
+<db name="test2" qtdriver="QSQLITE" hostname="" dbName="./test2.db" user="" password="">
+	<table name="table3" tagTrigger="rTrigger1" timeTrigger="">
+		<tag name="fecha" tagName="_sysDate" type="DATE" />
+		<tag name="time" tagName="_sysTime" type="TIME" />
+        <tag name="readTest" tagName="readTest2" type="FLOAT" />
+	</table>
+	<table name="table4" tagTrigger="rTrigger2" timeTrigger="">
+		<tag name="fecha" tagName="_sysDate" type="DATE" />
+		<tag name="time" tagName="_sysTime" type="TIME" />
+        <tag name="readWriteTest" tagName="readWriteTest2" type="INT" />
+	</table>
+</db>

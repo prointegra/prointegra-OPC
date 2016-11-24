@@ -36,31 +36,17 @@ configParser::~configParser()
        
   return;   
 }
-
+//database functions
 /*!retrieving database parameters*/
 int configParser::retrieveDBParams()
 {
   int i=0;
   int nTables = 0;
   int size;
-  char *type = NULL;
-  char *dbName = NULL;
-  char *name = NULL;
   int saveMode;
-  int numTables;
-  char *tableName = NULL;
-  char *user = NULL;
-  char * password = NULL;
-  char *hostname = NULL;
-  
-  //1 number of databases
-  for (pugi::xml_node db = doc.child("db"); db; db = db.next_sibling("db"))
-    {
-      i++;
-    }
+ 
   //number of DB instances defined
-  nDBs = i;
-  ////
+  nDBs = retrieveNumberofNodes(&doc,"db");
   databaseParams = new databaseParameters[nDBs];
   tablesParams = new tableParameters*[nDBs];
   i = 0;
@@ -68,25 +54,24 @@ int configParser::retrieveDBParams()
   for (pugi::xml_node db = doc.child("db"); db; db = db.next_sibling("db"))
     {
       //retrieve database name (name of whole entity, database name + hostname +user + password + qtdriver + number of tables...)
-      retrieveCharAttr(&db,&name,"name");
+      retrieveCharAttr(&db,&databaseParams[i].internalName,"name");
       //retrieve database qt driver
-      retrieveCharAttr(&db,&type,"qtdriver");
+      retrieveCharAttr(&db,&databaseParams[i].type,"qtdriver");
       //retrieve database hostname
-      retrieveCharAttr(&db,&hostname,"hostname");
+      retrieveCharAttr(&db,&databaseParams[i].host,"hostname");
       //retrieve database id name
-      retrieveCharAttr(&db,&dbName,"dbName");    
+      retrieveCharAttr(&db,&databaseParams[i].dbName,"dbName");    
       //retrieve database user
-      retrieveCharAttr(&db,&user,"user");
+      retrieveCharAttr(&db,&databaseParams[i].user,"user");
       //retrieve database id name user password
-      retrieveCharAttr(&db,&password,"password");
-      //retrieve database id name user password
-      retrieveIntAttr(&db,&nTables,"tables");
+      retrieveCharAttr(&db,&databaseParams[i].pass,"password");
+      //number of tables
+      databaseParams[i].numTables = retrieveNumberofNodes(&db,"table");
       //if everything's allright
-      if(!checkDBParams(name,type,hostname,dbName,user,password,nTables))
+      if(!checkDBParams(i))
 	{
-	  databaseParams[i] = {  type,hostname,dbName,name,user,password,nTables };
-	  tablesParams[i]= new tableParameters;
-	  retrieveTableAttrs(&db,&tablesParams[i],nTables);
+	  std::cout << "DEBUG: processing tables from "<< databaseParams[i].internalName <<" database..." << std::endl;
+	  retrieveTableAttrs(&db,i,databaseParams[i].numTables);
 	  i++;
 	}
     }
@@ -94,20 +79,19 @@ int configParser::retrieveDBParams()
   return 0;
 }
 
-int configParser::checkDBParams(const char* name, const char* type, const char* hostname, const char* dbName, const char* user, const char* password, int nTables)
+int configParser::checkDBParams(int i)
 {
-  if (name != NULL)
+  if (databaseParams[i].internalName != NULL)
     {
-      if(!checkDBType(type))
+      if(!checkDBType(databaseParams[i].type))
 	{
 	  //if(!checkDBHostname(type,hostname, user, password))
 	  //  {
 	  //    if(!checkDBName(type,dbName)
 	  //	{
-		  if(nTables>0)
-		    {
-		      return 0;
-		    }
+
+	  return 0;
+		    
 		  //	}
 		//}
 	}
@@ -121,6 +105,7 @@ int configParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* 
   int size=0;
 
   newName = *name;
+  delete(newName);
   //better strlen than sizeof, sizeof return always 8
   if( strlen(db->attribute(attribute).value()) >0)
     {
@@ -177,7 +162,7 @@ databaseParameters configParser::retDBParams(int database)
   char * password = NULL;
   char *hostname = NULL;
 
-  databaseParameters temp = { type, hostname, dbName, name, user, password, 0 };
+  databaseParameters temp;
   
   if(database < nDBs && database >= 0)
     {
@@ -186,26 +171,84 @@ databaseParameters configParser::retDBParams(int database)
   else
     return temp;
 }
-/*! fucntion to retrieve all data from tables in db, and creating it in memory struct */
-int configParser::retrieveTableAttrs(pugi::xml_node* db, tableParameters** rtables,int nTables)
+/*!(private) number of child nodes in a master node of XML document*/
+int configParser::retrieveNumberofNodes(pugi::xml_node* master , const char* concept)
 {
-  tableParameters* tables;
-  char * dbInternalName;
-  char * tbName;
-  char * tbTrigger;
-  int tbTriggerTime;
-  int numFields;
-  char* field[3];
-
-  //pointer copy
-  //tables = *rtables;
   int i=0;
-  for (pugi::xml_node table = db->child("table"); table; table = table.next_sibling("table"))
+
+  for (pugi::xml_node node = master->child(concept); node; node = node.next_sibling(concept))
     {
       i++;
     }
-  //tables = new tableParams[nTables];
-  std::cout << "TABLES DEFINED : " << i << std::endl;
-  
+
+  return i;
+ 
+}
+/*!(private) number of child nodes in a XML document*/
+int configParser::retrieveNumberofNodes(pugi::xml_document* master , const char* concept)
+{
+  int i=0;
+
+    for (pugi::xml_node node = master->child(concept); node; node = node.next_sibling(concept))
+    {
+      i++;
+    }
+
+  return i;
+ 
+}
+
+/*! function to retrieve all data from table in database, and creating it in memory struct */
+int configParser::retrieveTableAttrs(pugi::xml_node* db, int dbNumber, int numTables)
+{
+
+  int numFields;
+  char* fieldName = NULL;
+  char* fieldTagName = NULL;
+  char* fieldType= NULL;
+  int i;
+
+  //defining number of tables in db
+  i = numTables;
+  std::cout << "number of tables = " << numTables << std::endl;
+  tablesParams[dbNumber] = new tableParameters[i];
+  //retrieving table parameters
+  i=0;
+  for (pugi::xml_node table = db->child("table"); table; table = table.next_sibling("table"))
+    {
+      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbName,"name");
+      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbTrigger,"tagTrigger");
+      retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeTrigger");
+      //tags
+      numFields = retrieveNumberofNodes(&table,"tag");
+      std::cout << "number of tablesfields in table = " << i << ", igual a " << numFields << std::endl;
+      tablesParams[dbNumber][i].field = new char**[numFields];
+      for(int j= 0; j < numFields ; j++)
+	tablesParams[dbNumber][i].field[j] = new char*[3];
+      int k=0;
+      for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
+	{
+	  std::cout << "retrieving data for tag = " << k+1 << std::endl;
+	  retrieveCharAttr(&tag,&fieldName,"name");
+       	  retrieveCharAttr(&tag,&fieldTagName,"tagName");
+	  retrieveCharAttr(&tag,&fieldType,"type");
+	  std::cout << "copying data for tag = " << k+1 << std::endl;
+	  tablesParams[dbNumber][i].field[k][0] = new char[sizeof(fieldName)+1];
+	  strcpy(tablesParams[dbNumber][i].field[k][0],fieldName);
+	  std::cout << "name in database = " <<tablesParams[dbNumber][i].field[k][0] << std::endl;
+	  tablesParams[dbNumber][i].field[k][1] = new char[sizeof(fieldTagName)+1];
+	  strcpy(tablesParams[dbNumber][i].field[k][1],fieldTagName);
+	  std::cout << "name in communications = " <<tablesParams[dbNumber][i].field[k][1] << std::endl;
+	  tablesParams[dbNumber][i].field[k][2] = new char[sizeof(fieldType)+1];
+	  strcpy(tablesParams[dbNumber][i].field[k][2],fieldType);
+	  std::cout << "type = " <<tablesParams[dbNumber][i].field[k][2] << std::endl;
+	  
+	  k++;
+	}
+
+      i++;
+    } 
+ 
+   
   return 0;
 }
