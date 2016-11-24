@@ -19,19 +19,19 @@
 
 #include "piDatabase.h"
 
-
+/*! function to take database connection and table parameters for our database interface */
 int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
   //taking db parameters
-  conParameters = dbParams;
-  if(conParameters.isValid)
+  parameters = dbParams;
+  if(parameters.isValid)
     {
       //building tables instances
-      tables = new DBTable*[conParameters.numTables];
+      tables = new DBTable*[parameters.numTables];
 
-      for(int i=0;i<conParameters.numTables;i++)
+      for(int i=0;i<parameters.numTables;i++)
 	{
-
+	  tables[i] = new DBTable(tablesParams[i]);
 	  std::cout << "ERROR TODO: building table instance" << i << std::endl;
 
 	}
@@ -39,15 +39,15 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
   return 0;
 }
 
-
+/*! function to open connection to database */
 int DBInterface::start()
 {
   //SQLSERVER EXAMPLE
   //if(database->open("QTDS7","PROINTEG-3FCFDD","master","sa","prointegra"))
   //SQLITE 
-  if(qtDatabase::open(conParameters.type,conParameters.host,conParameters.dbName,conParameters.user,conParameters.pass))
+  if(qtDatabase::open(parameters.type,parameters.host,parameters.dbName,parameters.user,parameters.pass))
     {
-      std::cout << "ERROR!: CAN'T OPEN DATABASE " << conParameters.internalName << std::endl;
+      std::cout << "ERROR!: CAN'T OPEN DATABASE " << parameters.internalName << std::endl;
     }
 }
 
@@ -121,9 +121,10 @@ int DBInterface::checkAndCreate()
 
 
 ///TABLE FUNCTIONS
-DBTable::DBTable()
+/*! function to take table parameters for our table in database interface*/
+DBTable::DBTable(tableParameters tableParams)
 {
-
+  parameters = tableParams;
   return;
 }
 DBTable::~DBTable()

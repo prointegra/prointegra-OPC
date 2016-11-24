@@ -75,6 +75,13 @@ typedef struct
   int nRegs;
 } mbSlaves;
 
+//field parameters
+typedef struct
+{
+  char * name = NULL;
+  char * type = NULL;
+  char * tag = NULL;
+} field;
 
 //database parameters
 typedef struct
@@ -97,9 +104,10 @@ typedef struct
   char * tbTrigger = NULL;
   int tbTriggerTime;
   int numFields;
-  char*** field; //field name, field type, field var
+  field* stField; 
   
 } tableParameters;
+
 
 class configParser 
 {

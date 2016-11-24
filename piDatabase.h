@@ -33,9 +33,10 @@
 class DBTable
 {
  public:
-  DBTable();
+  DBTable(tableParameters tableParams);
   ~DBTable();
 
+  tableParameters parameters;
 };
 
 /*! Database interface class, derived from pvbrowser addons examples */
@@ -50,7 +51,7 @@ class DBInterface : public qtDatabase
   int checkAndCreate();
 
  private:
-  databaseParameters conParameters;
+  databaseParameters parameters;
   DBTable** tables;
 };
 

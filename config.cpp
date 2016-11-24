@@ -233,21 +233,19 @@ int configParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
       retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeTrigger");
       //tags
       numFields = retrieveNumberofNodes(&table,"tag");
-      tablesParams[dbNumber][i].field = new char**[numFields];
-      for(int j= 0; j < numFields ; j++)
-	tablesParams[dbNumber][i].field[j] = new char*[3];
-      int k=0;
+      tablesParams[dbNumber][i].stField = new field[numFields];
+      int k =0;
       for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
 	{
 	  retrieveCharAttr(&tag,&fieldName,"name");
        	  retrieveCharAttr(&tag,&fieldTagName,"tagName");
 	  retrieveCharAttr(&tag,&fieldType,"type");
-	  tablesParams[dbNumber][i].field[k][0] = new char[sizeof(fieldName)+1];
-	  strcpy(tablesParams[dbNumber][i].field[k][0],fieldName);
-	  tablesParams[dbNumber][i].field[k][1] = new char[sizeof(fieldTagName)+1];
-	  strcpy(tablesParams[dbNumber][i].field[k][1],fieldTagName);
-	  tablesParams[dbNumber][i].field[k][2] = new char[sizeof(fieldType)+1];
-	  strcpy(tablesParams[dbNumber][i].field[k][2],fieldType);
+	  tablesParams[dbNumber][i].stField[k].name = new char[sizeof(fieldName)+1];
+	  strcpy(tablesParams[dbNumber][i].stField[k].name,fieldName);
+	  tablesParams[dbNumber][i].stField[k].tag = new char[sizeof(fieldTagName)+1];
+	  strcpy(tablesParams[dbNumber][i].stField[k].tag,fieldTagName);
+	  tablesParams[dbNumber][i].stField[k].type = new char[sizeof(fieldType)+1];
+	  strcpy(tablesParams[dbNumber][i].stField[k].type,fieldType);
 	  
 	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
 	  k++;
