@@ -22,8 +22,12 @@
 /*! function to take database connection and table parameters for our database interface */
 int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
+  char *sqlQuery = NULL;
+  int ret;
+  
   //taking db parameters
   parameters = dbParams;
+  start();
   if(parameters.isValid)
     {
       //building tables instances
@@ -32,12 +36,18 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
       for(int i=0;i<parameters.numTables;i++)
 	{
 	  tables[i] = new DBTable(tablesParams[i]);
-	  std::cout << "ERROR TODO: building table instance" << i << std::endl;
+	  tables[i]->create(&parameters,&sqlQuery);
+          //TODO: we should catch exceptions!
+	  std::cout << sqlQuery << std::endl;
+	  ret = query(NULL,sqlQuery);
+
 
 	}
     }
+  delete sqlQuery;
   return 0;
 }
+
 
 /*! function to open connection to database */
 int DBInterface::start()
@@ -132,5 +142,84 @@ DBTable::~DBTable()
 
   return;
 }
+/*!function for creating the tale dinamycally
+TODO: only implemented sqlite tables!
+*/
+int DBTable::create(databaseParameters* parameters, char **query)
+{
+  char *sqlQuery = NULL;
+  int ret;
+
+  sqlQuery = *query;
+  
+  if(!strcmp(parameters->type,"QSQLITE"))
+    {
+      creationSqlite(&sqlQuery);
+      ret = 0;
+    }
+  else if(!strcmp(parameters->type,"QTDS"))
+    {
+      sqlQuery=NULL;
+      ret = -1;
+    }
+  else
+    {
+      sqlQuery=NULL;
+      ret = -1;
+    }
+  *query = sqlQuery;
+  
+  return ret;
+}
+
+int DBTable::creationSqlite(char **sql)
+{
+  char *sqlQuery = NULL;
+  char * temp = NULL;
+  char * field = NULL;
+  
+  sqlQuery = *sql;
+  
+  if(sqlQuery != NULL)
+    delete(sqlQuery);
+  
+  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT,")+5];
+  strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
+  strcat(temp,parameters.tbName);
+  strcat(temp," (ID INTEGER PRIMARY KEY AUTOINCREMENT,");
+
+  sqlQuery = new char[strlen(temp)+5];
+  strcpy(sqlQuery,temp);
+  for (int i = 0; i < parameters.numFields;i++)
+    {
+      delete temp;
+      temp = new char[strlen(sqlQuery)+5];
+      strcpy(temp,sqlQuery);
+      delete sqlQuery;
+	
+      field = new char[strlen(parameters.stField[i].type) + strlen(parameters.stField[i].name) + 5];
+      strcpy(field,parameters.stField[i].name);
+      //different types
+      if(!strcmp(parameters.stField[i].type,"DATE"))
+	strcat(field," DATE");
+      if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
+	strcat(field," INT");
+      if(!strcmp(parameters.stField[i].type,"TIME"))
+	strcat(field," TIME");
+      if(!strcmp(parameters.stField[i].type,"STRING"))
+	strcat(field," TEXT");      
+      if(i < (parameters.numFields-1))
+	strcat(field,",");
+      /////
+      sqlQuery = new char[strlen(temp)+strlen(field)+5];
+      strcpy(sqlQuery,temp);
+      strcat(sqlQuery,field);
+      delete field;
+    }
+  strcat(sqlQuery,")");
+  delete temp;
+  *sql = sqlQuery;
+  return 0;
 
 
+}

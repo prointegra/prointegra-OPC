@@ -214,7 +214,6 @@ int configParser::retrieveNumberofNodes(pugi::xml_document* master , const char*
 int configParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables)
 {
 
-  int numFields;
   char* fieldName = NULL;
   char* fieldTagName = NULL;
   char* fieldType= NULL;
@@ -232,8 +231,9 @@ int configParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
       retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbTrigger,"tagTrigger");
       retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeTrigger");
       //tags
-      numFields = retrieveNumberofNodes(&table,"tag");
-      tablesParams[dbNumber][i].stField = new field[numFields];
+      tablesParams[dbNumber][i].numFields = retrieveNumberofNodes(&table,"tag");
+      
+      tablesParams[dbNumber][i].stField = new field[tablesParams[dbNumber][i].numFields];
       int k =0;
       for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
 	{

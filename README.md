@@ -17,14 +17,26 @@ prointegra-OPC is a C++ application to take/send tags from/to industrial automat
 
 ##Dependencies
 
-+ it's based in [pvbrowser](http://pvbrowser.de) libs, so have it installed is required
-+ QT 5 and it's drivers for databases
-+ use of [gStools](https://github.com/gentooza/gStools) for tags conversions
-+ use of pugiXML (v1.7) for configurations files
++ it's based in [pvbrowser](http://pvbrowser.de) libs, so have it installed is required.
++ QT 5 and it's drivers for databases.
++ use of [gStools](https://github.com/gentooza/gStools) for tags conversions (already included in /lib folder)
++ use of pugiXML for configurations files (already cinluded in /lib folder, v1.7)
 
 ##Compile and installation
 
-..In progress
+###Under GNU/Linux
+normally doing:
+```
+qmake
+```
+and:
+```
+make
+```
+should give us the executable file: prointegra-OPC
+
+###Under MS Windows XP
+work in progress...
 
 ##Contact
 
