@@ -36,6 +36,9 @@ class DBTable
   DBTable(tableParameters tableParams);
   ~DBTable();
 
+  int create(databaseParameters* parameters,char **query);
+  int creationSqlite(char **sql);
+private:  
   tableParameters parameters;
 };
 

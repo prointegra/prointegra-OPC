@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 
 <db name="test" qtdriver="QSQLITE" hostname="" dbName="./test.db" user="" password="">
-	<table name="table1" tagTrigger="rTrigger1" timeTrigger="">
+	<table name="table1" tagTrigger="rTrigger1" timeTrigger="" type="LOG">
 		<tag name="fecha" tagName="_sysDate" type="DATE" />
 		<tag name="time" tagName="_sysTime" type="TIME" />
         <tag name="readTest" tagName="readTest" type="INT" />
 	</table>
-	<table name="table2" tagTrigger="rTrigger2" timeTrigger="">
+	<table name="table2" tagTrigger="rTrigger2" timeTrigger="" type="LOG">
 		<tag name="fecha" tagName="_sysDate" type="DATE" />
 		<tag name="time" tagName="_sysTime" type="TIME" />
         <tag name="readWriteTest" tagName="readWriteTest" type="INT" />
@@ -14,12 +14,12 @@
 </db>
 
 <db name="test2" qtdriver="QMYSQL" hostname="localhost" dbName="./test2.db" user="test" password="test">
-	<table name="table3" tagTrigger="rTrigger1" timeTrigger="">
+	<table name="table3" tagTrigger="rTrigger1" timeTrigger="" type="LOG">
 		<tag name="fecha" tagName="_sysDate" type="DATE" />
 		<tag name="time" tagName="_sysTime" type="TIME" />
         <tag name="readTest" tagName="readTest2" type="FLOAT" />
 	</table>
-	<table name="table4" tagTrigger="rTrigger2" timeTrigger="">
+	<table name="table4" tagTrigger="rTrigger2" timeTrigger="" type="LOG">
 		<tag name="fecha" tagName="_sysDate" type="DATE" />
 		<tag name="time" tagName="_sysTime" type="TIME" />
         <tag name="readWriteTest" tagName="readWriteTest2" type="INT" />
