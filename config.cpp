@@ -25,7 +25,7 @@ configParser::configParser(char* path)
 {
   //initialization of file
   pugi::xml_parse_result result = doc.load_file(path); 
-  cout << "Load result: " << result.description()  << endl;
+  cout << "INFO: XML Load result: " << result.description()  << endl;
   return;   
 }
 /*! Destructor*/
@@ -36,88 +36,88 @@ configParser::~configParser()
        
   return;   
 }
-
+//database functions
 /*!retrieving database parameters*/
 int configParser::retrieveDBParams()
 {
   int i=0;
   int nTables = 0;
   int size;
-  char *type = NULL;
-  char *dbName = NULL;
-  char *name = NULL;
   int saveMode;
-  int numTables;
-  char *tableName = NULL;
-  char *user = NULL;
-  char * password = NULL;
-  char *hostname = NULL;
-  
-  //1 number of databases
-  for (pugi::xml_node db = doc.child("db"); db; db = db.next_sibling("db"))
-    {
-      i++;
-    }
+ 
   //number of DB instances defined
-  nDBs = i;
-  ////
+  nDBs = retrieveNumberofNodes(&doc,"db");
   databaseParams = new databaseParameters[nDBs];
+  tablesParams = new tableParameters*[nDBs];
   i = 0;
   //capturing data from databases;
   for (pugi::xml_node db = doc.child("db"); db; db = db.next_sibling("db"))
     {
       //retrieve database name (name of whole entity, database name + hostname +user + password + qtdriver + number of tables...)
-      retrieveCharAttr(&db,&name,"name");
+      retrieveCharAttr(&db,&databaseParams[i].internalName,"name");
       //retrieve database qt driver
-      retrieveCharAttr(&db,&type,"qtdriver");
+      retrieveCharAttr(&db,&databaseParams[i].type,"qtdriver");
       //retrieve database hostname
-      retrieveCharAttr(&db,&hostname,"hostname");
+      retrieveCharAttr(&db,&databaseParams[i].host,"hostname");
       //retrieve database id name
-      retrieveCharAttr(&db,&dbName,"dbName");    
+      retrieveCharAttr(&db,&databaseParams[i].dbName,"dbName");    
       //retrieve database user
-      retrieveCharAttr(&db,&user,"user");
+      retrieveCharAttr(&db,&databaseParams[i].user,"user");
       //retrieve database id name user password
-      retrieveCharAttr(&db,&password,"password");
-      //retrieve database id name user password
-      retrieveIntAttr(&db,&nTables,"tables");
-      //if everything's allright
-      if(!checkDBParams(name,type,hostname,dbName,user,password,nTables))
-	{
-	  databaseParams[i] = {  type,hostname,dbName,name,user,password,nTables };
-	  i++;
-	}
+      retrieveCharAttr(&db,&databaseParams[i].pass,"password");
+      //number of tables
+      databaseParams[i].numTables = retrieveNumberofNodes(&db,"table");
+      //is everything ok? 
+      if(!checkDBParams(i))
+	databaseParams[i].isValid = 1;
+      else
+	databaseParams[i].isValid = 0;
+      //
+      std::cout << "INFO: processing tables from "<< databaseParams[i].internalName <<" database..." << std::endl;
+      retrieveTablesParams(&db,i,databaseParams[i].numTables);
+      i++;      
     }
   //i = number of databases created 
   return 0;
 }
 
-int configParser::checkDBParams(const char* name, const char* type, const char* hostname, const char* dbName, const char* user, const char* password, int nTables)
+/*!function to check Database parameters integrity 
+TODO: to improve the check!
+*/
+int configParser::checkDBParams(int i)
 {
-  if (name != NULL)
+  int failed = -1;
+  if (databaseParams[i].internalName != NULL)
     {
-      if(!checkDBType(type))
+      if(!checkDBType(databaseParams[i].type))
 	{
-	  //if(!checkDBHostname(type,hostname, user, password))
-	  //  {
-	  //    if(!checkDBName(type,dbName)
-	  //	{
-		  if(nTables>0)
-		    {
-		      return 0;
-		    }
-		  //	}
-		//}
+	  failed = 0;		    
 	}
     }
-  return -1;
+  return failed;
 }
 
+/*!function to check table parameters integrity 
+TODO: to improve the check!
+*/
+int configParser::checkTableParams(int db, int table)
+{
+  int failed = -1;
+
+  //WORKAROUND: check must go here
+  failed = 0;
+  
+  return failed;
+}
+
+/*!(private) function to take a string attribute from XML parsing*/
 int configParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute)
 {
   char *newName;
   int size=0;
 
   newName = *name;
+  delete(newName);
   //better strlen than sizeof, sizeof return always 8
   if( strlen(db->attribute(attribute).value()) >0)
     {
@@ -160,21 +160,10 @@ int configParser::checkDBType(const char* type)
   return -1;
 }
 
-
+/*!function for retuning a database parameters instance*/
 databaseParameters configParser::retDBParams(int database)
 {
-
-  char *type = NULL;
-  char *dbName = NULL;
-  char *name = NULL;
-  int saveMode;
-  int numTables;
-  char *tableName = NULL;
-  char *user = NULL;
-  char * password = NULL;
-  char *hostname = NULL;
-
-  databaseParameters temp = { type, hostname, dbName, name, user, password, 0 };
+  databaseParameters temp;
   
   if(database < nDBs && database >= 0)
     {
@@ -183,162 +172,91 @@ databaseParameters configParser::retDBParams(int database)
   else
     return temp;
 }
-
-/*!iterating data*/
-/*
-int configParser::IterateComms()
+/*!function for retuning a table parameters instance array from a given database (by index)*/
+tableParameters* configParser::retDBTables(int database)
 {
-  char buffer[100];
+  tableParameters* temp = new tableParameters[0];
+  if(database < nDBs && database >= 0)
+    {
+      return tablesParams[database];
+    }
+  return temp;
+}
 
-  //how many devices?
-  int i=0,j=0;
-  for (pugi::xml_node comm = doc.child("comm"); comm; comm = comm.next_sibling("comm"))
+/*!(private) number of child nodes in a master node of XML document*/
+int configParser::retrieveNumberofNodes(pugi::xml_node* master , const char* concept)
+{
+  int i=0;
+
+  for (pugi::xml_node node = master->child(concept); node; node = node.next_sibling(concept))
     {
       i++;
     }
-  ConfigSlaves = new mbSlaves[i];
-  nSlaves = i;
-  //configure device
-  i=0;
-  setModbusRTU(0);
-  setModbusTCP(0);
-  for (pugi::xml_node comm = doc.child("comm"); comm; comm = comm.next_sibling("comm"))
-    {
-      //slave id
-      ConfigSlaves[i].slaveId = comm.attribute("slave").as_int();
-      //communications type
-      if(!strcmp(comm.attribute("mailbox").value(),"modbus_rtu"))
-	{
-	  ConfigSlaves[i].commType = 1;
-	}
-      if(!strcmp(comm.attribute("mailbox").value(),"modbus_tcp"))
-	{
-	  ConfigSlaves[i].commType = 2;
-	}
-      //save by trigger or by rate time?
-      ConfigSlaves[i].mTime = comm.attribute("mTime").as_int();
-      //registers number
-      ConfigSlaves[i].nRegs = comm.attribute("registers").as_int(); 
-      ConfigSlaves[i].Registers = new mbReadData[ConfigSlaves[i].nRegs];
-      //
-      i++;
-      }
-  ///////
-  //**REGISTROS
+
+  return i;
  
-  i=0;
-  j=0;
- for (pugi::xml_node comm = doc.child("comm"); comm; comm = comm.next_sibling("comm"))
-    {
-      i=0;
-      //checking type
-      for(int h=0;h<ntypes;h++)
-	{
-	  //cout << "DEBUG: comparando entre: " << comm.attribute("Tregister").value() << " y " << stypes[h] << endl;
-	  if(!strcmp(comm.attribute("Tregister").value(),stypes[h]))
-	    ConfigSlaves[j].Registers[i].Datatype = itypes[h];
-	}
-      ConfigSlaves[j].Registers[i].address = comm.attribute("Aregister").value();	 
-      for(i = 1; i <  ConfigSlaves[j].nRegs;i++)
-	{
-	  //cout << "slave: " << j << "register; " << i << endl;
-	  //cout << "numero de registros: " <<  ConfigSlaves[j].nRegs << endl;
-	  //cout << "EN EL FOR!!" << endl;
-	  sprintf(buffer,"Tregister%d",i+1);
-	  //cout << " DEBUG: " << comm.attribute(buffer).value() << endl;
-	  //checking type
-	  for(int h=0;h<ntypes;h++)
-	    {
-	      //cout << "DEBUG: comparando entre: " << comm.attribute(buffer).value() << " y " << stypes[h] << endl;
-	      if(!strcmp(comm.attribute(buffer).value(),stypes[h]))
-		ConfigSlaves[j].Registers[i].Datatype = itypes[h];
-	    }
-	  sprintf(buffer,"Aregister%d",i+1);
-	  //cout << " DEBUG: " << comm.attribute(buffer).value() << endl;
-	  ConfigSlaves[j].Registers[i].address = comm.attribute(buffer).value();
-
-	}
-      j++;
-      }
-  return 0;
 }
-*/
-/*!debug show config information*//*
-int configParser::RetrieveConfig()
+/*!(private) number of child nodes in a XML document*/
+int configParser::retrieveNumberofNodes(pugi::xml_document* master , const char* concept)
 {
-  int i=0,j=0;
-  cout << "number of slaves configured: " << nSlaves << endl;
+  int i=0;
 
-  for (i=0;i<nSlaves;i++)
+    for (pugi::xml_node node = master->child(concept); node; node = node.next_sibling(concept))
     {
-      cout << "************************************" << endl;
-      cout << "*** SLAVE "<< i+1 <<" ***" << endl;
-      cout << endl;
-   
-      cout << " ID = " << ConfigSlaves[i].slaveId << endl;
-      cout << " mTime = " << ConfigSlaves[i].mTime << endl;
-      cout << " registers = " << ConfigSlaves[i].nRegs << endl;
-
-      cout << "** REGISTROS **" << endl;
-      
-      for(j=0;j<ConfigSlaves[i].nRegs;j++)
-	{
-	   cout << " numero = " << j+1 << endl;
-	   cout << " tipo = " << ConfigSlaves[i].Registers[j].Datatype << endl;
-	   cout << " direccion = " << ConfigSlaves[i].Registers[j].address << endl;
-	   cout << endl;
-	   }
-	 
+      i++;
     }
 
-  return 0;
-  }*/
-/*
-int configParser::getSlaveId(int id)
-{
-  if(id >=0 && id <nSlaves)
-    return ConfigSlaves[id].slaveId;
-  else
-    return -1;
+  return i;
+ 
 }
-*/
-/*
-int configParser::getSlaveMailbox(int id,rlDataAcquisition **mailBox)
-{
-  if(id >=0 && id <nSlaves)
-    *mailBox = ConfigSlaves[id].Mailbox;
-  else
-    return -1;
-  return 0;
-}
-*/
-/*
-int configParser::getSlavemTime(int id)
-{  
-  if(id >=0 && id <nSlaves)
-    return ConfigSlaves[id].mTime;
-  else
-    return -1;
 
-}
-*/
-/*
-int configParser::getSlavenRegs(int id)
+/*! function to retrieve all data from table in database, and creating it in memory struct */
+int configParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables)
 {
-  if(id >=0 && id <nSlaves)
-    return ConfigSlaves[id].nRegs;
-  else
-    return -1;
 
-}
-*/
-/*
-int configParser::getSlaveReadData(int id,mbReadData **rData)
-{
-  if(id >=0 && id <nSlaves)
-    *rData = ConfigSlaves[id].Registers;
-  else
-    return -1;
+  int numFields;
+  char* fieldName = NULL;
+  char* fieldTagName = NULL;
+  char* fieldType= NULL;
+  int i;
+
+  //defining number of tables in db
+  i = numTables;
+  std::cout << "INFO: " << numTables << " tables found" << std::endl;
+  tablesParams[dbNumber] = new tableParameters[i];
+  //retrieving table parameters
+  i=0;
+  for (pugi::xml_node table = db->child("table"); table; table = table.next_sibling("table"))
+    {
+      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbName,"name");
+      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbTrigger,"tagTrigger");
+      retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeTrigger");
+      //tags
+      numFields = retrieveNumberofNodes(&table,"tag");
+      tablesParams[dbNumber][i].stField = new field[numFields];
+      int k =0;
+      for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
+	{
+	  retrieveCharAttr(&tag,&fieldName,"name");
+       	  retrieveCharAttr(&tag,&fieldTagName,"tagName");
+	  retrieveCharAttr(&tag,&fieldType,"type");
+	  tablesParams[dbNumber][i].stField[k].name = new char[sizeof(fieldName)+1];
+	  strcpy(tablesParams[dbNumber][i].stField[k].name,fieldName);
+	  tablesParams[dbNumber][i].stField[k].tag = new char[sizeof(fieldTagName)+1];
+	  strcpy(tablesParams[dbNumber][i].stField[k].tag,fieldTagName);
+	  tablesParams[dbNumber][i].stField[k].type = new char[sizeof(fieldType)+1];
+	  strcpy(tablesParams[dbNumber][i].stField[k].type,fieldType);
+	  
+	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  k++;
+	}
+      
+      if(!checkTableParams(dbNumber,i))
+	tablesParams[dbNumber][i].isValid = 1;
+      else
+	tablesParams[dbNumber][i].isValid = 0;		  
+      i++;
+    } 
+   
   return 0;
 }
-*/

@@ -75,29 +75,39 @@ typedef struct
   int nRegs;
 } mbSlaves;
 
+//field parameters
+typedef struct
+{
+  char * name = NULL;
+  char * type = NULL;
+  char * tag = NULL;
+} field;
 
 //database parameters
 typedef struct
 {
-  char *type;
-  char *host;
-  char *dbName;
-  char *internalName;
-  char *user;
-  char *pass;
-  int numTables;
+  int isValid = 0;
+  char *type = NULL;
+  char *host = NULL;
+  char *dbName = NULL;
+  char *internalName = NULL;
+  char *user = NULL;
+  char *pass = NULL;
+  int numTables = 0;
 } databaseParameters;
 
 //table parameters
 typedef struct
 {
-  char * dbInternalName;
-  char * tbName;
-  char * tbTrigger;
+  int isValid = 0;
+  char * tbName = NULL;
+  char * tbTrigger = NULL;
+  int tbTriggerTime;
   int numFields;
-  char* field[3]; //field name, field type, field var
+  field* stField; 
   
 } tableParameters;
+
 
 class configParser 
 {
@@ -107,14 +117,22 @@ class configParser
 
   //database Parsing
   int retrieveDBParams();
-  int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
-  int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
-  //check fucntions
-  int checkDBParams(const char* name, const char* type, const char* hostname, const char* dbName, const char* user, const char* password, int nTables);
+  //check functions
+  int checkDBParams(int i);
+  int checkTableParams(int db, int table);
   int checkDBType(const char* type);
+  
   //private members returning functions
   int retnDBs(){ return nDBs;}
   databaseParameters retDBParams(int database);
+  tableParameters* retDBTables(int database);
+  
+ private:
+  int retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables);
+  int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
+  int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
+  int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
+  int retrieveNumberofNodes(pugi::xml_node* master , const char* concept);
   /*
   int IterateComms();
   int RetrieveConfig();
@@ -134,6 +152,7 @@ class configParser
   pugi::xml_document doc;
   //databases parameters
   databaseParameters* databaseParams;
+  tableParameters** tablesParams;
   int nDBs;
   //number of slaves and type
   mbSlaves* ConfigSlaves;

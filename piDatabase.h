@@ -29,30 +29,33 @@
 #include "config.h"
 
 
-/*! Database interface class, derived from pvbrowser addons examples */
+/*! Database table interface class */
+class DBTable
+{
+ public:
+  DBTable(tableParameters tableParams);
+  ~DBTable();
 
+  tableParameters parameters;
+};
+
+/*! Database interface class, derived from pvbrowser addons examples */
 class DBInterface : public qtDatabase
 {
  public:
  DBInterface() : qtDatabase(){
   };
-  int setup(databaseParameters parameters){conParameters = parameters; return 0;};
+  int setup(databaseParameters dbParams,tableParameters* tablesParams);
   int start();
   int tCheckAndCreate();
   int checkAndCreate();
-  int getJuliano(int silo);
-  
+
  private:
-  databaseParameters conParameters;
+  databaseParameters parameters;
+  DBTable** tables;
 };
 
-class DBTable
-{
- public:
-  DBTable();
-  ~DBTable();
 
-};
 
 
 #endif

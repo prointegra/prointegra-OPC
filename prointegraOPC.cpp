@@ -33,13 +33,10 @@ ProintegraOPC::ProintegraOPC()
   for(int i=0;i<nDBs;i++)
     {
       hDatabase[i] = new DBInterface();
-      hDatabase[i]->setup(cDatabase->retDBParams(i));
+      hDatabase[i]->setup(cDatabase->retDBParams(i),cDatabase->retDBTables(i));
       hDatabase[i]->start();
     }
   //creating database tables
-  recepcion = new table(0);
-  limpia = new table(1);
-  producto = new table(2);
   return;   
 }
 /*! destructor*/
@@ -61,8 +58,8 @@ int ProintegraOPC::checkDB()
 {
   cout<<"DEBUG: checking and creating!" << endl;
   //check database
-  for(int i = 0;i < nDBs ;i++)
-    hDatabase[i]->checkAndCreate();
+  //  for(int i = 0;i < nDBs ;i++)
+  //  hDatabase[i]->checkAndCreate();
   //check comunications
   return 0;   
 }
@@ -86,44 +83,8 @@ int ProintegraOPC::checkComm()
 WORKAROUND: It works only with 5 Casas*/
 int ProintegraOPC::dataCapture()
 {
-  //capture recepcion DATA
-  if (recepcion->checkTrigger())
-    {
-      std::cout << "INFO:Capturando recepcion!" << std::endl;
-      recepcion->takeValues();
-      //recepcion->resetTrigger();
-      Sleep(2000);
-      recepcion->resetTrigger();
-      //std::cout << recepcion->storeValues() << std::endl;
-      hDatabase[0]->query(NULL,recepcion->storeValues());
-    }
-  //capture limpia DATA
-  if (limpia->checkTrigger())
-    {
-      std::cout << "INFO:Capturando limpia!" << std::endl;
-      limpia->takeValues();
-      //limpia->resetTrigger();
-      Sleep(2000);
-      limpia->resetTrigger();
-      //std::cout << recepcion->storeValues() << std::endl;
-      hDatabase[0]->query(NULL,limpia->storeValues());
-      hDatabase[0]->query(NULL,limpia->storeJuliano());
-    }  
-   //capture producto DATA
-  if (producto->checkTrigger())
-    {
-      std::cout << "INFO:Capturando producto!" << std::endl;
-      producto->takeValues();
-      //producto->resetTrigger();
-      Sleep(2000);
-      producto->resetTrigger();
-      //std::cout << recepcion->storeValues() << std::endl;     
-      producto->setJuliano(1);
-      hDatabase[0]->getJuliano(4);
-      //producto->setJuliano(database->getJuliano());
-      hDatabase[0]->query(NULL,producto->storeValues());
-    } 
-
+  Sleep(2000);
+  std::cout << "ERROR: capture not implemented yet" << std::endl;
   return 0;   
 }
 
