@@ -13,15 +13,14 @@
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*!
-@File piDatabase.cpp
-'''Database and tables manager
-checks config and create dinamically databases connections and schemas'''
+@File piComm.cpp
+'''communication manager class, to manage slaves'''
 */
 
-#include "piDatabase.h"
+#include "piComm.h"
 
-/*! function to take database connection and table parameters for our database interface */
-int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
+/*! function to take slave connection parameters and build interface dinamically */
+int CommInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
   char *sqlQuery = NULL;
   int ret;

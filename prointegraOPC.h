@@ -55,14 +55,16 @@ class ProintegraOPC
 
  private:
   //database configuration parser
-  configParser* cDatabase;
+  configParser* confParser;
+  ////databases
   //number of database handlers
   int nDBs;
   //database handler
   DBInterface** hDatabase;
-  table* recepcion;
-  table* limpia;
-  table* producto;
+  ////communications
+  //number of slaves handlers
+  int nSlaves;
+
   
 };
 

@@ -24,18 +24,20 @@
 ProintegraOPC::ProintegraOPC()
 {
   //load xml config file
-  cDatabase = new configParser("config/database.xml");
+  confParser = new configParser("config/database.xml","config/slaves.xml");
   //retrieve database info from config file
-  cDatabase->retrieveDBParams();
+  confParser->retrieveDBParams();
   //creating database interfaces
-  nDBs = cDatabase->retnDBs();
+  nDBs = confParser->retnDBs();
   hDatabase = new DBInterface*[nDBs];
   for(int i=0;i<nDBs;i++)
     {
       hDatabase[i] = new DBInterface();
-      hDatabase[i]->setup(cDatabase->retDBParams(i),cDatabase->retDBTables(i));
+      hDatabase[i]->setup(confParser->retDBParams(i),confParser->retDBTables(i));
     }
-  
+  //retrieve slaves info from config file
+  confParser->retrieveCommParams();
+  nSlaves = confParser->retnSlaves();
 
   return;   
 }
@@ -43,10 +45,7 @@ ProintegraOPC::ProintegraOPC()
 /*!TODO: it's in fact not be called, when we close with crtl+c the application doesn't take the sigterm signal*/
 ProintegraOPC::~ProintegraOPC()
 {
-  delete recepcion;
-  delete limpia;
-  delete producto;
-  delete cDatabase;
+  delete confParser;
   for(int i=nDBs-1;i== 0 ; i--)
     delete hDatabase[nDBs];
   delete hDatabase;

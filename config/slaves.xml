@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<slave name="test" protocol="MODBUSTCP" port="">
+	<MODBUSTCP addr="172.26.0.13" port="502">
+</slave>
+

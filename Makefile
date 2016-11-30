@@ -444,7 +444,27 @@ main.o: main.cpp pvapp.h \
 		threads.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
-prointegraOPC.o: prointegraOPC.cpp 
+prointegraOPC.o: prointegraOPC.cpp prointegraOPC.h \
+		piDatabase.h \
+		qtdatabase.h \
+		/opt/pvb/pvserver/processviewserver.h \
+		/opt/pvb/pvserver/vmsgl.h \
+		/opt/pvb/pvserver/vmsglext.h \
+		/opt/pvb/pvserver/wthread.h \
+		config.h \
+		lib/pugixml-1.7/src/pugixml.hpp \
+		lib/pugixml-1.7/src/pugiconfig.hpp \
+		/opt/pvb/rllib/lib/rldataacquisition.h \
+		/opt/pvb/rllib/lib/rldefine.h \
+		/opt/pvb/rllib/lib/rlmailbox.h \
+		/opt/pvb/rllib/lib/rlsharedmemory.h \
+		/opt/pvb/rllib/lib/rlwthread.h \
+		dataManaging.h \
+		lib/gStools/libgStools.h \
+		lib/gStools/gStDate.h \
+		lib/gStools/gStMisc.h \
+		lib/gStools/gStConv.h \
+		threads.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o prointegraOPC.o prointegraOPC.cpp
 
 qtdatabase.o: qtdatabase.cpp qtdatabase.h \
