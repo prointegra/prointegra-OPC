@@ -291,6 +291,20 @@ int configParser::checkSlaveProtocol(const char * protocol)
 
 }
 
+/*!function for retuning a database parameters instance*/
+mbSlaves configParser::retSlaveParams(int slave)
+{
+  mbSlaves temp;
+  
+  if(slave < nSlaves && slave >= 0)
+    {
+      return slaveParams[slave];
+    }
+  else
+    return temp;
+}
+
+
 ////private and generic////
 /*!(private) number of child nodes in a master node of XML document*/
 int configParser::retrieveNumberofNodes(pugi::xml_node* master , const char* concept)

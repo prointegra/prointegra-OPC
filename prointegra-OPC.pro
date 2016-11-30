@@ -16,6 +16,7 @@ HEADERS += qtdatabase.h
 HEADERS += threads.h
 HEADERS += dataManaging.h
 HEADERS += piDatabase.h
+HEADERS += piComm.h
 HEADERS += config.h
 HEADERS += lib/pugixml-1.7/src/pugixml.hpp
 HEADERS += lib/pugixml-1.7/src/pugiconfig.hpp
@@ -26,6 +27,7 @@ SOURCES += qtdatabase.cpp
 SOURCES += threads.cpp
 SOURCES += dataManaging.cpp
 SOURCES += piDatabase.cpp
+SOURCES += piComm.cpp
 SOURCES += config.cpp
 SOURCES += lib/pugixml-1.7/src/pugixml.cpp
 

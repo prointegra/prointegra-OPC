@@ -143,7 +143,8 @@ class configParser
   int checkSlaveProtocol(const char* protocol);
   //private members returning functions
   int retnSlaves(){ return nSlaves;}  
-  
+  mbSlaves retSlaveParams(int slave);
+    
  private:
   int retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables);
   int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);

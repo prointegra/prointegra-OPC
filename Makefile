@@ -54,6 +54,7 @@ SOURCES       = main.cpp \
 		threads.cpp \
 		dataManaging.cpp \
 		piDatabase.cpp \
+		piComm.cpp \
 		config.cpp \
 		lib/pugixml-1.7/src/pugixml.cpp 
 OBJECTS       = main.o \
@@ -62,6 +63,7 @@ OBJECTS       = main.o \
 		threads.o \
 		dataManaging.o \
 		piDatabase.o \
+		piComm.o \
 		config.o \
 		pugixml.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -153,6 +155,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		threads.h \
 		dataManaging.h \
 		piDatabase.h \
+		piComm.h \
 		config.h \
 		lib/pugixml-1.7/src/pugixml.hpp \
 		lib/pugixml-1.7/src/pugiconfig.hpp main.cpp \
@@ -161,6 +164,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		threads.cpp \
 		dataManaging.cpp \
 		piDatabase.cpp \
+		piComm.cpp \
 		config.cpp \
 		lib/pugixml-1.7/src/pugixml.cpp
 QMAKE_TARGET  = prointegra-OPC
@@ -382,8 +386,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents pvapp.h prointegraOPC.h qtdatabase.h threads.h dataManaging.h piDatabase.h config.h lib/pugixml-1.7/src/pugixml.hpp lib/pugixml-1.7/src/pugiconfig.hpp $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp prointegraOPC.cpp qtdatabase.cpp threads.cpp dataManaging.cpp piDatabase.cpp config.cpp lib/pugixml-1.7/src/pugixml.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents pvapp.h prointegraOPC.h qtdatabase.h threads.h dataManaging.h piDatabase.h piComm.h config.h lib/pugixml-1.7/src/pugixml.hpp lib/pugixml-1.7/src/pugiconfig.hpp $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp prointegraOPC.cpp qtdatabase.cpp threads.cpp dataManaging.cpp piDatabase.cpp piComm.cpp config.cpp lib/pugixml-1.7/src/pugixml.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -436,6 +440,7 @@ main.o: main.cpp pvapp.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
+		piComm.h \
 		dataManaging.h \
 		lib/gStools/libgStools.h \
 		lib/gStools/gStDate.h \
@@ -459,6 +464,7 @@ prointegraOPC.o: prointegraOPC.cpp prointegraOPC.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
+		piComm.h \
 		dataManaging.h \
 		lib/gStools/libgStools.h \
 		lib/gStools/gStDate.h \
@@ -504,6 +510,17 @@ piDatabase.o: piDatabase.cpp piDatabase.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piDatabase.o piDatabase.cpp
+
+piComm.o: piComm.cpp piComm.h \
+		config.h \
+		lib/pugixml-1.7/src/pugixml.hpp \
+		lib/pugixml-1.7/src/pugiconfig.hpp \
+		/opt/pvb/rllib/lib/rldataacquisition.h \
+		/opt/pvb/rllib/lib/rldefine.h \
+		/opt/pvb/rllib/lib/rlmailbox.h \
+		/opt/pvb/rllib/lib/rlsharedmemory.h \
+		/opt/pvb/rllib/lib/rlwthread.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piComm.o piComm.cpp
 
 config.o: config.cpp config.h \
 		lib/pugixml-1.7/src/pugixml.hpp \

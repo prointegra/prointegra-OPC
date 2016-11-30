@@ -28,33 +28,18 @@
 #include "config.h"
 
 
-/*! Database table interface class */
-class DBTable
-{
- public:
-  DBTable(tableParameters tableParams);
-  ~DBTable();
 
-  int create(databaseParameters* parameters,char **query);
-  int creationSqlite(char **sql);
-private:  
-  tableParameters parameters;
-};
-
-/*! Database interface class, derived from pvbrowser addons examples */
+/*! slave interface class*/
 class CommInterface
 {
  public:
- DBInterface() : qtDatabase(){
-  };
-  int setup(databaseParameters dbParams,tableParameters* tablesParams);
-  int start();
-  int tCheckAndCreate();
-  int checkAndCreate();
+  CommInterface(){return;};
+  ~CommInterface();
+
+  int setup(mbSlaves slaveParameters);
 
  private:
-  databaseParameters parameters;
-  DBTable** tables;
+  mbSlaves parameters;
 };
 
 

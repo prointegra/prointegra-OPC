@@ -23,6 +23,7 @@
 /*! Constructor*/
 ProintegraOPC::ProintegraOPC()
 {
+  int i = 0;
   //load xml config file
   confParser = new configParser("config/database.xml","config/slaves.xml");
   //retrieve database info from config file
@@ -30,7 +31,7 @@ ProintegraOPC::ProintegraOPC()
   //creating database interfaces
   nDBs = confParser->retnDBs();
   hDatabase = new DBInterface*[nDBs];
-  for(int i=0;i<nDBs;i++)
+  for(i=0;i<nDBs;i++)
     {
       hDatabase[i] = new DBInterface();
       hDatabase[i]->setup(confParser->retDBParams(i),confParser->retDBTables(i));
@@ -38,6 +39,12 @@ ProintegraOPC::ProintegraOPC()
   //retrieve slaves info from config file
   confParser->retrieveCommParams();
   nSlaves = confParser->retnSlaves();
+  hSlaves = new CommInterface*[nSlaves];
+  for(i=0;i<nSlaves;i++)
+    {
+      hSlaves[i] = new CommInterface();
+      hSlaves[i]->setup(confParser->retSlaveParams(i));
+    }  
 
   return;   
 }
