@@ -60,8 +60,7 @@ typedef struct
 typedef struct 
 {
   char* tagName = NULL;
-  int Datatype = 0;
-  char* sAddress = NULL;
+  int dataType = 0;
   int iAddress = 0;
   int isValid = 0;
 } mbReadData;
@@ -80,7 +79,7 @@ typedef struct
   int commPort = -1;
   
   int nRegs = 0;
-  mbReadData* Registers = NULL;
+  mbReadData* stRegisters = NULL;
 
 } mbSlaves;
 
@@ -137,16 +136,20 @@ class configParser
   
   ////communications Parsing////
   int retrieveCommParams();
+  
   //check functions
   int checkSlaveParams(int i);
   int checkSlaveName(const char * name, int index);
   int checkSlaveProtocol(const char* protocol);
+  int checkSlaveId(int index);
+  int checkTagData(int i);  
   //private members returning functions
   int retnSlaves(){ return nSlaves;}  
   mbSlaves retSlaveParams(int slave);
     
  private:
-  int retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables);
+  int retrieveTablesParams(pugi::xml_node* db, int dbIndex, int numTables);
+  int retrieveSlaveTags(pugi::xml_node* slave, int slaveIndex);
   int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
   int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
   int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
@@ -175,6 +178,7 @@ class configParser
   int nDBs;
   //number of slaves and type
   mbSlaves* slaveParams;
+  mbReadData** allTags;
   int nSlaves;
 
 };

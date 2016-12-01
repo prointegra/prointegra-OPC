@@ -37,9 +37,15 @@ class CommInterface
   ~CommInterface();
 
   int setup(mbSlaves slaveParameters);
-
+  //rlib communications settings
+  int setupCommDaemon();
+  int setupMBUSTCP();
+  int iniSet(char *iniFile);
+  
  private:
   mbSlaves parameters;
+  //daemons
+  rlDataAcquisition*    rlMODBUS = NULL;
 };
 
 

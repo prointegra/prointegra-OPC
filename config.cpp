@@ -212,10 +212,10 @@ int configParser::retrieveCommParams()
 {
   int i=0;
  
-  //number of DB instances defined
+  //number of slaves instances defined
   nSlaves = retrieveNumberofNodes(&commDoc,"slave");
   slaveParams = new mbSlaves[nSlaves];
-
+  
   i = 0;
   //capturing data from databasesslaves;
   for (pugi::xml_node slave = commDoc.child("slave"); slave; slave = slave.next_sibling("slave"))
@@ -237,13 +237,64 @@ int configParser::retrieveCommParams()
 	}
 	
       if(!checkSlaveParams(i))
-	slaveParams[i].isValid = 1;
+	{
+	  slaveParams[i].isValid = 1;
+	}
       else
 	slaveParams[i].isValid = 0;
+
+      std::cout << "INFO: processing tags from "<< slaveParams[i].slaveName <<" slave, with id = " << slaveParams[i].commId << " ..." << std::endl;
+      retrieveSlaveTags(&slave,i);
       i++;      
     }
   return 0;
 }
+
+/*! function to retrieve all data from table in database, and creating it in memory struct */
+int configParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
+{
+
+  char* tagName = NULL;
+  char* sAddress = NULL;
+ 
+  int i;
+
+  //defining number of tags in slave protocol
+  if (pugi::xml_node protocol = slave->child( slaveParams[index].commType))
+    {
+      slaveParams[index].nRegs = retrieveNumberofNodes(&protocol,"tag");
+      if(slaveParams[index].nRegs > 0)
+	{
+	
+	  slaveParams[index].stRegisters = new mbReadData[slaveParams[index].nRegs];
+
+	  //retrieving tag data
+	  i=0;
+	  for (pugi::xml_node tag = protocol.child("tag"); protocol; protocol = protocol.next_sibling("tag"))
+	    {
+	      //tag NAME
+	      //TODO: it should do any check before accept it
+	      retrieveCharAttr(&tag,&slaveParams[index].stRegisters[i].tagName,"name");
+	      //tag ADDRESS
+	      retrieveIntAttr(&tag,&slaveParams[index].stRegisters[i].iAddress,"addr");
+	      //tag type
+	      retrieveIntAttr(&tag,&slaveParams[index].stRegisters[i].dataType,"type");   
+	      if(!checkTagData(i))
+		slaveParams[index].stRegisters[i].isValid = 1;
+	      else
+		slaveParams[index].stRegisters[i].isValid = 1;		  
+	      i++;
+	    }
+	}
+      else
+	slaveParams[index].isValid = 0;
+    } 
+   
+  return 0;
+}
+
+
+
 /*!function to check slave parameters integrity 
 TODO: to improve the check!
 */
@@ -254,6 +305,7 @@ int configParser::checkSlaveParams(int i)
     {
       if(!checkSlaveProtocol(slaveParams[i].commType))
 	{
+	  checkSlaveId(i);
 	  failed = 0;		    
 	}
     }
@@ -263,12 +315,12 @@ int configParser::checkSlaveParams(int i)
 /*!function to check slave name integrity 
 TODO: to improve the check!
 */
-int configParser::checkSlaveName(const char * name,int i)
+int configParser::checkSlaveName(const char * name,int index)
 {
   int failed = -1;
-  if (i > 0)
+  if (index > 0)
     {
-      for (int j = i-1  ; j > 0 ; j--)
+      for (int j = index-1  ; j >= 0 ; j--)
 	failed = failed && strcmp(name,slaveParams[j].slaveName);
     }
   else
@@ -277,7 +329,7 @@ int configParser::checkSlaveName(const char * name,int i)
   return failed;
 }
 
-/*!function to check slave nameprotocol integrity 
+/*!function to check slave protocol integrity 
 TODO: to improve the check!
 */
 int configParser::checkSlaveProtocol(const char * protocol)
@@ -289,6 +341,63 @@ int configParser::checkSlaveProtocol(const char * protocol)
   return failed;
 
 
+}
+
+/*!function to check slave network id, if none, one is asigned
+TODO: to improve the check!
+*/
+int configParser::checkSlaveId(int index)
+{
+  int failed = -1;
+  int match = 1;
+  
+  if (slaveParams[index].commId <= 0)
+      slaveParams[index].commId = 1;
+  
+  if(index > 0)
+    {
+      while(match || slaveParams[index].commId > 1000)
+	{
+	  match = 0;
+	  for (int j = index-1  ; j >= 0 ; j--)
+	    {
+	      if(slaveParams[index].commId == slaveParams[j].commId)
+		{
+		  slaveParams[index].commId++;
+		  match=1;
+		}
+	    }
+
+	}
+      if(slaveParams[index].commId < 1000)
+	{
+	  failed=0;
+	}
+      else
+	{
+	  slaveParams[index].commId=-1;	  
+	  failed = 1;
+	}
+    }
+  else
+    {
+      failed=0;
+    }
+
+  return failed;
+}
+
+/*!function to check tag integrity 
+TODO: to improve the check!
++ to check name duplicity (Also between slaves!
+*/
+int configParser::checkTagData(int i)
+{
+  int failed = -1;
+
+  failed = 0;
+
+  return failed;
 }
 
 /*!function for retuning a database parameters instance*/
