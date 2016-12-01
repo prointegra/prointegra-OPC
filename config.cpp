@@ -263,6 +263,7 @@ int configParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
   if (pugi::xml_node protocol = slave->child( slaveParams[index].commType))
     {
       slaveParams[index].nRegs = retrieveNumberofNodes(&protocol,"tag");
+      std::cout << "found "<< slaveParams[index].nRegs << " tags!" << std::endl;
       if(slaveParams[index].nRegs > 0)
 	{
 	
@@ -270,7 +271,7 @@ int configParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 
 	  //retrieving tag data
 	  i=0;
-	  for (pugi::xml_node tag = protocol.child("tag"); protocol; protocol = protocol.next_sibling("tag"))
+	  for (pugi::xml_node tag = protocol.child("tag"); tag; tag  = tag.next_sibling("tag"))
 	    {
 	      //tag NAME
 	      //TODO: it should do any check before accept it
@@ -282,7 +283,8 @@ int configParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 	      if(!checkTagData(i))
 		slaveParams[index].stRegisters[i].isValid = 1;
 	      else
-		slaveParams[index].stRegisters[i].isValid = 1;		  
+		slaveParams[index].stRegisters[i].isValid = 1;
+	      //std::cout <<"DEBUG: processed tag: " << slaveParams[index].stRegisters[i].tagName << "," << slaveParams[index].stRegisters[i].iAddress << "," << slaveParams[index].stRegisters[i].dataType << std::endl;
 	      i++;
 	    }
 	}
@@ -339,8 +341,6 @@ int configParser::checkSlaveProtocol(const char * protocol)
     failed = 0;
 
   return failed;
-
-
 }
 
 /*!function to check slave network id, if none, one is asigned

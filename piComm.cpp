@@ -61,6 +61,7 @@ int CommInterface::setupMBUSTCP()
   char *mailbox = NULL;
   char *sharedMemory = NULL;
   char * iniFile = NULL;
+  IniConfigurator iniConfig;
   
   std::cout << "DEBUG: setting MODBUS TCP/IP rlDataAcquisition class..."<< std::endl;
   
@@ -74,7 +75,8 @@ int CommInterface::setupMBUSTCP()
   
   rlMODBUS = new rlDataAcquisition(mailbox,sharedMemory, 65536);
   std::cout << "DEBUG: setting MODBUS TCP/IP client ini file..."<< std::endl;
-  failed = iniSet(iniFile);
+ 
+  failed = iniConfig.iniCreate(iniFile,&parameters);
   if (failed)
     std::cout << "DEBUG:something has gone wrong configuring rlDataAcquistion structure!\n" << std::endl;
 
@@ -82,50 +84,4 @@ int CommInterface::setupMBUSTCP()
   delete mailbox;
   delete sharedMemory;
   return 0;
-}
-
-/*! function to setup ini file, [global] paragraph  
-//TODO:manually created for modbus TCP/IP
-it should be extern to piComm, another class?
-we give it parameters and it builds dinamically an ini file
-*/
-int CommInterface::iniSet(char *iniFile)
-{
-  FILE * pFile;
-  int ret = -1;
-  int min,max=0;
-
-  pFile = fopen (iniFile,"w");
-
-  if(pFile!=NULL)
-    {
-      ret = 0;
-      fprintf(pFile,"//Config file created by Prointegra-OPC\n");
-      fprintf(pFile,"\n");
-      fprintf(pFile,"[GLOBAL]\n");
-      fprintf(pFile,"USE_SOCKET=1\n");
-      fprintf(pFile,"DEBUG=1\n");
-      fprintf(pFile,"CYCLETIME=1000\n");
-      fprintf(pFile,"N_POLL_SLAVE=10\n");      
-      fprintf(pFile,"\n");   
-      fprintf(pFile,"[SOCKET]\n");
-      fprintf(pFile,"IP=%s\n",parameters.commAddr);
-      fprintf(pFile,"PORT=%d\n",parameters.commPort);
-      fprintf(pFile,"\n");   
-      fprintf(pFile,"[RLLIB]\n");
-      fprintf(pFile,"MAX_NAME_LENGTH=30\n");
-      fprintf(pFile,"SHARED_MEMORY=../id%d.shm\n",parameters.commId);
-      fprintf(pFile,"SHARED_MEMORY_SIZE=65536\n");
-      fprintf(pFile,"MAILBOX=../id%d.mbx\n",parameters.commId);
-      //cycles CALC?!?!?! TO DO!
-      fprintf(pFile,"\n");
-      fprintf(pFile,"[CYCLES]\n");      
-      fprintf(pFile,"NUM_CYCLES=3\n");
-      fprintf(pFile,"CYCLE1=50,holdingRegisters(%d,100)\n",parameters.commId);
-      fprintf(pFile,"CYCLE2=50,holdingRegisters(%d,150)\n",parameters.commId);      
-      fprintf(pFile,"CYCLE3=50,holdingRegisters(%d,200)\n",parameters.commId);
-
-      fclose(pFile);
-    }
-  return ret;
 }

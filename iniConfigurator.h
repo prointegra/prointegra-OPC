@@ -1,5 +1,5 @@
 /*
- *  Prointegra OPC
+ *  Prointegra OPC 
  *
  *  Copyright 2016 by it's authors. 
  *
@@ -13,42 +13,29 @@
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*!
-@File piComm.h
+@File iniConfigurator.h
 */
 
-#ifndef _PICOMMUNICATIONS_
-#define _PICOMMUNICATIONS_
+#ifndef _INI_CONFIGURATOR_
+#define _INI_CONFIGURATOR_
 
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
-#include <time.h>
 
 #include "config.h"
-#include "iniConfigurator.h"
 
 
-
-/*! slave interface class*/
-class CommInterface
+class IniConfigurator
 {
  public:
-  CommInterface(){return;};
-  ~CommInterface();
+  IniConfigurator(){return;};
+  ~IniConfigurator(){return;};
 
-  int setup(mbSlaves slaveParameters);
-  //rlib communications settings
-  int setupCommDaemon();
-  int setupMBUSTCP();
-  
- private:
-  mbSlaves parameters;
-  //daemons
-  rlDataAcquisition*    rlMODBUS = NULL;
+  int iniCreate(char * path, mbSlaves* slaveParams);
+  int usingSocket(mbSlaves* parameters);
+  int writCycles(FILE* pFile, mbSlaves* parameters);
+
 };
-
-
-
-
 #endif

@@ -26,7 +26,6 @@
 #include <time.h>
 
 #include "config.h"
-#include "iniConfigurator.h"
 
 
 
@@ -41,6 +40,7 @@ class CommInterface
   //rlib communications settings
   int setupCommDaemon();
   int setupMBUSTCP();
+  int iniSet(char *iniFile);
   
  private:
   mbSlaves parameters;
