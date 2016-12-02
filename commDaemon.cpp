@@ -137,8 +137,8 @@ int CommDaemon::renameOldLog(int commId,char** logPath)
   file1 = new char[sizeof(char)*commId + 20];
   file2 = new char[sizeof(char)*commId + 30];
 
-  sprintf(file1,".\logs\id%d.log",commId);
-  sprintf(file2,".\logs\id%d_old.log",commId);
+  sprintf(file1,".\log\id%d_rl.log",commId);
+  sprintf(file2,".\log\id%d_rl_old.log",commId);
   
   rename(file1, file2);
 
