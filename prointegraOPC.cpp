@@ -25,7 +25,7 @@ ProintegraOPC::ProintegraOPC()
 {
   int i = 0;
   //load xml config file
-  confParser = new configParser("config/database.xml","config/slaves.xml");
+  confParser = new ConfigParser("config/database.xml","config/slaves.xml");
   //retrieve database info from config file
   confParser->retrieveDBParams();
   //creating database interfaces
@@ -91,6 +91,14 @@ int ProintegraOPC::dataCapture()
 {
   Sleep(2000);
   std::cout << "ERROR: capture not implemented yet" << std::endl;
+  return 0;   
+}
+
+/*start communications
+*/
+int ProintegraOPC::startCommunications()
+{
+
   return 0;   
 }
 

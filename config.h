@@ -117,11 +117,11 @@ typedef struct
 } tableParameters;
 
 
-class configParser 
+class ConfigParser 
 {
  public:
-  configParser (char *, char *);
-  ~configParser ();  
+  ConfigParser (char *, char *);
+  ~ConfigParser ();  
 
   ////database Parsing////
   int retrieveDBParams();

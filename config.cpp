@@ -21,7 +21,7 @@
 const char* sVERSION = "v0.0.1 ALPHA";
 
 /*! Constructor*/
-configParser::configParser(char* path, char *slaves)
+ConfigParser::ConfigParser(char* path, char *slaves)
 {
   //initialization of files
   pugi::xml_parse_result result = doc.load_file(path); 
@@ -31,7 +31,7 @@ configParser::configParser(char* path, char *slaves)
   return;   
 }
 /*! Destructor*/
-configParser::~configParser()
+ConfigParser::~ConfigParser()
 {
   if (databaseParams != NULL)
     delete databaseParams;
@@ -40,7 +40,7 @@ configParser::~configParser()
 }
 ////database functions////
 /*!retrieving database parameters*/
-int configParser::retrieveDBParams()
+int ConfigParser::retrieveDBParams()
 {
   int i=0;
   int nTables = 0;
@@ -86,7 +86,7 @@ int configParser::retrieveDBParams()
 /*!function to check Database parameters integrity 
 TODO: to improve the check!
 */
-int configParser::checkDBParams(int i)
+int ConfigParser::checkDBParams(int i)
 {
   int failed = -1;
   if (databaseParams[i].internalName != NULL)
@@ -102,7 +102,7 @@ int configParser::checkDBParams(int i)
 /*!function to check table parameters integrity 
 TODO: to improve the check!
 */
-int configParser::checkTableParams(int db, int table)
+int ConfigParser::checkTableParams(int db, int table)
 {
   int failed = -1;
 
@@ -114,7 +114,7 @@ int configParser::checkTableParams(int db, int table)
 
 
 
-int configParser::checkDBType(const char* type)
+int ConfigParser::checkDBType(const char* type)
 {
   char * temp;
 
@@ -132,7 +132,7 @@ int configParser::checkDBType(const char* type)
 }
 
 /*!function for retuning a database parameters instance*/
-databaseParameters configParser::retDBParams(int database)
+databaseParameters ConfigParser::retDBParams(int database)
 {
   databaseParameters temp;
   
@@ -144,7 +144,7 @@ databaseParameters configParser::retDBParams(int database)
     return temp;
 }
 /*!function for retuning a table parameters instance array from a given database (by index)*/
-tableParameters* configParser::retDBTables(int database)
+tableParameters* ConfigParser::retDBTables(int database)
 {
   tableParameters* temp = new tableParameters[0];
   if(database < nDBs && database >= 0)
@@ -157,7 +157,7 @@ tableParameters* configParser::retDBTables(int database)
 
 
 /*! function to retrieve all data from table in database, and creating it in memory struct */
-int configParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables)
+int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables)
 {
 
   char* fieldName = NULL;
@@ -208,7 +208,7 @@ int configParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
 }
 ////Communication functions////
 /*!retrieving slaves parameters*/
-int configParser::retrieveCommParams()
+int ConfigParser::retrieveCommParams()
 {
   int i=0;
  
@@ -251,7 +251,7 @@ int configParser::retrieveCommParams()
 }
 
 /*! function to retrieve all data from table in database, and creating it in memory struct */
-int configParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
+int ConfigParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 {
 
   char* tagName = NULL;
@@ -300,7 +300,7 @@ int configParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 /*!function to check slave parameters integrity 
 TODO: to improve the check!
 */
-int configParser::checkSlaveParams(int i)
+int ConfigParser::checkSlaveParams(int i)
 {
   int failed = -1;
   if (!checkSlaveName(slaveParams[i].slaveName,i))
@@ -317,7 +317,7 @@ int configParser::checkSlaveParams(int i)
 /*!function to check slave name integrity 
 TODO: to improve the check!
 */
-int configParser::checkSlaveName(const char * name,int index)
+int ConfigParser::checkSlaveName(const char * name,int index)
 {
   int failed = -1;
   if (index > 0)
@@ -334,7 +334,7 @@ int configParser::checkSlaveName(const char * name,int index)
 /*!function to check slave protocol integrity 
 TODO: to improve the check!
 */
-int configParser::checkSlaveProtocol(const char * protocol)
+int ConfigParser::checkSlaveProtocol(const char * protocol)
 {
   int failed = -1;
   if(!strcmp(protocol,"MODBUSTCP"))
@@ -346,7 +346,7 @@ int configParser::checkSlaveProtocol(const char * protocol)
 /*!function to check slave network id, if none, one is asigned
 TODO: to improve the check!
 */
-int configParser::checkSlaveId(int index)
+int ConfigParser::checkSlaveId(int index)
 {
   int failed = -1;
   int match = 1;
@@ -391,7 +391,7 @@ int configParser::checkSlaveId(int index)
 TODO: to improve the check!
 + to check name duplicity (Also between slaves!
 */
-int configParser::checkTagData(int i)
+int ConfigParser::checkTagData(int i)
 {
   int failed = -1;
 
@@ -401,7 +401,7 @@ int configParser::checkTagData(int i)
 }
 
 /*!function for retuning a database parameters instance*/
-mbSlaves configParser::retSlaveParams(int slave)
+mbSlaves ConfigParser::retSlaveParams(int slave)
 {
   mbSlaves temp;
   
@@ -416,7 +416,7 @@ mbSlaves configParser::retSlaveParams(int slave)
 
 ////private and generic////
 /*!(private) number of child nodes in a master node of XML document*/
-int configParser::retrieveNumberofNodes(pugi::xml_node* master , const char* concept)
+int ConfigParser::retrieveNumberofNodes(pugi::xml_node* master , const char* concept)
 {
   int i=0;
 
@@ -429,7 +429,7 @@ int configParser::retrieveNumberofNodes(pugi::xml_node* master , const char* con
 }
 
 /*!(private) number of child nodes in a XML document*/
-int configParser::retrieveNumberofNodes(pugi::xml_document* master , const char* concept)
+int ConfigParser::retrieveNumberofNodes(pugi::xml_document* master , const char* concept)
 {
   int i=0;
 
@@ -443,7 +443,7 @@ int configParser::retrieveNumberofNodes(pugi::xml_document* master , const char*
 }
 
 /*!(private) function to take a string attribute from XML parsing*/
-int configParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute)
+int ConfigParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute)
 {
   char *newName;
   int size=0;
@@ -464,7 +464,7 @@ int configParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* 
   return 0;  
 }
 /*!(private) function to take a int attribute from XML parsing*/
-int configParser::retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute)
+int ConfigParser::retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute)
 {
 
   int size=0;

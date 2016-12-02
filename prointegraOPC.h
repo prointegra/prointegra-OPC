@@ -52,11 +52,12 @@ class ProintegraOPC
   int checkDB();
   int initComm();
   int checkComm();
+  int startCommunications();
   int dataCapture();
 
  private:
   //database configuration parser
-  configParser* confParser;
+  ConfigParser* confParser;
   ////databases
   //number of database handlers
   int nDBs;
