@@ -30,10 +30,12 @@ extern const char* sVERSION;
 
 enum RLLIB_ERRORS
   {
-
     DAQ_ERROR = 8388608
   };
-
+enum DATA_TYPES
+  {
+    INT = 0
+  };
 
 //members
 /*!register to save
@@ -57,22 +59,31 @@ typedef struct
 /*!register trnasmitted*/
 typedef struct 
 {
-  int Datatype;
-  string address;
-  string addressH;
-  string addressHH;
-  string addressHHH;
+  char* tagName = NULL;
+  int dataType = 0;
+  int iAddress = 0;
+  int isValid = 0;
+
+  int iValue = 0;
+  int valueValid = 0;
 } mbReadData;
 
 //members
 /*!slaves to communicate with*/
 typedef struct 
 {
-  int slaveId;
-  int commType; //1->modbus RTU, 2-> modbus TCP/IP
-  int mTime;
-  mbReadData* Registers;
-  int nRegs;
+  char *slaveName = NULL;
+  char *commType = NULL;
+  char *port  = NULL;
+  int isValid = 0;
+
+  int commId = -1;
+  char* commAddr = NULL;
+  int commPort = -1;
+  
+  int nRegs = 0;
+  mbReadData* stRegisters = NULL;
+
 } mbSlaves;
 
 //field parameters
@@ -109,26 +120,39 @@ typedef struct
 } tableParameters;
 
 
-class configParser 
+class ConfigParser 
 {
  public:
-  configParser (char *);
-  ~configParser ();  
+  ConfigParser (char *, char *);
+  ~ConfigParser ();  
 
-  //database Parsing
+  ////database Parsing////
   int retrieveDBParams();
   //check functions
   int checkDBParams(int i);
   int checkTableParams(int db, int table);
-  int checkDBType(const char* type);
-  
+  int checkDBType(const char* type); 
   //private members returning functions
   int retnDBs(){ return nDBs;}
   databaseParameters retDBParams(int database);
   tableParameters* retDBTables(int database);
   
+  ////communications Parsing////
+  int retrieveCommParams();
+  
+  //check functions
+  int checkSlaveParams(int i);
+  int checkSlaveName(const char * name, int index);
+  int checkSlaveProtocol(const char* protocol);
+  int checkSlaveId(int index);
+  int checkTagData(int i);  
+  //private members returning functions
+  int retnSlaves(){ return nSlaves;}  
+  mbSlaves retSlaveParams(int slave);
+    
  private:
-  int retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables);
+  int retrieveTablesParams(pugi::xml_node* db, int dbIndex, int numTables);
+  int retrieveSlaveTags(pugi::xml_node* slave, int slaveIndex);
   int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
   int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
   int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
@@ -150,20 +174,16 @@ class configParser
 */
  private:
   pugi::xml_document doc;
+  pugi::xml_document commDoc;  
   //databases parameters
   databaseParameters* databaseParams;
   tableParameters** tablesParams;
   int nDBs;
   //number of slaves and type
-  mbSlaves* ConfigSlaves;
+  mbSlaves* slaveParams;
+  mbReadData** allTags;
   int nSlaves;
 
-  int MODBUSRTU;
-  int MODBUSTCP;
-
-  const char* stypes[2] = {"INT","MOD10"};
-  const int itypes[2]= {1,10};
-  const int ntypes = 2;
 };
 
 

@@ -38,6 +38,7 @@ int main(int ac, char **av)
   int ret;
   std::cout << "DEBUG: Prointegra OPC version: " << sVERSION << std::endl;
   server = new ProintegraOPC();
+  server->startCommunications();
   std::cout << "DEBUG: checking system!" << std::endl;
   server->checkDB();
   std::cout << "DEBUG: capturing!" << std::endl;

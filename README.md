@@ -7,12 +7,9 @@ prointegra-OPC is a C++ application to take/send tags from/to industrial automat
 
 + it's configurable via easy XML files, where edit Database type, topology, communications,tag, etc.
 + database support (trough QT)
-    - mysql
     - sqlite3
 + industrial communications
     - MODBUS TCP/IP
-    - MODBUS RTU
-    - all protocols supported by pvbrowser rlib
 + easy integration in pvbrowser SCADA code, or other custom projects for visualization
 
 ##Dependencies

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<slave name="test" protocol="MODBUSTCP" port="">
+	<MODBUSTCP addr="172.26.0.17" port="502">
+		<tag name="readWriteTest" addr="100" type="INT"/>
+		<tag name="readWriteTest2" addr="200" type="INT"/>
+		<tag name="readWriteTest3" addr="220" type="INT"/>
+	</MODBUSTCP>
+</slave>
+

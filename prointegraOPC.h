@@ -22,14 +22,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+
 #include <time.h>
 
 #include "piDatabase.h"
+#include "piComm.h"
 #include "dataManaging.h"
 #include "libgStools.h"
 #include "config.h"
 
-#include "threads.h"
+#include "commDaemon.h"
 
 
 #ifdef __FUCKIN_WINDOWS
@@ -51,18 +53,23 @@ class ProintegraOPC
   int checkDB();
   int initComm();
   int checkComm();
+  int startCommunications();
   int dataCapture();
 
  private:
   //database configuration parser
-  configParser* cDatabase;
+  ConfigParser* confParser;
+  ////databases
   //number of database handlers
   int nDBs;
   //database handler
   DBInterface** hDatabase;
-  table* recepcion;
-  table* limpia;
-  table* producto;
+  ////communications
+  //number of slaves handlers
+  int nSlaves;
+  CommInterface** hSlaves;
+  CommDaemon* commDaemonManager;
+
   
 };
 

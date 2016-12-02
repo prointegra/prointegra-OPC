@@ -14,7 +14,8 @@
  */
 /*!
 @File piDatabase.cpp
-'''personalize this files for custom data structures'''
+'''Database and tables manager
+checks config and create dinamically databases connections and schemas'''
 */
 
 #include "piDatabase.h"

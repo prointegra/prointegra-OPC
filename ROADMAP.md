@@ -1,9 +1,14 @@
 ROADMAP
 ===
-+ construct dinamically a database
-+ construct dinamically a tag exchange communication
-+ link database fields with tags
-+ save data by trigger
-    - configure trigger by time
++ save tags to database
++ write tags from database values
++ MORE databases support
+    - MYSQL support
+    - TDS support
++ MORE tags type support
+    - BOOL
+    - WORD
+    - REAL
+    - STRING
 ...
 

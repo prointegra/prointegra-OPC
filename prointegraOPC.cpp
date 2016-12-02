@@ -23,19 +23,28 @@
 /*! Constructor*/
 ProintegraOPC::ProintegraOPC()
 {
+  int i = 0;
   //load xml config file
-  cDatabase = new configParser("config/database.xml");
+  confParser = new ConfigParser("config/database.xml","config/slaves.xml");
   //retrieve database info from config file
-  cDatabase->retrieveDBParams();
+  confParser->retrieveDBParams();
   //creating database interfaces
-  nDBs = cDatabase->retnDBs();
+  nDBs = confParser->retnDBs();
   hDatabase = new DBInterface*[nDBs];
-  for(int i=0;i<nDBs;i++)
+  for(i=0;i<nDBs;i++)
     {
       hDatabase[i] = new DBInterface();
-      hDatabase[i]->setup(cDatabase->retDBParams(i),cDatabase->retDBTables(i));
+      hDatabase[i]->setup(confParser->retDBParams(i),confParser->retDBTables(i));
     }
-  
+  //retrieve slaves info from config file
+  confParser->retrieveCommParams();
+  nSlaves = confParser->retnSlaves();
+  hSlaves = new CommInterface*[nSlaves];
+  for(i=0;i<nSlaves;i++)
+    {
+      hSlaves[i] = new CommInterface();
+      hSlaves[i]->setup(confParser->retSlaveParams(i));
+    }  
 
   return;   
 }
@@ -43,10 +52,7 @@ ProintegraOPC::ProintegraOPC()
 /*!TODO: it's in fact not be called, when we close with crtl+c the application doesn't take the sigterm signal*/
 ProintegraOPC::~ProintegraOPC()
 {
-  delete recepcion;
-  delete limpia;
-  delete producto;
-  delete cDatabase;
+  delete confParser;
   for(int i=nDBs-1;i== 0 ; i--)
     delete hDatabase[nDBs];
   delete hDatabase;
@@ -68,14 +74,10 @@ int ProintegraOPC::checkDB()
 TODO: it's in fact still not be used*/
 int ProintegraOPC::checkComm()
 {
-  //check comunications
-
-      if(piproc_find("../comm/modbus_client/modbus_client") <= 0)
-	    {
-	      //comms not working
-	      std::cout << "ERR:modbus not running!" << std::endl;
-	      return(-1);
-	    }
+  for(int i=0; i < nSlaves; i++)
+    {
+      std::cout << "DEBUG:checking slave "<< i << " status: " << commDaemonManager->checkDaemon(i)<< std::endl;
+    }
 
   return 0;   
 }
@@ -83,8 +85,19 @@ int ProintegraOPC::checkComm()
 WORKAROUND: It works only with 5 Casas*/
 int ProintegraOPC::dataCapture()
 {
-  Sleep(2000);
-  std::cout << "ERROR: capture not implemented yet" << std::endl;
+  for(int i=0; i < nSlaves; i++)
+    hSlaves[i]->readData();
+  return 0;   
+}
+
+/*start communications
+*/
+int ProintegraOPC::startCommunications()
+{
+  commDaemonManager = new CommDaemon(nSlaves);
+
+  for(int i=0; i < nSlaves; i++)
+    commDaemonManager->launchDaemon(i,confParser->retSlaveParams(i).commId,confParser->retSlaveParams(i).commType);
   return 0;   
 }
 
@@ -93,11 +106,12 @@ TODO: we don't manage daemons!*/
 int ProintegraOPC::startCapture()
 {
 
-  //launchDaemonMBTCP();
 
   std::cout << "capturing!" << std::endl;
   while(1)
     {
+      Sleep(2000);
+      checkComm();
       dataCapture();
 
     }

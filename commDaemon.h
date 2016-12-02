@@ -21,31 +21,33 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <unistd.h>
 
-//THREADS
 
-#ifndef THREADS_
-#define THREADS_
 
-#ifdef __FUCKIN_WINDOWS
+#ifndef _COMMDAEMON_
+#define _COMMDAEMON_
 
-#include <windows.h>
-extern PROCESS_INFORMATION wpidmodbusTCP;
-extern STARTUPINFO si;
-
-#else
 
 #include <unistd.h>
 
-#endif
 
+class CommDaemon
+{
+ public:
+  CommDaemon(int slaves);
+  ~CommDaemon();
 
-/*! function to check if a process is running*/
-int piproc_find(const char* name);
-
-/*! it executes the modbus TCP IP daemon with no parameters, could be improved the path to daemon personalized, a .ini file choosable, etc.*/
-int launchDaemonMBTCP();
-
-
-
+  int launchDaemon(int slave, int commId, char* protocol);
+  int launchMODBUSDaemon(int nSlave, int commId);
+  int checkDaemon(int slave);
+  
+ private:
+  //tools
+  int renameOldLog(int commId,char** logPath);
+  int setExecutable(int commId,char* protocol, char ** executable);
+ private:
+  int **nPipes;
+  int nSlaves;
+};
 #endif
