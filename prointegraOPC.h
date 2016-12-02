@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+
 #include <time.h>
 
 #include "piDatabase.h"
@@ -30,7 +31,7 @@
 #include "libgStools.h"
 #include "config.h"
 
-#include "threads.h"
+#include "commDaemon.h"
 
 
 #ifdef __FUCKIN_WINDOWS
@@ -67,6 +68,7 @@ class ProintegraOPC
   //number of slaves handlers
   int nSlaves;
   CommInterface** hSlaves;
+  CommDaemon* commDaemonManager;
 
   
 };

@@ -64,9 +64,9 @@ int IniConfigurator::iniCreate(char *iniFile, mbSlaves* parameters)
 	}
       fprintf(pFile,"[RLLIB]\n");
       fprintf(pFile,"MAX_NAME_LENGTH=30\n");
-      fprintf(pFile,"SHARED_MEMORY=../id%d.shm\n",parameters->commId);
+      fprintf(pFile,"SHARED_MEMORY=./comm/id%d.shm\n",parameters->commId);
       fprintf(pFile,"SHARED_MEMORY_SIZE=65536\n");
-      fprintf(pFile,"MAILBOX=../id%d.mbx\n",parameters->commId);
+      fprintf(pFile,"MAILBOX=./comm/id%d.mbx\n",parameters->commId);
       //cycles CALC?!?!?! TO DO!
       fprintf(pFile,"\n");
       writCycles(pFile,parameters);

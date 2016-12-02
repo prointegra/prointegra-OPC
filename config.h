@@ -63,6 +63,9 @@ typedef struct
   int dataType = 0;
   int iAddress = 0;
   int isValid = 0;
+
+  int iValue = 0;
+  int valueValid = 0;
 } mbReadData;
 
 //members

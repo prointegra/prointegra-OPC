@@ -85,3 +85,40 @@ int CommInterface::setupMBUSTCP()
   delete sharedMemory;
   return 0;
 }
+/*!function to read all data */
+int CommInterface::readData()
+{
+  int failed = -1;
+
+  for(int i=0; i < parameters.nRegs;i++)
+    {
+
+      if(parameters.stRegisters[i].isValid)
+	readTag(i);
+      std::cout << "DEBUG: reading tag: " <<  parameters.stRegisters[i].tagName << ", int value: " << parameters.stRegisters[i].iValue << std::endl;
+    }
+  failed  = 0;
+
+  return failed;
+}
+/*function to read a slave's tag*/
+int CommInterface::readTag(int index)
+{
+  if(parameters.stRegisters[index].dataType == INT)
+    parameters.stRegisters[index].iValue = readINT(index);
+
+  return 0;
+}
+/*function to read a slave's int tag
+TODO: for now only from holdingRegisters!*/
+int CommInterface::readINT(int index)
+{
+  char *rlCommand;
+
+  rlCommand = new char[sizeof("holdingRegisters(,)") + sizeof(parameters.commId) + sizeof(parameters.stRegisters[index].iAddress) + 5];
+  sprintf(rlCommand,"holdingRegisters(%d,%d)",parameters.commId,parameters.stRegisters[index].iAddress);
+
+  parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->intValue(rlCommand));
+
+  return 0;
+}

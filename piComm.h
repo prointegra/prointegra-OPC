@@ -27,6 +27,7 @@
 
 #include "config.h"
 #include "iniConfigurator.h"
+#include "lib/gStools/libgStools.h"
 
 
 
@@ -41,7 +42,10 @@ class CommInterface
   //rlib communications settings
   int setupCommDaemon();
   int setupMBUSTCP();
-  
+  //read data
+  int readData();
+  int readTag(int index);
+  int readINT(int index);  
  private:
   mbSlaves parameters;
   //daemons

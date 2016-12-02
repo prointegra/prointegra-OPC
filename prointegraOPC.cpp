@@ -74,14 +74,10 @@ int ProintegraOPC::checkDB()
 TODO: it's in fact still not be used*/
 int ProintegraOPC::checkComm()
 {
-  //check comunications
-
-      if(piproc_find("../comm/modbus_client/modbus_client") <= 0)
-	    {
-	      //comms not working
-	      std::cout << "ERR:modbus not running!" << std::endl;
-	      return(-1);
-	    }
+  for(int i=0; i < nSlaves; i++)
+    {
+      std::cout << "DEBUG:checking slave "<< i << " status: " << commDaemonManager->checkDaemon(i)<< std::endl;
+    }
 
   return 0;   
 }
@@ -89,8 +85,8 @@ int ProintegraOPC::checkComm()
 WORKAROUND: It works only with 5 Casas*/
 int ProintegraOPC::dataCapture()
 {
-  Sleep(2000);
-  std::cout << "ERROR: capture not implemented yet" << std::endl;
+  for(int i=0; i < nSlaves; i++)
+    hSlaves[i]->readData();
   return 0;   
 }
 
@@ -98,7 +94,10 @@ int ProintegraOPC::dataCapture()
 */
 int ProintegraOPC::startCommunications()
 {
+  commDaemonManager = new CommDaemon(nSlaves);
 
+  for(int i=0; i < nSlaves; i++)
+    commDaemonManager->launchDaemon(i,confParser->retSlaveParams(i).commId,confParser->retSlaveParams(i).commType);
   return 0;   
 }
 
@@ -107,11 +106,12 @@ TODO: we don't manage daemons!*/
 int ProintegraOPC::startCapture()
 {
 
-  //launchDaemonMBTCP();
 
   std::cout << "capturing!" << std::endl;
   while(1)
     {
+      Sleep(2000);
+      checkComm();
       dataCapture();
 
     }
