@@ -46,6 +46,9 @@ int piproc_find(const char* name);
 /*! it executes the modbus TCP IP daemon with no parameters, could be improved the path to daemon personalized, a .ini file choosable, etc.*/
 int launchDaemonMBTCP();
 
+class CommDaemons
+{
 
-
+  
+}
 #endif
