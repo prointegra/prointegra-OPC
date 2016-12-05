@@ -104,10 +104,11 @@ int CommInterface::readData()
 /*function to read a slave's tag*/
 int CommInterface::readTag(int index)
 {
+  int ret = -1;
   if(parameters.stRegisters[index].dataType == INT)
-    parameters.stRegisters[index].iValue = readINT(index);
+    ret = readINT(index);
 
-  return 0;
+  return ret;
 }
 /*function to read a slave's int tag
 TODO: for now only from holdingRegisters!*/
@@ -117,8 +118,38 @@ int CommInterface::readINT(int index)
 
   rlCommand = new char[sizeof("holdingRegisters(,)") + sizeof(parameters.commId) + sizeof(parameters.stRegisters[index].iAddress) + 5];
   sprintf(rlCommand,"holdingRegisters(%d,%d)",parameters.commId,parameters.stRegisters[index].iAddress);
-
+  //std::cout <<"DEBUG: reading tag, command:"<< rlCommand <<" raw data:"<<rlMODBUS->intValue(rlCommand)<<" int data:"<< gstWord2Int(rlMODBUS->intValue(rlCommand)) << std::endl;
   parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->intValue(rlCommand));
 
   return 0;
+}
+/*!Function for returning a tag name
+TODO: it shoulds return only once*/
+char* CommInterface::retTagName(int tag)
+{
+  if(tag >=0 && tag < parameters.nRegs)
+    return parameters.stRegisters[tag].tagName;
+  else
+    return NULL;
+
+}
+
+/*!Function for returning a tag int value
+TODO: MORE TYPES, strings, float, bool, etc.*/
+int CommInterface::retTagValue(int tag)
+{
+  int ret = 0;
+  if(tag >=0 && tag < parameters.nRegs)
+    ret = parameters.stRegisters[tag].iValue;
+  return ret;
+}
+/*!Function for returning a tag name
+TODO: it shoulds return only once*/
+int CommInterface::retTagValid(int tag)
+{
+  int ret = 0;
+  if(tag >=0 && tag < parameters.nRegs)
+    ret = parameters.stRegisters[tag].isValid;
+  return ret;
+
 }

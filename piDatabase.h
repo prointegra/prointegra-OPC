@@ -38,6 +38,14 @@ class DBTable
 
   int create(databaseParameters* parameters,char **query);
   int creationSqlite(char **sql);
+  //return private members
+  int retNumFields(){return parameters.numFields;};
+  char * retFieldTag(int field);
+  int retFieldValid(int field);
+  int retFieldValue(int field);
+  //set attributes
+  int setFieldValid(int field, int valid);
+  int setFieldValue(int field, int value);
 private:  
   tableParameters parameters;
 };
@@ -52,7 +60,16 @@ class DBInterface : public qtDatabase
   int start();
   int tCheckAndCreate();
   int checkAndCreate();
-
+  //return private members
+  int retNumTables(){return parameters.numTables;};
+  int retNumFields(int table);
+  char * retFieldTag(int table,int field);
+  int retFieldValid(int table,int field);
+  int retFieldValue(int table,int field);
+  //set attributes
+  int setFieldValid(int table,int field, int valid);
+  int setFieldValue(int table,int field, int value);
+  
  private:
   databaseParameters parameters;
   DBTable** tables;

@@ -41,8 +41,6 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
           //TODO: we should catch exceptions!
 	  std::cout << sqlQuery << std::endl;
 	  ret = query(NULL,sqlQuery);
-
-
 	}
     }
   delete sqlQuery;
@@ -129,7 +127,75 @@ int DBInterface::checkAndCreate()
   return 0;
 }
 
+/*!function for returning the number of fields private member 
+  of a table*/
+int DBInterface::retNumFields(int table)
+{
+  int fields = 0;
+  if(table >=0 && table < parameters.numTables)
+    fields = tables[table]->retNumFields();
+  return fields;
+}
+/*!function to return a field tag from table
+TODO: it should, for convention, only return once*/
+char * DBInterface::retFieldTag(int table, int field)
+{ 
+  if(table >= 0 && table < parameters.numTables)
+    return tables[table]->retFieldTag(field);
+  else
+    return NULL;
+}
+/*!function to return a field valid variable 
+from table*/
+int DBInterface::retFieldValid(int table, int field)
+{
+  int ret = -1;
+  if(table >= 0 && table < parameters.numTables)
+    {
+      ret = tables[table]->retFieldValid(field);      
+    }
+  
+  return ret;
 
+}
+/*!function to return a field value variable
+from table*/
+int DBInterface::retFieldValue(int table, int field)
+{
+  int ret = -1;  
+  if(table >= 0 && table < parameters.numTables)
+    {
+      ret = tables[table]->retFieldValue(field);
+    }
+  
+  return ret;
+}
+
+/////
+/*!function to set a field valid variable from table*/
+int DBInterface::setFieldValid(int table, int field, int valid)
+{
+  int ret = -1;
+  if(table > 0 && table < parameters.numTables)
+    {
+      ret = tables[table]->setFieldValid(field,valid);      
+    }
+  
+  return ret;
+
+}
+/*!function to set a field number value variable
+from table*/
+int DBInterface::setFieldValue(int table, int field, int value)
+{
+  int ret = -1;  
+  if(table > 0 && table < parameters.numTables)
+    {
+      ret = tables[table]->setFieldValue(field,value);
+    }
+  
+  return ret;
+}
 
 ///TABLE FUNCTIONS
 /*! function to take table parameters for our table in database interface*/
@@ -140,7 +206,6 @@ DBTable::DBTable(tableParameters tableParams)
 }
 DBTable::~DBTable()
 {
-
   return;
 }
 /*!function for creating the tale dinamycally
@@ -221,6 +286,70 @@ int DBTable::creationSqlite(char **sql)
   delete temp;
   *sql = sqlQuery;
   return 0;
+
+
+}
+/*!function to return a field tag
+TODO: it should, for convention, only return once*/
+char * DBTable::retFieldTag(int field)
+{
+  if(field >= 0 && field < parameters.numFields)
+    return parameters.stField[field].tag;
+  else
+    return NULL;
+
+}
+
+/*!function to return a field valid variable*/
+int DBTable::retFieldValid(int field)
+{
+  int ret = -1;
+  if(field >= 0 && field < parameters.numFields)
+    {
+      ret = parameters.stField[field].isValid;
+    }
+  return ret;
+}
+
+/*!function to return a field number value variable*/
+int DBTable::retFieldValue(int field)
+{
+  int ret = -1;  
+  if(field >= 0 && field < parameters.numFields)
+    {
+      ret = parameters.stField[field].iValue;      
+    }
+  return ret;
+}
+
+//
+/*!function to set a field valid variable*/
+int DBTable::setFieldValid(int field, int valid)
+{
+  int ret = -1;
+  if(field >= 0 && field < parameters.numFields)
+    {
+      parameters.stField[field].isValid = valid;
+      ret = 0;
+    }
+  
+  return ret;
+
+}
+/*!function to set a field number value variable*/
+int DBTable::setFieldValue(int field, int value)
+{
+  int ret = -1;  
+  if(field >= 0 && field < parameters.numFields)
+    {
+      if(!strcmp(parameters.stField[field].type,"INT"))
+	parameters.stField[field].iValue = value;
+      else
+	parameters.stField[field].iValue = value;
+      ret = 0;
+    }
+  
+  return ret;
 
 
 }

@@ -48,14 +48,19 @@ class ProintegraOPC
  public:
  ProintegraOPC();
   ~ProintegraOPC();
-
-  int startCapture();
-  int checkDB();
-  int initComm();
-  int checkComm();
+  //initialization functions
   int startCommunications();
+  int initComm();
+  //checking fucntions
+  int checkDB(); 
+  int checkComm();  
+  //capturing functions
+  int startCapture();
   int dataCapture();
-
+  int dataToDB();
+  //DEBUGGING FUNCTIONS
+  int showDBData();
+  
  private:
   //database configuration parser
   ConfigParser* confParser;
