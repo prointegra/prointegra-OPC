@@ -95,6 +95,9 @@ typedef struct
 
   int isValid = 0;
   int iValue = 0;
+
+  int fromSlave= -1;
+  int fromTag= -1;
   
 } field;
 

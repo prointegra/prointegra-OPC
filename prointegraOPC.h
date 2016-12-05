@@ -55,11 +55,13 @@ class ProintegraOPC
   int checkDB(); 
   int checkComm();  
   //capturing functions
-  int startCapture();
+  int loop();
   int dataCapture();
   int dataToDB();
+  int storeDB();
   //DEBUGGING FUNCTIONS
   int showDBData();
+
   
  private:
   //database configuration parser

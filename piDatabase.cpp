@@ -60,71 +60,20 @@ int DBInterface::start()
     }
 }
 
-
-//check tables and create them if not exist
-//personalize!
-int DBInterface::checkAndCreate()
+//SQL
+int DBInterface::storeData()
 {
-  //table "recepcion"
-  //index,date,time,silo de recepcion INT, tipo de producto STRING, kilos INT, matricula del camion STRING,proveedor STRING, vacio1 STRING, vacio2 STRING, vacio3 STRING, vacio4 STRING, vacio5 STRING;
-  //
-  //table "proceso"
-  //index, date, time, silo recepcion INT, silo limpia INT, tipo de producto STRING
-  //
-  //table "salida"
-  //index, date, time, juliano envasado INT, juliano limpia INT, silo limpia INT, tipo de producto STRING
-
-  int ret;
-  char       buf[80];
- 
-  std::cout << "DEBUG: Creating table \"recepcion\"" << std::endl;
-  ret = query(NULL,"CREATE TABLE IF NOT EXISTS recepcion(ID INTEGER PRIMARY KEY AUTOINCREMENT,FECHA DATE,HORA TIME,SILO_RECEPCION INT,TIPO_DE_PRODUCTO INT,KILOS INT, MATRICULA TEXT,PROVEEDOR INT,VACIO1 INT,VACIO2 INT,VACIO3 INT,VACIO4 INT,VACIO5 INT)");
-  if(ret != 0)
-    {
-      std::cout << "ERROR CREATING TABLE recepcion" << std::endl;
-    }
-  std::cout << "DEBUG: Creating table \"proceso\"" << std::endl;
-  ret = query(NULL,"CREATE TABLE IF NOT EXISTS proceso(ID INTEGER PRIMARY KEY AUTOINCREMENT,FECHA DATE,HORA TIME,SILO_RECEPCION INT,SILO_LIMPIA INT, TIPO_DE_PRODUCTO INT)");
-  if(ret != 0)
-    {
-      std::cout << "ERROR CREATING TABLE proceso" << std::endl;
-    }
-  //
-    std::cout << "DEBUG: Creating table \"julianos\"" << std::endl;
-    ret = query(NULL,"CREATE TABLE IF NOT EXISTS julianos(SILO INT NOT NULL UNIQUE,JULIANO INT)");
-  if(ret != 0)
-    {
-      std::cout << "ERROR CREATING TABLE julianos" << std::endl;
-    }
-   ret = query(NULL,"INSERT OR IGNORE INTO julianos VALUES(5,0)");
-  if(ret != 0)
-    {
-      std::cout << "ERROR CREATING TABLE julianos" << std::endl;
-    }
-     ret = query(NULL,"INSERT OR IGNORE INTO julianos VALUES(6,0)");
-  if(ret != 0)
-    {
-      std::cout << "ERROR CREATING TABLE julianos" << std::endl;
-    }
-     ret = query(NULL,"INSERT OR IGNORE INTO julianos VALUES(7,0)");
-  if(ret != 0)
-    {
-      std::cout << "ERROR CREATING TABLE julianos" << std::endl;
-    }
-     ret = query(NULL,"INSERT OR IGNORE INTO julianos VALUES(8,0)");
-  if(ret != 0)
-    {
-      std::cout << "ERROR CREATING TABLE julianos" << std::endl;
-    } 
-  std::cout << "DEBUG: Creating table \"producto\"" << std::endl;
+  int ret = 0;
+  char *sqlQuery = NULL;
   
-  ret = query(NULL,"CREATE TABLE IF NOT EXISTS producto(ID INTEGER PRIMARY KEY AUTOINCREMENT,FECHA DATE,HORA TIME,JULIANO_ENVASADO INT,JULIANO_LIMPIA INT, TIPO_DE_PRODUCTO INT, SILO_LIMPIA INT,KILOS INT)");
-  if(ret != 0)
+  for(int i=0;i < parameters.numTables;i++)
     {
-      std::cout << "ERROR CREATING TABLE producto" << std::endl;
+      tables[i]->store(&parameters,&sqlQuery);
+      //TODO: we should catch exceptions!
+      std::cout << sqlQuery << std::endl;
+      ret = ret + query(NULL,sqlQuery);
     }
-
-  return 0;
+  return ret;
 }
 
 /*!function for returning the number of fields private member 
@@ -196,6 +145,47 @@ int DBInterface::setFieldValue(int table, int field, int value)
   
   return ret;
 }
+//linking fields with communications
+/*!function to check if a field is already linked*/
+int DBInterface::fieldlinked(int table,int field)
+{
+  int link[2] = {-1,-1};
+  int linked = 0;
+  if(table > 0 && table < parameters.numTables)
+    {
+      link = tables[table]->retLink(field);
+    }
+  if(link[0]>= 0 && link[1] >= 0)
+    linked = 1;
+
+  return linked;
+}
+/*!function to return a field linking*/
+int* DBInterface::retFieldLink(int table, int field)
+{
+  int link[2] = {-1,-1};
+  int linked = 0;
+    if(table > 0 && table < parameters.numTables)
+    {
+      link = tables[table]->retLink(field);
+    }
+
+  return link;
+
+}
+/*!function to link a field with a slave and tag*/
+int DBInterface::fieldLink(int table, int field, int slave, int tag)
+{
+  int ret = -1;
+  if(table > 0 && table < parameters.numTables)
+    {
+      tables[table]->setLink(field,slave,tag);
+      ret = 0;
+    }
+  return ret;
+
+}
+
 
 ///TABLE FUNCTIONS
 /*! function to take table parameters for our table in database interface*/
@@ -289,6 +279,122 @@ int DBTable::creationSqlite(char **sql)
 
 
 }
+/*!function for store data to the table
+TODO: only implemented sqlite tables!
+*/
+int DBTable::store(databaseParameters* parameters,char **query)
+{
+  char *sqlQuery = NULL;
+  int ret;
+
+  sqlQuery = *query;
+  
+  if(!strcmp(parameters->type,"QSQLITE"))
+    {
+      storeSqlite(&sqlQuery);
+      ret = 0;
+    }
+  else if(!strcmp(parameters->type,"QTDS"))
+    {
+      sqlQuery=NULL;
+      ret = -1;
+    }
+  else
+    {
+      sqlQuery=NULL;
+      ret = -1;
+    }
+  *query = sqlQuery;
+  
+  return ret;
+}
+/*!function for store data to the sqlite table
+*/
+int DBTable::storeSqlite(char **sql)
+{
+  char *sqlQuery = NULL;
+  char * temp = NULL;
+  char * field = NULL;
+
+  char *values;
+  char *tmpValues;
+  int first = 1;
+  
+  sqlQuery = *sql;
+  
+  if(sqlQuery != NULL)
+    delete(sqlQuery);
+  
+  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (")+5];
+  strcpy(temp,"INSERT INTO ");
+  strcat(temp,parameters.tbName);
+  strcat(temp,"(");
+
+  tmpValues = new char[strlen("VALUES (") +5];
+  strcpy(tmpValues,"VALUES (");
+
+  sqlQuery = new char[strlen(temp)+5];
+  strcpy(sqlQuery,temp);
+  values =  new char[strlen(tmpValues)+5];
+  strcpy(values,tmpValues);
+  for (int i = 0; i < parameters.numFields;i++)
+    {
+      delete temp;
+      delete tmpValues;
+      temp = new char[strlen(sqlQuery)+5];
+      tmpValues = new char[strlen(values)+5];
+      strcpy(temp,sqlQuery);
+      strcpy(tmpValues,values);
+      delete values;
+      delete sqlQuery;
+      
+      if(parameters.stField[i].isValid)
+	{
+	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
+	    {
+	      field = new char[parameters.stField[i].iValue +5];
+	      sprintf(field,"%d",parameters.stField[i].iValue);
+	    }
+	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5];
+	  values = new char[strlen(tmpValues)+strlen(field)+5];
+	  strcpy(sqlQuery,temp);
+	  strcpy(values,tmpValues);
+	  if(!first)
+	    {
+	      strcat(values,",");
+	      strcat(sqlQuery,",");
+	    }
+	  else
+	    first = 0;
+	  strcat(values,field);
+	  strcat(sqlQuery,parameters.stField[i].name);
+	  delete field;
+	}
+      else
+	{
+	  sqlQuery = new char[strlen(temp)+5];
+	  values = new char[strlen(tmpValues)+5];
+	  strcpy(sqlQuery,temp);
+	  strcpy(values,tmpValues);
+	}
+    }
+  strcat(sqlQuery,") ");
+  strcat(values,") ");
+  delete temp;
+  delete tmpValues;
+
+  temp = new char[strlen(sqlQuery) + strlen(values) + 10];
+  
+  strcpy(temp,sqlQuery);
+  strcat(temp,values);
+  delete sqlQuery;
+  delete values;
+  
+  *sql = temp;
+  return 0;
+
+
+}
 /*!function to return a field tag
 TODO: it should, for convention, only return once*/
 char * DBTable::retFieldTag(int field)
@@ -300,6 +406,21 @@ char * DBTable::retFieldTag(int field)
 
 }
 
+/*!function to return linking info from tag
+*/
+int * DBTable::retLink(int field)
+{
+  int link[2] = {-1,-1};
+  
+  if(field >= 0 && field < parameters.numFields)
+    {
+      link[0] = parameters.stField[field].fromSlave;
+      link[1] = parameters.stField[field].fromTag;
+    }
+  
+ return link;
+
+}
 /*!function to return a field valid variable*/
 int DBTable::retFieldValid(int field)
 {
@@ -351,5 +472,21 @@ int DBTable::setFieldValue(int field, int value)
   
   return ret;
 
+
+}
+
+/*!function to set a linking info to tag
+*/
+int * DBTable::setLink(int field, int slave, int tag)
+{
+  int ret = -1;
+  if(field >= 0 && field < parameters.numFields)
+    {
+      parameters.stField[field].fromSlave = slave;
+      parameters.stField[field].fromTag = tag;
+      ret = 0;
+    }
+  
+ return ret;
 
 }
