@@ -147,23 +147,23 @@ int DBInterface::setFieldValue(int table, int field, int value)
 }
 //linking fields with communications
 /*!function to check if a field is already linked*/
-int DBInterface::fieldlinked(int table,int field)
+int DBInterface::fieldLinked(int table,int field)
 {
-  int link[2] = {-1,-1};
+  int* link;
   int linked = 0;
   if(table > 0 && table < parameters.numTables)
     {
       link = tables[table]->retLink(field);
+    
+      if(link[0]>= 0 && link[1] >= 0)
+	linked = 1;
     }
-  if(link[0]>= 0 && link[1] >= 0)
-    linked = 1;
-
   return linked;
 }
 /*!function to return a field linking*/
 int* DBInterface::retFieldLink(int table, int field)
 {
-  int link[2] = {-1,-1};
+  int* link;
   int linked = 0;
     if(table > 0 && table < parameters.numTables)
     {
@@ -410,7 +410,9 @@ char * DBTable::retFieldTag(int field)
 */
 int * DBTable::retLink(int field)
 {
-  int link[2] = {-1,-1};
+  static int link[2];
+  link[0] = -1;
+  link[1] = -1;
   
   if(field >= 0 && field < parameters.numFields)
     {
@@ -477,7 +479,7 @@ int DBTable::setFieldValue(int field, int value)
 
 /*!function to set a linking info to tag
 */
-int * DBTable::setLink(int field, int slave, int tag)
+int DBTable::setLink(int field, int slave, int tag)
 {
   int ret = -1;
   if(field >= 0 && field < parameters.numFields)

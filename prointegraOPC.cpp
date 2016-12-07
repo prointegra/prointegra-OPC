@@ -94,7 +94,7 @@ it takes data from slave structures and save it to our tables structures
 TODO: it has to be cut in smaller functions!*/
 int ProintegraOPC::dataToDB()
 {
-  int link[2];
+  int* link;
   //databases
   for(int i=0; i< nDBs ; i++)
     {
@@ -104,23 +104,28 @@ int ProintegraOPC::dataToDB()
 	  //fields
 	  for(int k=0; k < hDatabase[i]->retNumFields(j);k++)
 	    {
+	      std::cout << "**DEBUG: field:"<< k << " , from table:" << j << " , database:" << i << std::endl;
+	      std::cout << "**DEBUG: setting it invalid!"<< std::endl;
 	      hDatabase[i]->setFieldValid(j,k,0);
+	      std::cout << "**DEBUG: checking linking!"<< std::endl;
 	      if(hDatabase[i]->fieldLinked(j,k))
 		{
+		  std::cout << "**DEBUG: linked!"<< std::endl;
 		  link = hDatabase[i]->retFieldLink(j,k);
-		  hDatabase[i]->setFieldValid(j,k,hSlave[link[0]]->retTagValid(link[1]));
-		  hDatabase[i]->setFieldValue(j,k,hSlave[link[0]]->retTagValue(link[1]));
+		  hDatabase[i]->setFieldValid(j,k,hSlaves[link[0]]->retTagValid(link[1]));
+		  hDatabase[i]->setFieldValue(j,k,hSlaves[link[0]]->retTagValue(link[1]));
 		}
 	      else
 		{
+		  std::cout << "**DEBUG: not linked!"<< std::endl;
 		  for(int slave = 0; slave < nSlaves;slave++)
 		    {
-		      for(int tag=0; tag < hSlave[slave]->retNumTags(); tag++)
+		      for(int tag=0; tag < hSlaves[slave]->retNumTags(); tag++)
 			{
-			  if(!strcmp(hSlave[slave]->retTagName(tag),hDatabase[i]->retFieldTag(j,k))
+			  if(!strcmp(hSlaves[slave]->retTagName(tag),hDatabase[i]->retFieldTag(j,k)))
 			    {
-			      hDatabase[i]->setFieldValid(j,k,hSlave[slave]->retTagValid(tag));
-			      hDatabase[i]->setFieldValue(j,k,hSlave[slave]->retTagValue(tag));
+			      hDatabase[i]->setFieldValid(j,k,hSlaves[slave]->retTagValid(tag));
+			      hDatabase[i]->setFieldValue(j,k,hSlaves[slave]->retTagValue(tag));
 			      hDatabase[i]->fieldLink(j,k,slave,tag);
 			    }
 			}

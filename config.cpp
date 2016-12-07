@@ -193,7 +193,8 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
 	  tablesParams[dbNumber][i].stField[k].type = new char[sizeof(fieldType)+1];
 	  strcpy(tablesParams[dbNumber][i].stField[k].type,fieldType);
 	  
-	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  //std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  
 	  k++;
 	}
       
