@@ -456,7 +456,7 @@ int DBTable::storeSqlite(char **sql)
 }
 /*!function for store data to a MySQL table
 */
-int DBTable::storeSqlite(char **sql)
+int DBTable::storeMysql(char **sql)
 {
   char *sqlQuery = NULL;
   char * temp = NULL;

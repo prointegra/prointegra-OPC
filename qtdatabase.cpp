@@ -159,7 +159,7 @@ const char *qtDatabase::recordFieldValue(PARAM *p, int x)
   {
     QVariant v = f.value();
     //return v.toString().toUtf8();
-    printf("%s\n", v.toString());
+    //printf("%s\n", v.toString());
     return "999";
   }
   else

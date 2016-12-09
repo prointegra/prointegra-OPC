@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<db name="test" qtdriver="QSQLITE" hostname="" dbName="./test.db" user="" password="">
+<db name="test" qtdriver="QMYSQL" hostname="localhost" dbName="prointegra" user="prointegra" password="password">
 	<table name="table1" tagTrigger="rTrigger1" timeTrigger="" type="LOG">
         <tag name="tagTest4" tagName="readTest" type="INT" />
         <tag name="tagTest3" tagName="readWriteTest3" type="INT" />
