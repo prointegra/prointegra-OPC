@@ -38,8 +38,10 @@ class DBTable
 
   int create(databaseParameters* parameters,char **query);
   int creationSqlite(char **sql);
+  int creationMysql(char **sql);
   int store(databaseParameters* parameters,char **query);
   int storeSqlite(char **sql);
+  int storeMysql(char **sql);
   //return private members
   int retNumFields(){return parameters.numFields;};
   char * retFieldTag(int field);

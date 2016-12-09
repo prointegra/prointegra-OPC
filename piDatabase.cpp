@@ -198,8 +198,8 @@ DBTable::~DBTable()
 {
   return;
 }
-/*!function for creating the tale dinamycally
-TODO: only implemented sqlite tables!
+/*!function for creating database tables dinamycally
+TODO: only implemented sqlite,MySQL tables!
 */
 int DBTable::create(databaseParameters* parameters, char **query)
 {
@@ -211,6 +211,11 @@ int DBTable::create(databaseParameters* parameters, char **query)
   if(!strcmp(parameters->type,"QSQLITE"))
     {
       creationSqlite(&sqlQuery);
+      ret = 0;
+    }
+   else if(!strcmp(parameters->type,"QMYSQL"))
+    {
+      creationMysql(&sqlQuery);
       ret = 0;
     }
   else if(!strcmp(parameters->type,"QTDS"))
@@ -227,7 +232,7 @@ int DBTable::create(databaseParameters* parameters, char **query)
   
   return ret;
 }
-
+/*!function for creating the database schema, for SQLite databases*/
 int DBTable::creationSqlite(char **sql)
 {
   char *sqlQuery = NULL;
@@ -275,12 +280,61 @@ int DBTable::creationSqlite(char **sql)
   strcat(sqlQuery,")");
   delete temp;
   *sql = sqlQuery;
-  return 0;
-
-
+  return 0; 
 }
+/*!function for creating the database schema, for MySQL databases*/
+int DBTable::creationMysql(char **sql)
+{
+  char *sqlQuery = NULL;
+  char * temp = NULL;
+  char * field = NULL;
+  
+  sqlQuery = *sql;
+  
+  if(sqlQuery != NULL)
+    delete(sqlQuery);
+  
+  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT,")+5];
+  strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
+  strcat(temp,parameters.tbName);
+  strcat(temp," (ID INTEGER PRIMARY KEY AUTOINCREMENT,");
+
+  sqlQuery = new char[strlen(temp)+5];
+  strcpy(sqlQuery,temp);
+  for (int i = 0; i < parameters.numFields;i++)
+    {
+      delete temp;
+      temp = new char[strlen(sqlQuery)+5];
+      strcpy(temp,sqlQuery);
+      delete sqlQuery;
+	
+      field = new char[strlen(parameters.stField[i].type) + strlen(parameters.stField[i].name) + 5];
+      strcpy(field,parameters.stField[i].name);
+      //different types
+      if(!strcmp(parameters.stField[i].type,"DATE"))
+	strcat(field," DATE");
+      if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
+	strcat(field," INT");
+      if(!strcmp(parameters.stField[i].type,"TIME"))
+	strcat(field," TIME");
+      if(!strcmp(parameters.stField[i].type,"STRING"))
+	strcat(field," TEXT");      
+      if(i < (parameters.numFields-1))
+	strcat(field,",");
+      /////
+      sqlQuery = new char[strlen(temp)+strlen(field)+5];
+      strcpy(sqlQuery,temp);
+      strcat(sqlQuery,field);
+      delete field;
+    }
+  strcat(sqlQuery,")");
+  delete temp;
+  *sql = sqlQuery;
+  return 0;
+}
+
 /*!function for store data to the table
-TODO: only implemented sqlite tables!
+TODO: only implemented sqlite,MySQL tables!
 */
 int DBTable::store(databaseParameters* parameters,char **query)
 {
@@ -292,6 +346,11 @@ int DBTable::store(databaseParameters* parameters,char **query)
   if(!strcmp(parameters->type,"QSQLITE"))
     {
       storeSqlite(&sqlQuery);
+      ret = 0;
+    }
+   else if(!strcmp(parameters->type,"QMYSQL"))
+    {
+      storeMysql(&sqlQuery);
       ret = 0;
     }
   else if(!strcmp(parameters->type,"QTDS"))
@@ -308,7 +367,7 @@ int DBTable::store(databaseParameters* parameters,char **query)
   
   return ret;
 }
-/*!function for store data to the sqlite table
+/*!function for store data to a sqlite table
 */
 int DBTable::storeSqlite(char **sql)
 {
@@ -394,6 +453,91 @@ int DBTable::storeSqlite(char **sql)
   return 0;
 
 
+}
+/*!function for store data to a MySQL table
+*/
+int DBTable::storeSqlite(char **sql)
+{
+  char *sqlQuery = NULL;
+  char * temp = NULL;
+  char * field = NULL;
+
+  char *values;
+  char *tmpValues;
+  int first = 1;
+  
+  sqlQuery = *sql;
+  
+  if(sqlQuery != NULL)
+    delete(sqlQuery);
+  
+  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (")+5];
+  strcpy(temp,"INSERT INTO ");
+  strcat(temp,parameters.tbName);
+  strcat(temp,"(");
+
+  tmpValues = new char[strlen("VALUES (") +5];
+  strcpy(tmpValues,"VALUES (");
+
+  sqlQuery = new char[strlen(temp)+5];
+  strcpy(sqlQuery,temp);
+  values =  new char[strlen(tmpValues)+5];
+  strcpy(values,tmpValues);
+  for (int i = 0; i < parameters.numFields;i++)
+    {
+      delete temp;
+      delete tmpValues;
+      temp = new char[strlen(sqlQuery)+5];
+      tmpValues = new char[strlen(values)+5];
+      strcpy(temp,sqlQuery);
+      strcpy(tmpValues,values);
+      delete values;
+      delete sqlQuery;
+      
+      if(parameters.stField[i].isValid)
+	{
+	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
+	    {
+	      field = new char[parameters.stField[i].iValue +5];
+	      sprintf(field,"%d",parameters.stField[i].iValue);
+	    }
+	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5];
+	  values = new char[strlen(tmpValues)+strlen(field)+5];
+	  strcpy(sqlQuery,temp);
+	  strcpy(values,tmpValues);
+	  if(!first)
+	    {
+	      strcat(values,",");
+	      strcat(sqlQuery,",");
+	    }
+	  else
+	    first = 0;
+	  strcat(values,field);
+	  strcat(sqlQuery,parameters.stField[i].name);
+	  delete field;
+	}
+      else
+	{
+	  sqlQuery = new char[strlen(temp)+5];
+	  values = new char[strlen(tmpValues)+5];
+	  strcpy(sqlQuery,temp);
+	  strcpy(values,tmpValues);
+	}
+    }
+  strcat(sqlQuery,") ");
+  strcat(values,") ");
+  delete temp;
+  delete tmpValues;
+
+  temp = new char[strlen(sqlQuery) + strlen(values) + 10];
+  
+  strcpy(temp,sqlQuery);
+  strcat(temp,values);
+  delete sqlQuery;
+  delete values;
+  
+  *sql = temp;
+  return 0;
 }
 /*!function to return a field tag
 TODO: it should, for convention, only return once*/
