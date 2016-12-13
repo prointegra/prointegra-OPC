@@ -104,20 +104,20 @@ int ProintegraOPC::dataToDB()
 	  //fields
 	  for(int k=0; k < hDatabase[i]->retNumFields(j);k++)
 	    {
-	      std::cout << "**DEBUG: field:"<< k << " , from table:" << j << " , database:" << i << std::endl;
-	      std::cout << "**DEBUG: setting it invalid!"<< std::endl;
+	      //std::cout << "**DEBUG: field:"<< k << " , from table:" << j << " , database:" << i << std::endl;
+	      //std::cout << "**DEBUG: setting it invalid!"<< std::endl;
 	      hDatabase[i]->setFieldValid(j,k,0);
-	      std::cout << "**DEBUG: checking linking!"<< std::endl;
+	      //std::cout << "**DEBUG: checking linking!"<< std::endl;
 	      if(hDatabase[i]->fieldLinked(j,k))
 		{
-		  std::cout << "**DEBUG: linked!"<< std::endl;
+		  //std::cout << "**DEBUG: linked!"<< std::endl;
 		  link = hDatabase[i]->retFieldLink(j,k);
 		  hDatabase[i]->setFieldValid(j,k,hSlaves[link[0]]->retTagValid(link[1]));
 		  hDatabase[i]->setFieldValue(j,k,hSlaves[link[0]]->retTagValue(link[1]));
 		}
 	      else
 		{
-		  std::cout << "**DEBUG: not linked!"<< std::endl;
+		  //std::cout << "**DEBUG: not linked!"<< std::endl;
 		  for(int slave = 0; slave < nSlaves;slave++)
 		    {
 		      for(int tag=0; tag < hSlaves[slave]->retNumTags(); tag++)
