@@ -95,7 +95,7 @@ int CommInterface::readData()
 
       if(parameters.stRegisters[i].isValid)
 	readTag(i);
-      std::cout << "DEBUG: reading tag: " <<  parameters.stRegisters[i].tagName << ", int value: " << parameters.stRegisters[i].iValue << std::endl;
+      //std::cout << "DEBUG: reading tag: " <<  parameters.stRegisters[i].tagName << ", int value: " << parameters.stRegisters[i].iValue << std::endl;
     }
   failed  = 0;
 
@@ -106,7 +106,12 @@ int CommInterface::readTag(int index)
 {
   int ret = -1;
   if(parameters.stRegisters[index].dataType == INT)
-    ret = readINT(index);
+    {
+      if(readINT(index))
+	parameters.stRegisters[index].valueValid = 0;
+      else
+	parameters.stRegisters[index].valueValid = 1;
+    }
 
   return ret;
 }
@@ -115,13 +120,18 @@ TODO: for now only from holdingRegisters!*/
 int CommInterface::readINT(int index)
 {
   char *rlCommand;
+  int failed = DAQ_ERROR;
 
   rlCommand = new char[sizeof("holdingRegisters(,)") + sizeof(parameters.commId) + sizeof(parameters.stRegisters[index].iAddress) + 5];
   sprintf(rlCommand,"holdingRegisters(%d,%d)",parameters.commId,parameters.stRegisters[index].iAddress);
   //std::cout <<"DEBUG: reading tag, command:"<< rlCommand <<" raw data:"<<rlMODBUS->intValue(rlCommand)<<" int data:"<< gstWord2Int(rlMODBUS->intValue(rlCommand)) << std::endl;
-  parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->intValue(rlCommand));
+  if (rlMODBUS->intValue(rlCommand) != DAQ_ERROR)
+    {
+      failed = 0;
+      parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->intValue(rlCommand));
+    }
 
-  return 0;
+  return failed;
 }
 /*!Function for returning a tag name
 TODO: it shoulds return only once*/
@@ -143,13 +153,14 @@ int CommInterface::retTagValue(int tag)
     ret = parameters.stRegisters[tag].iValue;
   return ret;
 }
-/*!Function for returning a tag name
+
+/*!Function for returning if a tag value is valid
 TODO: it shoulds return only once*/
 int CommInterface::retTagValid(int tag)
 {
   int ret = 0;
   if(tag >=0 && tag < parameters.nRegs)
-    ret = parameters.stRegisters[tag].isValid;
+    ret = parameters.stRegisters[tag].valueValid;
   return ret;
 
 }

@@ -72,7 +72,7 @@ int DBInterface::storeData()
     {
       tables[i]->store(&parameters,&sqlQuery);
       //TODO: we should catch exceptions!
-      std::cout << sqlQuery << std::endl;
+      //std::cout << sqlQuery << std::endl;
       ret = ret + query(NULL,sqlQuery);
     }
   return ret;
