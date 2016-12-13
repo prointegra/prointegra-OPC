@@ -21,21 +21,12 @@ prointegra-OPC is a C++ application to take/send tags from/to industrial automat
 + use of [gStools](https://github.com/gentooza/gStools) for tags conversions (already included in /lib folder)
 + use of pugiXML for configurations files (already cinluded in /lib folder, v1.7)
 
-##Compile and installation
+##Docs
 
-###Under GNU/Linux
-normally doing:
-```
-qmake
-```
-and:
-```
-make
-```
-should give us the executable file: prointegra-OPC
+Inside the docs folder you'll find documentation about installing, setting, etc.
 
-###Under MS Windows XP
-work in progress...
++ [installing prointegra-OPC](docs/installing.md)
++ [configuring prointegra-OPC](docs/configuring.md)
 
 ##Contact
 
@@ -44,9 +35,7 @@ mail to: jcuellar (at) prointegra.com
 ##TODO/ROADMAP
 [roadmap](./ROADMAP.md)
 
-
 ##Changelog
 
-**v0.0.1: (2016/11/23)**
-* ALPHA prototype, first commit
+[changelog](./CHANGELOG.md)
 

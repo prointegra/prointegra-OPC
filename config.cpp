@@ -18,7 +18,7 @@
 
 #include "config.h"
 //constants
-const char* sVERSION = "v0.0.1 ALPHA";
+const char* sVERSION = "v0.0.2B";
 
 /*! Constructor*/
 ConfigParser::ConfigParser(char* path, char *slaves)
