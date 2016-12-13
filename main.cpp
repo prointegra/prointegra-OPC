@@ -42,7 +42,7 @@ int main(int ac, char **av)
   std::cout << "DEBUG: checking system!" << std::endl;
   server->checkDB();
   std::cout << "DEBUG: capturing!" << std::endl;
-  ret = server->startCapture();
+  ret = server->loop();
 
   return ret;
 }

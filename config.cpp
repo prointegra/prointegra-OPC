@@ -1,5 +1,5 @@
 /*
- * 	Prointegra OPC
+ *  Prointegra OPC
  *
  *  Copyright 2016 by it's authors. 
  *
@@ -18,7 +18,7 @@
 
 #include "config.h"
 //constants
-const char* sVERSION = "v0.0.1 ALPHA";
+const char* sVERSION = "v0.0.2B";
 
 /*! Constructor*/
 ConfigParser::ConfigParser(char* path, char *slaves)
@@ -122,12 +122,12 @@ int ConfigParser::checkDBType(const char* type)
   strcpy(temp,type);
   for(int i=0;i<strlen(temp);i++)
     temp[i] = toupper(temp[i]);
-  if(!strcmp(temp,"QSQLITE") || !strcmp(temp,"QTDS"))
+  if(!strcmp(temp,"QSQLITE") || !strcmp(temp,"QMYSQL"))
     {
       delete temp;
       return 0;
     }
-  cout << "ERROR: DATABASE " << temp << " DOESN'T EXIST OR IS NOT IMPLEMENTED" << endl;
+  cout << "ERROR!: DATABASE TYPE " << temp << " DOESN'T EXIST OR IS NOT IMPLEMENTED" << endl;
   return -1;
 }
 
@@ -193,7 +193,8 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
 	  tablesParams[dbNumber][i].stField[k].type = new char[sizeof(fieldType)+1];
 	  strcpy(tablesParams[dbNumber][i].stField[k].type,fieldType);
 	  
-	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  //std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  
 	  k++;
 	}
       

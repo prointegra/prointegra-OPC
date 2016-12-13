@@ -38,6 +38,20 @@ class DBTable
 
   int create(databaseParameters* parameters,char **query);
   int creationSqlite(char **sql);
+  int creationMysql(char **sql);
+  int store(databaseParameters* parameters,char **query);
+  int storeSqlite(char **sql);
+  int storeMysql(char **sql);
+  //return private members
+  int retNumFields(){return parameters.numFields;};
+  char * retFieldTag(int field);
+  int retFieldValid(int field);
+  int retFieldValue(int field);
+  int* retLink(int field);
+  //set attributes
+  int setFieldValid(int field, int valid);
+  int setFieldValue(int field, int value);
+  int setLink(int field, int slave, int tag);
 private:  
   tableParameters parameters;
 };
@@ -50,9 +64,22 @@ class DBInterface : public qtDatabase
   };
   int setup(databaseParameters dbParams,tableParameters* tablesParams);
   int start();
-  int tCheckAndCreate();
-  int checkAndCreate();
-
+  //sql functions
+  int storeData();
+  //return private members
+  int retNumTables(){return parameters.numTables;};
+  int retNumFields(int table);
+  char * retFieldTag(int table,int field);
+  int retFieldValid(int table,int field);
+  int retFieldValue(int table,int field);
+  //set attributes
+  int setFieldValid(int table,int field, int valid);
+  int setFieldValue(int table,int field, int value);
+  //linking fields with communications
+  int fieldLinked(int table,int field);
+  int* retFieldLink(int table, int field);
+  int fieldLink(int table, int field, int slave, int tag);
+  
  private:
   databaseParameters parameters;
   DBTable** tables;

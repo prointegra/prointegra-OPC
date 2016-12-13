@@ -446,11 +446,11 @@ main.o: main.cpp pvapp.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
 		piComm.h \
 		iniConfigurator.h \
-		dataManaging.h \
 		lib/gStools/libgStools.h \
 		lib/gStools/gStDate.h \
 		lib/gStools/gStMisc.h \
 		lib/gStools/gStConv.h \
+		dataManaging.h \
 		commDaemon.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
@@ -471,11 +471,11 @@ prointegraOPC.o: prointegraOPC.cpp prointegraOPC.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
 		piComm.h \
 		iniConfigurator.h \
-		dataManaging.h \
 		lib/gStools/libgStools.h \
 		lib/gStools/gStDate.h \
 		lib/gStools/gStMisc.h \
 		lib/gStools/gStConv.h \
+		dataManaging.h \
 		commDaemon.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o prointegraOPC.o prointegraOPC.cpp
 
@@ -526,7 +526,11 @@ piComm.o: piComm.cpp piComm.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
-		iniConfigurator.h
+		iniConfigurator.h \
+		lib/gStools/libgStools.h \
+		lib/gStools/gStDate.h \
+		lib/gStools/gStMisc.h \
+		lib/gStools/gStConv.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piComm.o piComm.cpp
 
 iniConfigurator.o: iniConfigurator.cpp iniConfigurator.h \

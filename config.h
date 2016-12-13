@@ -1,5 +1,5 @@
 /*
- * 	Prointegra OPC
+ *  Prointegra OPC
  *
  *  Copyright 2016 by it's authors. 
  *
@@ -92,6 +92,13 @@ typedef struct
   char * name = NULL;
   char * type = NULL;
   char * tag = NULL;
+
+  int isValid = 0;
+  int iValue = 0;
+
+  int fromSlave= -1;
+  int fromTag= -1;
+  
 } field;
 
 //database parameters

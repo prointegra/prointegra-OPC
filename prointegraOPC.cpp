@@ -62,7 +62,7 @@ ProintegraOPC::~ProintegraOPC()
 /*checking database devices and creating it's tables if don't exists*/
 int ProintegraOPC::checkDB()
 {
-  cout<<"DEBUG: checking and creating!" << endl;
+  //cout<<"DEBUG: checking and creating!" << endl;
   //check database
   //  for(int i = 0;i < nDBs ;i++)
   //  hDatabase[i]->checkAndCreate();
@@ -76,20 +76,82 @@ int ProintegraOPC::checkComm()
 {
   for(int i=0; i < nSlaves; i++)
     {
-      std::cout << "DEBUG:checking slave "<< i << " status: " << commDaemonManager->checkDaemon(i)<< std::endl;
+      std::cout << "DEBUG: slave "<< i << " status: " << commDaemonManager->checkDaemon(i)<< std::endl;
     }
 
   return 0;   
 }
-/*data capturing! process
-WORKAROUND: It works only with 5 Casas*/
+/*data capturing process
+it should takes data from communications mailboxes and save it to it's slave structure*/
 int ProintegraOPC::dataCapture()
 {
   for(int i=0; i < nSlaves; i++)
     hSlaves[i]->readData();
   return 0;   
 }
+/*data to database process
+it takes data from slave structures and save it to our tables structures
+TODO: it has to be cut in smaller functions!*/
+int ProintegraOPC::dataToDB()
+{
+  int* link;
+  //databases
+  for(int i=0; i< nDBs ; i++)
+    {
+      //tables
+      for(int j=0; j < hDatabase[i]->retNumTables();j++)
+	{
+	  //fields
+	  for(int k=0; k < hDatabase[i]->retNumFields(j);k++)
+	    {
+	      //std::cout << "**DEBUG: field:"<< k << " , from table:" << j << " , database:" << i << std::endl;
+	      //std::cout << "**DEBUG: setting it invalid!"<< std::endl;
+	      hDatabase[i]->setFieldValid(j,k,0);
+	      //std::cout << "**DEBUG: checking linking!"<< std::endl;
+	      if(hDatabase[i]->fieldLinked(j,k))
+		{
+		  //std::cout << "**DEBUG: linked!"<< std::endl;
+		  link = hDatabase[i]->retFieldLink(j,k);
+		  hDatabase[i]->setFieldValid(j,k,hSlaves[link[0]]->retTagValid(link[1]));
+		  hDatabase[i]->setFieldValue(j,k,hSlaves[link[0]]->retTagValue(link[1]));
+		}
+	      else
+		{
+		  //std::cout << "**DEBUG: not linked!"<< std::endl;
+		  for(int slave = 0; slave < nSlaves;slave++)
+		    {
+		      for(int tag=0; tag < hSlaves[slave]->retNumTags(); tag++)
+			{
+			  if(!strcmp(hSlaves[slave]->retTagName(tag),hDatabase[i]->retFieldTag(j,k)))
+			    {
+			      hDatabase[i]->setFieldValid(j,k,hSlaves[slave]->retTagValid(tag));
+			      hDatabase[i]->setFieldValue(j,k,hSlaves[slave]->retTagValue(tag));
+			      hDatabase[i]->fieldLink(j,k,slave,tag);
+			    }
+			}
 
+		    }
+
+		}
+	    }
+	}
+    }
+  storeDB();
+  return 0;   
+}
+/*data to database process
+it takes data from slave structures and save it to our tables structures
+TODO: it has to be cut in smaller functions!*/
+int ProintegraOPC::storeDB()
+{
+  int ret = -1;
+  //databases
+  for(int i=0; i< nDBs ; i++)
+    {
+      hDatabase[i]->storeData();
+    }
+  return ret;
+}
 /*start communications
 */
 int ProintegraOPC::startCommunications()
@@ -103,19 +165,55 @@ int ProintegraOPC::startCommunications()
 
 /*capturing proccess
 TODO: we don't manage daemons!*/
-int ProintegraOPC::startCapture()
+int ProintegraOPC::loop()
 {
 
 
-  std::cout << "capturing!" << std::endl;
+  std::cout << "INFO: capturing ..." << std::endl;
   while(1)
     {
-      Sleep(2000);
+      Sleep(1000);
+      std::cout << "INFO: checking communications ..." << std::endl;     
       checkComm();
+      std::cout << "INFO: taking data from communications ..." << std::endl;  
       dataCapture();
-
+      std::cout << "INFO: store data to Databases ..." << std::endl;        
+      dataToDB();
+      std::cout << "DEBUG: showing what we have stored ..." << std::endl;
+      showDBData();
     }
   return 0;   
+}
+
+//DEBUG FUNCTIONS
+/*show data in memory structures, data to be written in databases*/
+int ProintegraOPC::showDBData()
+{
+  int slave = 0;
+  int field = 0;
+  //databases
+  for(int i=0; i< nDBs ; i++)
+    {
+      std::cout << "**************************************************" << std::endl;
+      std::cout << "*DEBUG: showing data in memory, to save in databases" << std::endl;
+      std::cout << std::endl;
+      std::cout << "*DATA IN DATABASE: " << i+1 << std::endl;
+      //tables
+      for(int j=0; j < hDatabase[i]->retNumTables();j++)
+	{
+	  std::cout << std::endl;
+	  std::cout << "*--->TABLE: " << j+1 << std::endl;
+	  //fields
+	  for(int k=0; k < hDatabase[i]->retNumFields(j);k++)
+	    {
+	      std::cout << "*------->FIELD: " << k+1 << std::endl;
+	      std::cout << "*--------->NAME: " << hDatabase[i]->retFieldTag(j,k)  << std::endl;
+	      std::cout << "*--------->VALUE: " << hDatabase[i]->retFieldValue(j,k)  << std::endl;
+	      std::cout << "*--------->VALID: " << hDatabase[i]->retFieldValid(j,k)  << std::endl;	      
+	    }
+	}
+    }
+
 }
 
 

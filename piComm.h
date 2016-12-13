@@ -45,7 +45,12 @@ class CommInterface
   //read data
   int readData();
   int readTag(int index);
-  int readINT(int index);  
+  int readINT(int index);
+  //return functions
+  int retNumTags(){return parameters.nRegs;};
+  char * retTagName(int tag);
+  int retTagValue(int tag);
+  int retTagValid(int tag);
  private:
   mbSlaves parameters;
   //daemons
