@@ -122,6 +122,7 @@ typedef struct
   char * tbTrigger = NULL;
   int tbTriggerTime;
   int numFields;
+  char * tbType = NULL;
   field* stField; 
   
 } tableParameters;

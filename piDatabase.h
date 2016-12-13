@@ -35,13 +35,20 @@ class DBTable
  public:
   DBTable(tableParameters tableParams);
   ~DBTable();
-
-  int create(databaseParameters* parameters,char **query);
+  //creation
+  int create(databaseParameters* parameters,char **query, char **startValues);
   int creationSqlite(char **sql);
   int creationMysql(char **sql);
+  int initValuesSqlite(char **sql);
+  int initValuesMysql(char **sql);
+  //storing
   int store(databaseParameters* parameters,char **query);
   int storeSqlite(char **sql);
+  int insertSqlite(char **sql);
+  int updateSqlite(char **sql);
   int storeMysql(char **sql);
+  int insertMysql(char **sql);
+  int updateMysql(char **sql); 
   //return private members
   int retNumFields(){return parameters.numFields;};
   char * retFieldTag(int field);

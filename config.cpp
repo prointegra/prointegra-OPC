@@ -25,9 +25,9 @@ ConfigParser::ConfigParser(char* path, char *slaves)
 {
   //initialization of files
   pugi::xml_parse_result result = doc.load_file(path); 
-  cout << "INFO: database XML Load result: " << result.description()  << endl;
+  //cout << "INFO: database XML Load result: " << result.description()  << endl;
   result = commDoc.load_file(slaves); 
-  cout << "INFO: database XML Load result: " << result.description()  << endl;  
+  //cout << "INFO: database XML Load result: " << result.description()  << endl;  
   return;   
 }
 /*! Destructor*/
@@ -176,6 +176,7 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
       retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbName,"name");
       retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbTrigger,"tagTrigger");
       retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeTrigger");
+      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbType,"type");
       //tags
       tablesParams[dbNumber][i].numFields = retrieveNumberofNodes(&table,"tag");
       

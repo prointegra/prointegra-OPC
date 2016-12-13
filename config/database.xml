@@ -5,7 +5,7 @@
         <tag name="tagTest4" tagName="readTest" type="INT" />
         <tag name="tagTest3" tagName="readWriteTest3" type="INT" />
 	</table>
-	<table name="table2" tagTrigger="rTrigger2" timeTrigger="" type="LOG">
+	<table name="table2" tagTrigger="rTrigger2" timeTrigger="" type="LASTVALUE">
         <tag name="tagTest1" tagName="readWriteTest" type="INT" />
         <tag name="tagTest2" tagName="readWriteTest2" type="INT" />
 	</table>

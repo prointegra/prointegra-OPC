@@ -24,6 +24,7 @@ checks config and create dinamically databases connections and schemas'''
 int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
   char *sqlQuery = NULL;
+  char *initValues = NULL;
   int ret;
   
   //taking db parameters
@@ -37,13 +38,19 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
       for(int i=0;i<parameters.numTables;i++)
 	{
 	  tables[i] = new DBTable(tablesParams[i]);
-	  tables[i]->create(&parameters,&sqlQuery);
+	  tables[i]->create(&parameters,&sqlQuery, &initValues);
           //TODO: we should catch exceptions!
-	  std::cout << sqlQuery << std::endl;
+	  //std::cout << sqlQuery << std::endl;
 	  ret = query(NULL,sqlQuery);
+	  if (initValues !=NULL && initValues[0])
+	    {
+	      //std::cout << initValues << std::endl;	
+	      ret = query(NULL,initValues);
+	    }
 	}
     }
   delete sqlQuery;
+  delete initValues;
   return 0;
 }
 
@@ -72,7 +79,7 @@ int DBInterface::storeData()
     {
       tables[i]->store(&parameters,&sqlQuery);
       //TODO: we should catch exceptions!
-      //std::cout << sqlQuery << std::endl;
+      //std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
       ret = ret + query(NULL,sqlQuery);
     }
   return ret;
@@ -203,21 +210,25 @@ DBTable::~DBTable()
 /*!function for creating database tables dinamycally
 TODO: only implemented sqlite,MySQL tables!
 */
-int DBTable::create(databaseParameters* parameters, char **query)
+int DBTable::create(databaseParameters* parameters, char **query, char **startValues)
 {
   char *sqlQuery = NULL;
+  char * init = NULL;
   int ret;
 
   sqlQuery = *query;
+  init = *startValues;
   
   if(!strcmp(parameters->type,"QSQLITE"))
     {
       creationSqlite(&sqlQuery);
+      initValuesSqlite(&init);
       ret = 0;
     }
    else if(!strcmp(parameters->type,"QMYSQL"))
     {
-      creationMysql(&sqlQuery);
+      creationMysql(&sqlQuery);    
+      initValuesMysql(&init);
       ret = 0;
     }
   else if(!strcmp(parameters->type,"QTDS"))
@@ -230,7 +241,9 @@ int DBTable::create(databaseParameters* parameters, char **query)
       sqlQuery=NULL;
       ret = -1;
     }
+  
   *query = sqlQuery;
+  *startValues = init;
   
   return ret;
 }
@@ -334,7 +347,46 @@ int DBTable::creationMysql(char **sql)
   *sql = sqlQuery;
   return 0;
 }
+/*!function for insert initialization NULL data to a SQLITE NOT LOG type table
+*/
+int DBTable::initValuesSqlite(char **sql)
+{
+  char *sqlQuery = NULL;
+  
+  sqlQuery = *sql;
+  
+  if(sqlQuery != NULL)
+    delete(sqlQuery);
 
+  if(strcmp(parameters.tbType,"LOG"))
+    {
+      sqlQuery = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+5];
+      sprintf(sqlQuery,"INSERT INTO %S () VALUES ()",parameters.tbName );
+    }
+   
+  *sql = sqlQuery;
+  return 0;
+}
+/*!function for insert initialziation NULL data to a MySQL NOT LOG type table
+*/
+int DBTable::initValuesMysql(char **sql)
+{
+  char *sqlQuery = NULL;
+  
+  sqlQuery = *sql;
+  
+  if(sqlQuery != NULL)
+    delete(sqlQuery);
+
+  if(strcmp(parameters.tbType,"LOG"))
+    {
+      sqlQuery = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+5];
+      sprintf(sqlQuery,"INSERT INTO %s () VALUES ()",parameters.tbName );
+    }
+   
+  *sql = sqlQuery;
+  return 0;
+}
 /*!function for store data to the table
 TODO: only implemented sqlite,MySQL tables!
 */
@@ -369,9 +421,24 @@ int DBTable::store(databaseParameters* parameters,char **query)
   
   return ret;
 }
-/*!function for store data to a sqlite table
+/*!function for storing data to a SQLITE table
 */
 int DBTable::storeSqlite(char **sql)
+{
+  char *sqlQuery = NULL;
+  int ret = -1;
+
+  sqlQuery = *sql;
+  if(!strcmp(parameters.tbType,"LASTVALUE"))
+    ret = updateSqlite(&sqlQuery);
+  else
+    ret = insertSqlite(&sqlQuery);
+  
+  *sql = sqlQuery;
+}
+/*!function for inserting data to a sqlite table
+*/
+int DBTable::insertSqlite(char **sql)
 {
   char *sqlQuery = NULL;
   char * temp = NULL;
@@ -456,9 +523,85 @@ int DBTable::storeSqlite(char **sql)
 
 
 }
+
+/*!function for storing data to a SQLITE LASTVALUE type table
+*/
+int DBTable::updateSqlite(char **sql)
+{
+  char *sqlQuery = NULL;
+  char * temp = NULL;
+  char * field = NULL;
+
+  int first = 1;
+  
+  sqlQuery = *sql;
+  
+  if(sqlQuery != NULL)
+    delete(sqlQuery);
+  
+  temp = new char[strlen("UPDATE ") + strlen(parameters.tbName) + strlen(" SET ")+5];
+  strcpy(temp,"UPDATE ");
+  strcat(temp,parameters.tbName);
+  strcat(temp," SET ");
+
+  sqlQuery = new char[strlen(temp)+5];
+  strcpy(sqlQuery,temp);
+
+  for (int i = 0; i < parameters.numFields;i++)
+    {
+      delete temp;
+      temp = new char[strlen(sqlQuery)+5];
+      strcpy(temp,sqlQuery);
+      delete sqlQuery;
+      
+      if(parameters.stField[i].isValid)
+	{
+	  if(!first)
+	      strcat(temp,",");
+	  first = 0;
+	  
+	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
+	    {
+	      field = new char[parameters.stField[i].iValue +5];
+	      sprintf(field,"%d",parameters.stField[i].iValue);
+	    }
+	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5 + strlen(field)];
+	  strcpy(sqlQuery,temp);
+	  strcat(sqlQuery,parameters.stField[i].name);
+	  strcat(sqlQuery,"=");
+	  strcat(sqlQuery,field);
+
+	  delete field;
+	}
+      else
+	{
+	  sqlQuery = new char[strlen(temp)+5];
+	  strcpy(sqlQuery,temp);
+	}
+    }
+  delete temp;
+
+  *sql = sqlQuery;
+  return 0;
+}
 /*!function for store data to a MySQL table
 */
 int DBTable::storeMysql(char **sql)
+{
+  char *sqlQuery = NULL;
+  int ret = -1;
+
+  sqlQuery = *sql;
+  if(!strcmp(parameters.tbType,"LASTVALUE"))
+    ret = updateMysql(&sqlQuery);
+  else
+    ret = insertMysql(&sqlQuery);
+  
+  *sql = sqlQuery;
+}
+/*!function for insert data to a MySQL LOG type table
+*/
+int DBTable::insertMysql(char **sql)
 {
   char *sqlQuery = NULL;
   char * temp = NULL;
@@ -539,6 +682,66 @@ int DBTable::storeMysql(char **sql)
   delete values;
   
   *sql = temp;
+  return 0;
+}
+/*!function for storing data to a MySQL LASTVALUE type table
+*/
+int DBTable::updateMysql(char **sql)
+{
+  char *sqlQuery = NULL;
+  char * temp = NULL;
+  char * field = NULL;
+
+  int first = 1;
+  
+  sqlQuery = *sql;
+  
+  if(sqlQuery != NULL)
+    delete(sqlQuery);
+  
+  temp = new char[strlen("UPDATE ") + strlen(parameters.tbName) + strlen(" SET ")+5];
+  strcpy(temp,"UPDATE ");
+  strcat(temp,parameters.tbName);
+  strcat(temp," SET ");
+
+  sqlQuery = new char[strlen(temp)+5];
+  strcpy(sqlQuery,temp);
+
+  for (int i = 0; i < parameters.numFields;i++)
+    {
+      delete temp;
+      temp = new char[strlen(sqlQuery)+5];
+      strcpy(temp,sqlQuery);
+      delete sqlQuery;
+      
+      if(parameters.stField[i].isValid)
+	{
+	  if(!first)
+	      strcat(temp,",");
+	  first = 0;
+	  
+	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
+	    {
+	      field = new char[parameters.stField[i].iValue +5];
+	      sprintf(field,"%d",parameters.stField[i].iValue);
+	    }
+	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5 + strlen(field)];
+	  strcpy(sqlQuery,temp);
+	  strcat(sqlQuery,parameters.stField[i].name);
+	  strcat(sqlQuery,"=");
+	  strcat(sqlQuery,field);
+
+	  delete field;
+	}
+      else
+	{
+	  sqlQuery = new char[strlen(temp)+5];
+	  strcpy(sqlQuery,temp);
+	}
+    }
+  delete temp;
+
+  *sql = sqlQuery;
   return 0;
 }
 /*!function to return a field tag
