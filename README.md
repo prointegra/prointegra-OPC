@@ -15,7 +15,8 @@ prointegra-OPC is a C++ application to take/send tags from/to industrial automat
 ##Dependencies
 
 + it's based in [pvbrowser](http://pvbrowser.de) libs, so have it installed is required.
-+ QT 5 and it's drivers for databases.
++ QT 5 and it's drivers for databases. (MySQL, SQLite3)
+    - under ubuntu xenial (16.04): ``` sudo apt-get install libqt5sql-mysql libqt5sql-sqlite ```
 + use of [gStools](https://github.com/gentooza/gStools) for tags conversions (already included in /lib folder)
 + use of pugiXML for configurations files (already cinluded in /lib folder, v1.7)
 

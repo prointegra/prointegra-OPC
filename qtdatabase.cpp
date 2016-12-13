@@ -9,9 +9,9 @@
 
 qtDatabase::qtDatabase()
 {
-  db = new QSqlDatabase;
+  //db = new QSqlDatabase;
   //std::cout << db->drivers().isEmpty() <<std::endl;
-  delete db;
+  //delete db;
 
   db = NULL;
   result = new QSqlQuery();

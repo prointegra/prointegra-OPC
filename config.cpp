@@ -122,12 +122,12 @@ int ConfigParser::checkDBType(const char* type)
   strcpy(temp,type);
   for(int i=0;i<strlen(temp);i++)
     temp[i] = toupper(temp[i]);
-  if(!strcmp(temp,"QSQLITE") || !strcmp(temp,"QTDS"))
+  if(!strcmp(temp,"QSQLITE") || !strcmp(temp,"QMYSQL"))
     {
       delete temp;
       return 0;
     }
-  cout << "ERROR: DATABASE " << temp << " DOESN'T EXIST OR IS NOT IMPLEMENTED" << endl;
+  cout << "ERROR!: DATABASE TYPE " << temp << " DOESN'T EXIST OR IS NOT IMPLEMENTED" << endl;
   return -1;
 }
 

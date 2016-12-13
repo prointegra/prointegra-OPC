@@ -57,6 +57,8 @@ int DBInterface::start()
   if(qtDatabase::open(parameters.type,parameters.host,parameters.dbName,parameters.user,parameters.pass))
     {
       std::cout << "ERROR!: CAN'T OPEN DATABASE " << parameters.internalName << std::endl;
+      //std::cout << "->ERROR!: PARAMETERS: " << std::endl;
+      //std::cout << "->ERROR!: type: "<< parameters.type << " ,hostname:" << parameters.host << " ,database:" << parameters.dbName << " ,user:" << parameters.user << " ,password:" << parameters.pass << std::endl;      
     }
 }
 
@@ -294,10 +296,10 @@ int DBTable::creationMysql(char **sql)
   if(sqlQuery != NULL)
     delete(sqlQuery);
   
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT,")+5];
+  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTO_INCREMENT,")+5];
   strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
   strcat(temp,parameters.tbName);
-  strcat(temp," (ID INTEGER PRIMARY KEY AUTOINCREMENT,");
+  strcat(temp," (ID INTEGER PRIMARY KEY AUTO_INCREMENT,");
 
   sqlQuery = new char[strlen(temp)+5];
   strcpy(sqlQuery,temp);
