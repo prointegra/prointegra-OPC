@@ -137,7 +137,6 @@ int ProintegraOPC::dataToDB()
 	    }
 	}
     }
-  storeDB();
   return 0;   
 }
 /*data to database process
@@ -177,8 +176,10 @@ int ProintegraOPC::loop()
       dataCapture();
       std::cout << "INFO: store data to Databases ..." << std::endl;        
       dataToDB();
+      storeDB();
       std::cout << "DEBUG: showing what we have stored ..." << std::endl;
       showDBData();
+
     }
   return 0;   
 }
@@ -207,7 +208,7 @@ int ProintegraOPC::showDBData()
 	      std::cout << "*------->FIELD: " << k+1 << std::endl;
 	      std::cout << "*--------->NAME: " << hDatabase[i]->retFieldTag(j,k)  << std::endl;
 	      std::cout << "*--------->VALUE: " << hDatabase[i]->retFieldValue(j,k)  << std::endl;
-	      std::cout << "*--------->VALID: " << hDatabase[i]->retFieldValid(j,k)  << std::endl;	      
+	      std::cout << "*--------->VALID: " << hDatabase[i]->retFieldValid(j,k)  << std::endl;
 	    }
 	}
     }

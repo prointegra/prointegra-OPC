@@ -158,9 +158,9 @@ int DBInterface::setFieldValue(int table, int field, int value)
 /*!function to check if a field is already linked*/
 int DBInterface::fieldLinked(int table,int field)
 {
-  int* link;
+  static int* link = NULL;
   int linked = 0;
-  if(table > 0 && table < parameters.numTables)
+  if(table >= 0 && table < parameters.numTables)
     {
       link = tables[table]->retLink(field);
     
@@ -172,9 +172,9 @@ int DBInterface::fieldLinked(int table,int field)
 /*!function to return a field linking*/
 int* DBInterface::retFieldLink(int table, int field)
 {
-  int* link;
-  int linked = 0;
-    if(table > 0 && table < parameters.numTables)
+  static int* link = NULL;
+  
+  if(table >= 0 && table < parameters.numTables)
     {
       link = tables[table]->retLink(field);
     }
@@ -186,8 +186,9 @@ int* DBInterface::retFieldLink(int table, int field)
 int DBInterface::fieldLink(int table, int field, int slave, int tag)
 {
   int ret = -1;
-  if(table > 0 && table < parameters.numTables)
+  if(table >= 0 && table < parameters.numTables)
     {
+      std::cout << "DEBUG: (inside DBInterface::fieldLink function) linking table:" << table << "with slave,tag:"<<slave<<"," << tag <<std::endl;
       tables[table]->setLink(field,slave,tag);
       ret = 0;
     }
