@@ -402,7 +402,7 @@ int DBTable::store(databaseParameters* parameters,char **query)
       storeSqlite(&sqlQuery);
       ret = 0;
     }
-   else if(!strcmp(parameters->type,"QMYSQL"))
+  else if(!strcmp(parameters->type,"QMYSQL"))
     {
       storeMysql(&sqlQuery);
       ret = 0;
@@ -436,6 +436,7 @@ int DBTable::storeSqlite(char **sql)
   
   *sql = sqlQuery;
 }
+
 /*!function for inserting data to a sqlite table
 */
 int DBTable::insertSqlite(char **sql)
