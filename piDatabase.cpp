@@ -134,7 +134,7 @@ int DBInterface::retFieldValue(int table, int field)
 int DBInterface::setFieldValid(int table, int field, int valid)
 {
   int ret = -1;
-  if(table > 0 && table < parameters.numTables)
+  if(table >= 0 && table < parameters.numTables)
     {
       ret = tables[table]->setFieldValid(field,valid);      
     }
@@ -147,7 +147,7 @@ from table*/
 int DBInterface::setFieldValue(int table, int field, int value)
 {
   int ret = -1;  
-  if(table > 0 && table < parameters.numTables)
+  if(table >= 0 && table < parameters.numTables)
     {
       ret = tables[table]->setFieldValue(field,value);
     }
@@ -188,7 +188,6 @@ int DBInterface::fieldLink(int table, int field, int slave, int tag)
   int ret = -1;
   if(table >= 0 && table < parameters.numTables)
     {
-      std::cout << "DEBUG: (inside DBInterface::fieldLink function) linking table:" << table << "with slave,tag:"<<slave<<"," << tag <<std::endl;
       tables[table]->setLink(field,slave,tag);
       ret = 0;
     }
@@ -811,6 +810,7 @@ int DBTable::setFieldValid(int field, int valid)
   int ret = -1;
   if(field >= 0 && field < parameters.numFields)
     {
+      std::cout <<"DEBUG: (inside DBTable::setFieldValid function) field:"<<field<<" isValid:" << valid << std::endl;
       parameters.stField[field].isValid = valid;
       ret = 0;
     }
