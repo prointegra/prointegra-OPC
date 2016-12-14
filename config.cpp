@@ -283,7 +283,7 @@ int ConfigParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 	      //tag ADDRESS
 	      retrieveIntAttr(&tag,&slaveParams[index].stRegisters[i].iAddress,"addr");
 	      //tag type
-	      retrieveIntAttr(&tag,&slaveParams[index].stRegisters[i].dataType,"type");   
+	      retrieveCharAttr(&tag,&slaveParams[index].stRegisters[i].dataType,"type");   
 	      if(!checkTagData(i))
 		slaveParams[index].stRegisters[i].isValid = 1;
 	      else

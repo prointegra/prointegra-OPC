@@ -32,35 +32,13 @@ enum RLLIB_ERRORS
   {
     DAQ_ERROR = 8388608
   };
-enum DATA_TYPES
-  {
-    INT = 0
-  };
-
-//members
-/*!register to save
-typedef struct 
-{
-  int index;
-  char tag_name[12];
-  int valueLL;
-  int valueL;
-  int valueH;
-  int valueHH;
-  char date[20];
-  char time[20];
-  int cycle;
-  char comment[100];
-  int type;
-  int err;
-  } mbRegData;*/
 
 //members
 /*!register trnasmitted*/
 typedef struct 
 {
   char* tagName = NULL;
-  int dataType = 0;
+  char * dataType = NULL;
   int iAddress = 0;
   int isValid = 0;
 

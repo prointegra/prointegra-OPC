@@ -67,12 +67,12 @@ int IniConfigurator::iniCreate(char *iniFile, mbSlaves* parameters)
       fprintf(pFile,"SHARED_MEMORY=./comm/id%d.shm\n",parameters->commId);
       fprintf(pFile,"SHARED_MEMORY_SIZE=65536\n");
       fprintf(pFile,"MAILBOX=./comm/id%d.mbx\n",parameters->commId);
-      //cycles CALC?!?!?! TO DO!
       fprintf(pFile,"\n");
       writCycles(pFile,parameters);
   
       fclose(pFile);
     }
+  std::cout << "DEBUG: ini file finished!" << std::endl;
   return ret;
 }
 
@@ -93,28 +93,49 @@ int IniConfigurator::writCycles(FILE* pFile, mbSlaves* parameters)
 {
   int cycles = 0;
   int min,max,i = 0;
+  int failed = -1;
   
   //INT TAGS
-  while(parameters->stRegisters[i].dataType!=INT && parameters->stRegisters[i].isValid)
+  //  while(tagTypeValid(parameters->stRegisters[i].dataType) && parameters->stRegisters[i].isValid)
+  //  {
+  //    i++;
+  //  }
+  if(parameters->nRegs>0)
     {
-      i++;
-    }
-  min = max = parameters->stRegisters[i].iAddress;
+      min = max = parameters->stRegisters[0].iAddress;
   
-  for(i=0; i<parameters->nRegs;i++)
-    {
-      if((min > parameters->stRegisters[i].iAddress) && (parameters->stRegisters[i].isValid))
-	min = parameters->stRegisters[i].iAddress;
-      if((max < parameters->stRegisters[i].iAddress) && (parameters->stRegisters[i].isValid))
-	max = parameters->stRegisters[i].iAddress;
-    }
-  cycles = (max - min) / 50 + 1;
-  fprintf(pFile,"[CYCLES]\n");      
-  fprintf(pFile,"NUM_CYCLES=%d\n",cycles);
-  for(i=0;i < cycles;i++)
-    {
-      fprintf(pFile,"CYCLE%d=50,holdingRegisters(%d,%d)\n",i+1,parameters->commId,min+i*50);
+      for(i=0; i<parameters->nRegs;i++)
+	{
+	  if((min > parameters->stRegisters[i].iAddress) && (parameters->stRegisters[i].isValid))
+	    min = parameters->stRegisters[i].iAddress;
+	  if((max < parameters->stRegisters[i].iAddress) && (parameters->stRegisters[i].isValid))
+	    max = parameters->stRegisters[i].iAddress;
+	}
+      cycles = (max - min) / 50 + 1;
+     
+      fprintf(pFile,"[CYCLES]\n");      
+      fprintf(pFile,"NUM_CYCLES=%d\n",cycles);
+      for(i=0;i < cycles;i++)
+	{
+	  fprintf(pFile,"CYCLE%d=50,holdingRegisters(%d,%d)\n",i+1,parameters->commId,min+i*50);
+	}
+      failed = 0;
     }
 
-  return 0;
+  return failed;
+}
+
+/*! function to check if a tag type is valid
+*/
+int IniConfigurator::tagTypeValid(const char * type)
+{
+  int valid = 0;
+
+  if(!strcmp(type,"INT"))
+    valid++;
+  else if(!strcmp(type,"WORD"))
+    valid++;
+
+  return valid;
 }     
+

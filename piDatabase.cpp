@@ -40,11 +40,11 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 	  tables[i] = new DBTable(tablesParams[i]);
 	  tables[i]->create(&parameters,&sqlQuery, &initValues);
           //TODO: we should catch exceptions!
-	  //std::cout << sqlQuery << std::endl;
+	  std::cout << sqlQuery << std::endl;
 	  ret = query(NULL,sqlQuery);
 	  if (initValues !=NULL && initValues[0])
 	    {
-	      //std::cout << initValues << std::endl;	
+	      std::cout << initValues << std::endl;	
 	      ret = query(NULL,initValues);
 	    }
 	}
@@ -79,7 +79,7 @@ int DBInterface::storeData()
     {
       tables[i]->store(&parameters,&sqlQuery);
       //TODO: we should catch exceptions!
-      //std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
+      std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
       ret = ret + query(NULL,sqlQuery);
     }
   return ret;
@@ -241,7 +241,6 @@ int DBTable::create(databaseParameters* parameters, char **query, char **startVa
       sqlQuery=NULL;
       ret = -1;
     }
-  
   *query = sqlQuery;
   *startValues = init;
   
@@ -309,9 +308,10 @@ int DBTable::creationMysql(char **sql)
   if(sqlQuery != NULL)
     delete(sqlQuery);
   
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTO_INCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
+  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + 2 + strlen(" (ID INTEGER PRIMARY KEY AUTO_INCREMENT,")+5];
+  strcpy(temp,"CREATE TABLE IF NOT EXISTS `");
   strcat(temp,parameters.tbName);
+  strcat(temp,"`");
   strcat(temp," (ID INTEGER PRIMARY KEY AUTO_INCREMENT,");
 
   sqlQuery = new char[strlen(temp)+5];
@@ -323,8 +323,10 @@ int DBTable::creationMysql(char **sql)
       strcpy(temp,sqlQuery);
       delete sqlQuery;
 	
-      field = new char[strlen(parameters.stField[i].type) + strlen(parameters.stField[i].name) + 5];
-      strcpy(field,parameters.stField[i].name);
+      field = new char[strlen(parameters.stField[i].type) + strlen(parameters.stField[i].name) + 7];
+      strcpy(field,"`");
+      strcat(field,parameters.stField[i].name);
+      strcat(field,"`");
       //different types
       if(!strcmp(parameters.stField[i].type,"DATE"))
 	strcat(field," DATE");
@@ -361,7 +363,7 @@ int DBTable::initValuesSqlite(char **sql)
   if(strcmp(parameters.tbType,"LOG"))
     {
       sqlQuery = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+5];
-      sprintf(sqlQuery,"INSERT INTO %S () VALUES ()",parameters.tbName );
+      sprintf(sqlQuery,"INSERT INTO `%s` () VALUES ()",parameters.tbName );
     }
    
   *sql = sqlQuery;
@@ -381,7 +383,7 @@ int DBTable::initValuesMysql(char **sql)
   if(strcmp(parameters.tbType,"LOG"))
     {
       sqlQuery = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+5];
-      sprintf(sqlQuery,"INSERT INTO %s () VALUES ()",parameters.tbName );
+      sprintf(sqlQuery,"INSERT INTO `%s` () VALUES ()",parameters.tbName );
     }
    
   *sql = sqlQuery;
@@ -454,7 +456,7 @@ int DBTable::insertSqlite(char **sql)
   if(sqlQuery != NULL)
     delete(sqlQuery);
   
-  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (")+5];
+  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (")+7];
   strcpy(temp,"INSERT INTO ");
   strcat(temp,parameters.tbName);
   strcat(temp,"(");
@@ -617,10 +619,11 @@ int DBTable::insertMysql(char **sql)
   if(sqlQuery != NULL)
     delete(sqlQuery);
   
-  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (")+5];
+  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (") + 7];
   strcpy(temp,"INSERT INTO ");
+  strcat(temp,"`");
   strcat(temp,parameters.tbName);
-  strcat(temp,"(");
+  strcat(temp,"`(");
 
   tmpValues = new char[strlen("VALUES (") +5];
   strcpy(tmpValues,"VALUES (");
@@ -647,7 +650,7 @@ int DBTable::insertMysql(char **sql)
 	      field = new char[parameters.stField[i].iValue +5];
 	      sprintf(field,"%d",parameters.stField[i].iValue);
 	    }
-	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5];
+	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+7];
 	  values = new char[strlen(tmpValues)+strlen(field)+5];
 	  strcpy(sqlQuery,temp);
 	  strcpy(values,tmpValues);
@@ -659,7 +662,9 @@ int DBTable::insertMysql(char **sql)
 	  else
 	    first = 0;
 	  strcat(values,field);
+	  strcat(sqlQuery,"`");
 	  strcat(sqlQuery,parameters.stField[i].name);
+	  strcat(sqlQuery,"`");
 	  delete field;
 	}
       else
@@ -702,8 +707,10 @@ int DBTable::updateMysql(char **sql)
   
   temp = new char[strlen("UPDATE ") + strlen(parameters.tbName) + strlen(" SET ")+5];
   strcpy(temp,"UPDATE ");
+  
+  strcat(temp,"`");
   strcat(temp,parameters.tbName);
-  strcat(temp," SET ");
+  strcat(temp,"` SET ");
 
   sqlQuery = new char[strlen(temp)+5];
   strcpy(sqlQuery,temp);
@@ -728,8 +735,9 @@ int DBTable::updateMysql(char **sql)
 	    }
 	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5 + strlen(field)];
 	  strcpy(sqlQuery,temp);
+	  strcat(sqlQuery,"`");
 	  strcat(sqlQuery,parameters.stField[i].name);
-	  strcat(sqlQuery,"=");
+	  strcat(sqlQuery,"`=");
 	  strcat(sqlQuery,field);
 
 	  delete field;

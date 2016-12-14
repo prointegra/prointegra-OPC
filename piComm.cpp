@@ -23,21 +23,16 @@
 /*! function to take slave connection parameters and build interface dinamically */
 int CommInterface::setup(mbSlaves slaveParams)
 {
-
-  int ret;
-  
+  int failed = -1;
   //taking db parameters
   parameters = slaveParams;
   if(parameters.isValid)
     {
       std::cout << "DEBUG: configuring communications for slave with id = " << parameters.commId << std::endl;
       //setting communication daemon
-      setupCommDaemon();
-
-      
+      failed = setupCommDaemon();    
     }
-
-  return 0;
+  return failed;
 }
 
 /*! function to setup ini file, mailbox,shared memory and instance of rlib communications */
@@ -46,12 +41,10 @@ int CommInterface::setupCommDaemon()
   int failed = -1;
   if(!strcmp(parameters.commType,"MODBUSTCP"))
     {
-      std::cout << "DEBUG: MODBUS TCP/IP found, configuring..."<< std::endl;
+      std::cout << "INFO: MODBUS TCP/IP found, configuring..."<< std::endl;
       failed = setupMBUSTCP();
     }
-  else
-    failed = -1;
-  return 0;
+  return failed;
 }
 
 /*! function to setup ini file, mailbox,shared memory and instance of MODBUS TCP/IP rlib communications */
@@ -63,7 +56,7 @@ int CommInterface::setupMBUSTCP()
   char * iniFile = NULL;
   IniConfigurator iniConfig;
   
-  std::cout << "DEBUG: setting MODBUS TCP/IP rlDataAcquisition class..."<< std::endl;
+  //std::cout << "DEBUG: setting MODBUS TCP/IP rlDataAcquisition class..."<< std::endl;
   
   mailbox = new char[strlen("./comm/id.mbx")+sizeof(char)*10];
   sharedMemory = new char[strlen("./comm/id.shm")+sizeof(char)*10];
@@ -83,9 +76,10 @@ int CommInterface::setupMBUSTCP()
   delete iniFile;
   delete mailbox;
   delete sharedMemory;
-  return 0;
+  return failed;
 }
-/*!function to read all data */
+/*!function to read all data 
+TODO: error returning?*/
 int CommInterface::readData()
 {
   int failed = -1;
@@ -105,9 +99,16 @@ int CommInterface::readData()
 int CommInterface::readTag(int index)
 {
   int ret = -1;
-  if(parameters.stRegisters[index].dataType == INT)
+  if(!strcmp(parameters.stRegisters[index].dataType,"INT"))
     {
       if(readINT(index))
+	parameters.stRegisters[index].valueValid = 0;
+      else
+	parameters.stRegisters[index].valueValid = 1;
+    }
+  else if (!strcmp(parameters.stRegisters[index].dataType,"WORD"))
+    {
+      if(readWORD(index))
 	parameters.stRegisters[index].valueValid = 0;
       else
 	parameters.stRegisters[index].valueValid = 1;
@@ -131,6 +132,24 @@ int CommInterface::readINT(int index)
       parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->intValue(rlCommand));
     }
 
+  return failed;
+}
+
+/*function to read a slave's word tag
+TODO: for now only from holdingRegisters!*/
+int CommInterface::readWORD(int index)
+{
+  char *rlCommand;
+  int failed = DAQ_ERROR;
+
+  rlCommand = new char[sizeof("holdingRegisters(,)") + sizeof(parameters.commId) + sizeof(parameters.stRegisters[index].iAddress) + 5];
+  sprintf(rlCommand,"holdingRegisters(%d,%d)",parameters.commId,parameters.stRegisters[index].iAddress);
+  //std::cout <<"DEBUG: reading tag, command:"<< rlCommand <<" raw data:"<<rlMODBUS->intValue(rlCommand)<<" word data:"<< rlMODBUS->intValue(rlCommand) << std::endl;
+  if (rlMODBUS->intValue(rlCommand) != DAQ_ERROR)
+    {
+      failed = 0;
+      parameters.stRegisters[index].iValue = rlMODBUS->intValue(rlCommand);
+    }
   return failed;
 }
 /*!Function for returning a tag name
