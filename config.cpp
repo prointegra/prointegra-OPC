@@ -20,14 +20,16 @@
 //constants
 const char* sVERSION = "v0.0.2B";
 
-/*! Constructor*/
+/*! Constructor
+TODO:should we have to catch exceptions??¿*/
 ConfigParser::ConfigParser(char* path, char *slaves)
 {
+  
   //initialization of files
   pugi::xml_parse_result result = doc.load_file(path); 
-  //cout << "INFO: database XML Load result: " << result.description()  << endl;
+  std::cout << "INFO: database XML Load result: " << result.description()   << std::endl;
   result = commDoc.load_file(slaves); 
-  //cout << "INFO: database XML Load result: " << result.description()  << endl;  
+  std::cout << "INFO: communications XML Load result: " << result.description()   << std::endl;  
   return;   
 }
 /*! Destructor*/
@@ -112,11 +114,13 @@ int ConfigParser::checkTableParams(int db, int table)
   return failed;
 }
 
-
-
+/*!function to check tableDatabase type 
+TODO: we only check if driver is either QSQLITE or QMYSQL
+*/
 int ConfigParser::checkDBType(const char* type)
 {
-  char * temp;
+  char * temp = NULL;
+  int failed = -1;
 
   temp = new char[strlen(type)+1];
   strcpy(temp,type);
@@ -124,14 +128,16 @@ int ConfigParser::checkDBType(const char* type)
     temp[i] = toupper(temp[i]);
   if(!strcmp(temp,"QSQLITE") || !strcmp(temp,"QMYSQL"))
     {
-      delete temp;
-      return 0;
+      failed = 0;
     }
-  cout << "ERROR!: DATABASE TYPE " << temp << " DOESN'T EXIST OR IS NOT IMPLEMENTED" << endl;
-  return -1;
+  if(failed)
+    cout << "ERROR!: DATABASE TYPE " << temp << " DOESN'T EXIST OR IS NOT IMPLEMENTED" << endl;
+  delete temp;
+  return failed;
 }
 
-/*!function for retuning a database parameters instance*/
+/*!function for returning a database parameters instance
+TODO:fucntions must have only one return point!*/
 databaseParameters ConfigParser::retDBParams(int database)
 {
   databaseParameters temp;
@@ -143,7 +149,9 @@ databaseParameters ConfigParser::retDBParams(int database)
   else
     return temp;
 }
-/*!function for retuning a table parameters instance array from a given database (by index)*/
+
+/*!function for returning a table parameters instance array from a given database (by index)
+TODO:fucntions must have only one return point!*/
 tableParameters* ConfigParser::retDBTables(int database)
 {
   tableParameters* temp = new tableParameters[0];
@@ -153,8 +161,6 @@ tableParameters* ConfigParser::retDBTables(int database)
     }
   return temp;
 }
-
-
 
 /*! function to retrieve all data from table in database, and creating it in memory struct */
 int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables)
@@ -167,7 +173,7 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
 
   //defining number of tables in db
   i = numTables;
-  std::cout << "INFO: " << numTables << " tables found" << std::endl;
+  std::cout << "INFO: " << numTables << " tables found..." << std::endl;
   tablesParams[dbNumber] = new tableParameters[i];
   //retrieving table parameters
   i=0;
@@ -255,17 +261,13 @@ int ConfigParser::retrieveCommParams()
 /*! function to retrieve all data from table in database, and creating it in memory struct */
 int ConfigParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 {
-
-  char* tagName = NULL;
-  char* sAddress = NULL;
- 
   int i;
 
   //defining number of tags in slave protocol
   if (pugi::xml_node protocol = slave->child( slaveParams[index].commType))
     {
       slaveParams[index].nRegs = retrieveNumberofNodes(&protocol,"tag");
-      std::cout << "found "<< slaveParams[index].nRegs << " tags!" << std::endl;
+      std::cout << "INFO: "<< slaveParams[index].nRegs << " tags found..." << std::endl;
       if(slaveParams[index].nRegs > 0)
 	{
 	
@@ -296,8 +298,6 @@ int ConfigParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
    
   return 0;
 }
-
-
 
 /*!function to check slave parameters integrity 
 TODO: to improve the check!
@@ -465,12 +465,10 @@ int ConfigParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* 
   *name = newName;
   return 0;  
 }
-/*!(private) function to take a int attribute from XML parsing*/
+/*!(private) function to take a int attribute from XML parsing
+TODO:error check to improve, returning fail if value is not present(i.e)*/
 int ConfigParser::retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute)
 {
-
-  int size=0;
-
   //as_int() suppose to return 0  if value is empty
   *value = db->attribute(attribute).as_int();
 

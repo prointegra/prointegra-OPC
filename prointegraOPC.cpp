@@ -167,9 +167,6 @@ int ProintegraOPC::startCommunications()
 TODO: we don't manage daemons!*/
 int ProintegraOPC::loop()
 {
-
-
-  std::cout << "INFO: capturing ..." << std::endl;
   while(1)
     {
       Sleep(1000);
@@ -179,8 +176,8 @@ int ProintegraOPC::loop()
       dataCapture();
       std::cout << "INFO: store data to Databases ..." << std::endl;        
       dataToDB();
-      std::cout << "DEBUG: showing what we have stored ..." << std::endl;
-      showDBData();
+      //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
+      //showDBData();
     }
   return 0;   
 }

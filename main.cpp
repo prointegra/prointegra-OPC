@@ -36,12 +36,10 @@ int main(int ac, char **av)
 #endif
 
   int ret;
-  std::cout << "DEBUG: Prointegra OPC version: " << sVERSION << std::endl;
+  std::cout << "INFO: Prointegra OPC version: " << sVERSION << std::endl;
   server = new ProintegraOPC();
   server->startCommunications();
-  std::cout << "DEBUG: checking system!" << std::endl;
-  server->checkDB();
-  std::cout << "DEBUG: capturing!" << std::endl;
+  std::cout << "INFO: start capturing..." << std::endl;
   ret = server->loop();
 
   return ret;
