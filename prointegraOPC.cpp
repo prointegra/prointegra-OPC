@@ -177,8 +177,8 @@ int ProintegraOPC::loop()
       std::cout << "INFO: store data to Databases ..." << std::endl;        
       dataToDB();
       storeDB();
-      std::cout << "DEBUG: showing what we have stored ..." << std::endl;
-      showDBData();
+      //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
+      //showDBData();
 
     }
   return 0;   

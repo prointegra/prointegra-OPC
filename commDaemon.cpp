@@ -14,11 +14,12 @@
  */
 /**
 @file commDaemon.cpp
+'''launching,checking,logging... communication daemon manager class'''
 */
 
 #include "commDaemon.h"
 
-
+/*! constructor, creates pipes for every slave*/
 CommDaemon::CommDaemon(int slaves)
 {
   nSlaves = slaves;
@@ -68,8 +69,6 @@ int CommDaemon::launchDaemon(int nSlave, int commId, char * protocol)
   else//failure in creating a pipe
      perror("pipe");
 
-
-  
   return failed;
 }
 
@@ -94,6 +93,9 @@ int CommDaemon::launchMODBUSDaemon(int nSlave, int commId)
   char line[128];
   FILE *file;
   FILE *fout; // out file
+  clock_t start = clock();
+  int lines = 0;
+  const int maxLines = 20000;
 
   renameOldLog(commId,&tmpString);
   fout = fopen(tmpString,"w");
@@ -109,10 +111,16 @@ int CommDaemon::launchMODBUSDaemon(int nSlave, int commId)
 	  return -1;        
 	}
       //show output
-      while (fgets(line, 128, file) != NULL) //buffer can be improved IMPROVE
+      while (fgets(line, 128, file) != NULL) //buffer can be improved
 	{
-	  fprintf(fout,"%s", line);
-	    write(nPipes[nSlave][1], "11", strlen("nn"));
+	  fprintf(fout,"%f: %s", (clock()-start)/CLOCKS_PER_SEC, line);
+	  lines++;
+	  if(lines >= maxLines)
+	    {
+	      rewind(fout);
+	      lines = 0;
+	    }
+	  write(nPipes[nSlave][1], "11", strlen("nn"));
 	}
       write(nPipes[nSlave][1], "00", strlen("nn"));
       pclose(file);

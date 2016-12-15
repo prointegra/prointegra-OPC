@@ -13,8 +13,12 @@
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 /**
-@file threads.h
+@file commDaemon.h
 */
+
+#ifndef _COMMDAEMON_
+#define _COMMDAEMON_
+
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
@@ -22,16 +26,11 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
-
-
-
-#ifndef _COMMDAEMON_
-#define _COMMDAEMON_
-
+#include <time.h>
 
 #include <unistd.h>
 
-
+/*launching,checking,logging... communication daemon manager class*/
 class CommDaemon
 {
  public:

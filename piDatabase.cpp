@@ -40,11 +40,11 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 	  tables[i] = new DBTable(tablesParams[i]);
 	  tables[i]->create(&parameters,&sqlQuery, &initValues);
           //TODO: we should catch exceptions!
-	  std::cout << sqlQuery << std::endl;
+	  //std::cout << sqlQuery << std::endl;
 	  ret = query(NULL,sqlQuery);
 	  if (initValues !=NULL && initValues[0])
 	    {
-	      std::cout << initValues << std::endl;	
+	      //std::cout << initValues << std::endl;	
 	      ret = query(NULL,initValues);
 	    }
 	}
@@ -79,7 +79,7 @@ int DBInterface::storeData()
     {
       tables[i]->store(&parameters,&sqlQuery);
       //TODO: we should catch exceptions!
-      std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
+      //std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
       ret = ret + query(NULL,sqlQuery);
     }
   return ret;
@@ -180,7 +180,6 @@ int* DBInterface::retFieldLink(int table, int field)
     }
 
   return link;
-
 }
 /*!function to link a field with a slave and tag*/
 int DBInterface::fieldLink(int table, int field, int slave, int tag)
@@ -810,7 +809,7 @@ int DBTable::setFieldValid(int field, int valid)
   int ret = -1;
   if(field >= 0 && field < parameters.numFields)
     {
-      std::cout <<"DEBUG: (inside DBTable::setFieldValid function) field:"<<field<<" isValid:" << valid << std::endl;
+      // std::cout <<"DEBUG: (inside DBTable::setFieldValid function) field:"<<field<<" isValid:" << valid << std::endl;
       parameters.stField[field].isValid = valid;
       ret = 0;
     }
