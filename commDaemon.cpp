@@ -93,9 +93,13 @@ int CommDaemon::launchMODBUSDaemon(int nSlave, int commId)
   char line[128];
   FILE *file;
   FILE *fout; // out file
-  clock_t start = clock();
   int lines = 0;
   const int maxLines = 20000;
+
+  char buffer[10];
+  time_t rawTime;
+  struct tm * timeInfo;
+
 
   renameOldLog(commId,&tmpString);
   fout = fopen(tmpString,"w");
@@ -103,7 +107,7 @@ int CommDaemon::launchMODBUSDaemon(int nSlave, int commId)
   if (!setExecutable(commId,"MODBUSTCP", &tmpString))
     {
   
-      file = popen(tmpString, "r");
+      file = popen(tmpString, "w");
       if (!file) 
 	{ 
 	  fprintf(stderr,"ERROR: bad command to execute modbus tcp ip daemon\n");
@@ -113,15 +117,22 @@ int CommDaemon::launchMODBUSDaemon(int nSlave, int commId)
       //show output
       while (fgets(line, 128, file) != NULL) //buffer can be improved
 	{
-	  fprintf(fout,"%f: %s", (clock()-start)/CLOCKS_PER_SEC, line);
+	  time(&rawTime);
+	  timeInfo = localtime(&rawTime);
+	  strftime (buffer,10,"%T: ",timeInfo);
+	  std::cout << "DEBUG: MODBUS WORKING! PRINTING" <<  std::endl;
+	  fprintf(fout,"%s%s", buffer,line);
+	  std::cout << "DEBUG: MODBUS WORKING! PRINTED, line:" << lines <<  std::endl;
 	  lines++;
 	  if(lines >= maxLines)
 	    {
 	      rewind(fout);
 	      lines = 0;
 	    }
+	  std::cout << "DEBUG: MODBUS WORKING! :" << line <<  std::endl;
 	  write(nPipes[nSlave][1], "11", strlen("nn"));
 	}
+      std::cout << "ERROR:*** MODBUS STOP WORKING! ***" <<  std::endl;
       write(nPipes[nSlave][1], "00", strlen("nn"));
       pclose(file);
       delete tmpString;

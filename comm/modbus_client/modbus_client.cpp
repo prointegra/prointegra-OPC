@@ -411,6 +411,7 @@ static int readModbus(int i)
     }  
     return ret;
   }
+      
   ind = 0;
   for(i1=0; i1<namelist_count[i]; ) // store all values in shared memory
   {
@@ -425,6 +426,8 @@ static int readModbus(int i)
     }
     else if(namelist_datasize[i] == 16) // bit
     {
+      printf("**DEBUG DATA read = %s ,ind: %d , i1: %d , %i: %d , namelist_count[i]:%d**\n",data,ind,i1,i,namelist_count[i]);
+      printf("**DEBUG DATA read = %d*256 + %d **\n",data[ind],data[ind+1]);
       val = data[ind]*256 + data[ind+1];
       if(debug) printf("write short %s=%d to shared memory\n", name, val);
       provider->setIntValue(name,val);

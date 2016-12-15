@@ -23,10 +23,12 @@ checks config and create dinamically databases connections and schemas'''
 /*! function to take database connection and table parameters for our database interface */
 int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
-  char *sqlQuery = NULL;
+  char **sqlQuery = NULL;
   char *initValues = NULL;
+  int* nQueries = NULL;
   int ret;
-  
+
+  nQueries = new int;
   //taking db parameters
   parameters = dbParams;
   start();
@@ -38,14 +40,21 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
       for(int i=0;i<parameters.numTables;i++)
 	{
 	  tables[i] = new DBTable(tablesParams[i]);
-	  tables[i]->create(&parameters,&sqlQuery, &initValues);
-          //TODO: we should catch exceptions!
-	  //std::cout << sqlQuery << std::endl;
-	  ret = query(NULL,sqlQuery);
-	  if (initValues !=NULL && initValues[0])
+	  std::cout << "DEBUG: going to SQL creation!" << std::endl;
+	  tables[i]->create(&parameters,&nQueries,&sqlQuery);
+	  std::cout << "DEBUG: returned from creation! created:" << *nQueries <<"  SQL queries "<< std::endl;
+	  //TODO: we should catch exceptions!
+	  if (*nQueries > 0)
 	    {
-	      //std::cout << initValues << std::endl;	
-	      ret = query(NULL,initValues);
+	      for(int i=0;i<*nQueries;i++)
+		{
+		  if(sqlQuery != NULL && sqlQuery[i] != NULL && sqlQuery[i][0] )
+		    {
+		      std::cout << sqlQuery[i] << std::endl;
+		      ret = query(NULL,sqlQuery[i]);
+		    }
+
+		}
 	    }
 	}
     }
@@ -209,40 +218,54 @@ DBTable::~DBTable()
 /*!function for creating database tables dinamycally
 TODO: only implemented sqlite,MySQL tables!
 */
-int DBTable::create(databaseParameters* parameters, char **query, char **startValues)
+int DBTable::create(databaseParameters* dbParameters,int** nQueries, char ***query)
 {
-  char *sqlQuery = NULL;
-  char * init = NULL;
-  int ret;
+  char **sqlQuery = NULL;
+  int ret=-1;
+  int* num;
 
   sqlQuery = *query;
-  init = *startValues;
-  
-  if(!strcmp(parameters->type,"QSQLITE"))
+  num = *nQueries;
+  std::cout << "DEBUG: (inside DBTable::create) asigning 0 to *num "<< std::endl;
+  *num = 0;
+  std::cout << "DEBUG: (inside DBTable::create) creating an array of:asigning values to *num =" << *num << std::endl;
+  if(!strcmp(parameters.tbType,"LASTVALUE"))
     {
-      creationSqlite(&sqlQuery);
-      initValuesSqlite(&init);
-      ret = 0;
-    }
-   else if(!strcmp(parameters->type,"QMYSQL"))
-    {
-      creationMysql(&sqlQuery);    
-      initValuesMysql(&init);
-      ret = 0;
-    }
-  else if(!strcmp(parameters->type,"QTDS"))
-    {
-      sqlQuery=NULL;
-      ret = -1;
+      *num = 3;
     }
   else
-    {
-      sqlQuery=NULL;
-      ret = -1;
-    }
-  *query = sqlQuery;
-  *startValues = init;
+    *num=1;
+  std::cout << "DEBUG: (inside DBTable::create) creating an array of:" << *num << " SQL queries" << std::endl;
+  sqlQuery = new char*[*num];
+  std::cout << "DEBUG: (inside DBTable::create) created an array of:"<< *num << " SQL queries" << std::endl;
+  for(int i=0;i<*num;i++)
+    sqlQuery[i]=NULL;
   
+  if(!strcmp(dbParameters->type,"QSQLITE"))
+    {
+      std::cout << "DEBUG: (inside DBTable::create) creating SQLITE quieres" << std::endl;
+      creationSqlite(&sqlQuery[0]);
+      if(*num>1)
+	initValuesSqlite(*num,&sqlQuery);
+      ret = 0;
+    }
+   else if(!strcmp(dbParameters->type,"QMYSQL"))
+    {
+      std::cout << "DEBUG: (inside DBTable::create) creating MySQL queries" << std::endl;
+      creationMysql(&sqlQuery[0]);
+      if(*num>1)
+	initValuesMysql(*num,&sqlQuery);
+      ret = 0;
+    }
+  if(ret)
+    {
+      delete sqlQuery;
+      *num = 0;
+    }
+  std::cout << "DEBUG: (inside DBTable::create) copying back pointers, ret:" << ret << std::endl;
+  *nQueries = num;
+  *query =  sqlQuery;
+  std::cout << "DEBUG: (inside DBTable::create) returning ret:" << ret << std::endl;
   return ret;
 }
 /*!function for creating the database schema, for SQLite databases*/
@@ -350,43 +373,59 @@ int DBTable::creationMysql(char **sql)
 }
 /*!function for insert initialization NULL data to a SQLITE NOT LOG type table
 */
-int DBTable::initValuesSqlite(char **sql)
+int DBTable::initValuesSqlite(int num,char ***sql)
 {
-  char *sqlQuery = NULL;
+  char **sqlQuery = NULL;
+  int ret = -1;
   
   sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-
-  if(strcmp(parameters.tbType,"LOG"))
+  if(num == 3 && strcmp(parameters.tbType,"LOG")) //only contemplated option
     {
-      sqlQuery = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+5];
-      sprintf(sqlQuery,"INSERT INTO `%s` () VALUES ()",parameters.tbName );
+
+      for(int i=1;i<num;i++)
+	{
+	  if(sqlQuery[i] != NULL)
+	    delete(sqlQuery[i]);	
+	}
+      std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:1" << std::endl;
+      sqlQuery[1] = new char[strlen("DELETE FROM  ") + strlen(parameters.tbName) + 7];
+      sprintf(sqlQuery[1],"DELETE FROM `%s`",parameters.tbName );
+      std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:2" << std::endl;
+      sqlQuery[2] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+7];
+      sprintf(sqlQuery[2],"INSERT INTO `%s` () VALUES ()",parameters.tbName );
+      ret = 0;
     }
-   
+
   *sql = sqlQuery;
-  return 0;
+  return ret;
 }
 /*!function for insert initialziation NULL data to a MySQL NOT LOG type table
 */
-int DBTable::initValuesMysql(char **sql)
+int DBTable::initValuesMysql(int num,char ***sql)
 {
-  char *sqlQuery = NULL;
-  
+  char **sqlQuery = NULL;
+  int ret = -1;
   sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
 
-  if(strcmp(parameters.tbType,"LOG"))
+  if(num == 3 && strcmp(parameters.tbType,"LOG")) //only contemplated option
     {
-      sqlQuery = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+5];
-      sprintf(sqlQuery,"INSERT INTO `%s` () VALUES ()",parameters.tbName );
+      for(int i=1;i<num;i++)
+	{
+	  if(sqlQuery[i] != NULL)
+	    delete(sqlQuery[i]);
+	
+	}
+      std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:1" << std::endl;
+      sqlQuery[1] = new char[strlen("DELETE FROM  ") + strlen(parameters.tbName) + 7];
+      sprintf(sqlQuery[1],"DELETE FROM `%s`",parameters.tbName );
+      std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:2" << std::endl;
+      sqlQuery[2] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+7];
+      sprintf(sqlQuery[2],"INSERT INTO `%s` () VALUES ()",parameters.tbName );
+      ret = 0;
     }
-   
+
   *sql = sqlQuery;
-  return 0;
+  return ret;
 }
 /*!function for store data to the table
 TODO: only implemented sqlite,MySQL tables!

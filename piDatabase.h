@@ -36,11 +36,11 @@ class DBTable
   DBTable(tableParameters tableParams);
   ~DBTable();
   //creation
-  int create(databaseParameters* parameters,char **query, char **startValues);
+  int create(databaseParameters* parameters,int ** nQueries,char ***query);
   int creationSqlite(char **sql);
   int creationMysql(char **sql);
-  int initValuesSqlite(char **sql);
-  int initValuesMysql(char **sql);
+  int initValuesSqlite(int num,char ***sql);
+  int initValuesMysql(int num,char ***sql);
   //storing
   int store(databaseParameters* parameters,char **query);
   int storeSqlite(char **sql);
