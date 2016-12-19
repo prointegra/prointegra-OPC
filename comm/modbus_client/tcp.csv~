@@ -1,3 +1,0 @@
-COMMID,TAG_INDICE,TAG_NAME,COMENTARIO,TYPE
-1,1,currentA,corriente fase A en amperes,int
-1,2,currentB,corriente fase B en amperes,int

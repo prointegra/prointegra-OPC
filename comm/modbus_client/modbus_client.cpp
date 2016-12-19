@@ -343,10 +343,13 @@ static int init(int ac, char **av)
   return 0;
 }
 
-static int modbusCycle(int slave, int function, int start_adr, int num_register, unsigned char *data)
+static int modbusCycle(int slave, int function, int start_adr, int num_register, unsigned char **data)
 {
-  int ret;
+  int ret = 0;
+  unsigned char* localData = NULL;
 
+  localData = *data;
+  
   if(slave < 0 || slave >= 256) return -1;
   if(poll_slave_counter[slave] > 0)
   {
@@ -357,37 +360,53 @@ static int modbusCycle(int slave, int function, int start_adr, int num_register,
       int cnt = provider->readErrorCount() + 1;
       if(cnt >= 256*256) cnt = 0;
       provider->setReadErrorCount(cnt);
-      return -1;
+      ret = -1;
     }  
   }
 
-  if(debug) printf("modbusRequest: var=%s : slave=%d function=%d start_adr=%d num_register=%d\n", 
+  if(!ret)
+    {
+      if(debug) printf("modbusRequest: var=%s : slave=%d function=%d start_adr=%d num_register=%d\n", 
                                    var,     slave,   function,   start_adr,   num_register);
-  if(use_socket != 1) rlsleep(modbus_idletime); // on tty we have to sleep
-  thread->lock();
-  ret = modbus->request(slave, function, start_adr, num_register);
-  if(ret >= 0) ret = modbus->response( &slave, &function, data);
-  thread->unlock();
-  if(ret < 0)
-  {
-    int cnt = provider->readErrorCount() + 1;
-    if(cnt >= 256*256) cnt = 0;
-    provider->setReadErrorCount(cnt);
-    poll_slave_counter[slave] = n_poll_slave;
-  }
-  if(debug) printf("modbusResponse: ret=%d slave=%d function=%d data=%02x %02x %02x %02x\n",
+      if(use_socket != 1) rlsleep(modbus_idletime); // on tty we have to sleep
+
+      thread->lock();
+      ret = modbus->request(slave, function, start_adr, num_register);
+      if(ret >=0)
+	ret = modbus->response( &slave, &function, localData);
+      if(ret < 0)
+	{
+	  int cnt = provider->readErrorCount() + 1;
+	  if(cnt >= 256*256) cnt = 0;
+	  provider->setReadErrorCount(cnt);
+	  poll_slave_counter[slave] = n_poll_slave;
+	  //ADDED
+	  printf("RESETTING MODBUS! \n");
+	  delete modbus;
+	  modbus = new rlModbus(1024,protocol);
+	  delete mysocket;
+	  mysocket = new rlSocket(ip,port,1);
+	  modbus->registerSocket(mysocket);
+	  mysocket->connect();
+	  ////
+	}
+      thread->unlock();
+      if(debug) printf("modbusResponse: ret=%d slave=%d function=%d data=%02x %02x %02x %02x\n",
                                     ret,   slave,   function,   data[0], data[1], data[2], data[3]);
+    }
+  *data = localData;
   return ret;
 }
 
 static int readModbus(int i)
 {
-  unsigned char data[512];
+  unsigned char  *data;
   char          name[1024]; 
   int           i1, ind, ret;
   unsigned int  val;
 
-  ret = modbusCycle(namelist_slave[i], namelist_function[i], namelist_start_adr[i], namelist_count[i], data);
+  data = new unsigned char[512];
+  ret = modbusCycle(namelist_slave[i], namelist_function[i], namelist_start_adr[i], namelist_count[i], &data);
   if(ret < 0)
   {
     if(debug) printf("modbusCycle returned error\n");
@@ -408,39 +427,43 @@ static int readModbus(int i)
         ind += 2;
         i1  += 1;
       }
-    }  
-    return ret;
+    }
+
   }
-      
-  ind = 0;
-  for(i1=0; i1<namelist_count[i]; ) // store all values in shared memory
-  {
-    sprintf(name,"%s(%d,%d)", var, namelist_slave[i], namelist_start_adr[i] + i1); // print name
-    if     (namelist_datasize[i] == 1)  // bit
-    {
-      val = data[ind];
-      if(debug) printf("write 8bits %s=0x%x to shared memory\n", name, val);
-      provider->setIntValue(name,val);
-      ind += 1;
-      i1  += 8;
+  else
+    {   
+      ind = 0;
+      for(i1=0; i1<namelist_count[i]; ) // store all values in shared memory
+	{
+	  sprintf(name,"%s(%d,%d)", var, namelist_slave[i], namelist_start_adr[i] + i1); // print name
+
+	  if     (namelist_datasize[i] == 1)  // bit
+	    {
+	      val = data[ind];
+	      if(debug) printf("write 8bits %s=0x%x to shared memory\n", name, val);
+	      provider->setIntValue(name,val);
+	      ind += 1;
+	      i1  += 8;
+	      ret = 0;
+	    }
+	  else if(namelist_datasize[i] == 16) // bit
+	    {
+	      val = data[ind]*256 + data[ind+1];
+	      if(debug) printf("write short %s=%d to shared memory\n", name, val);
+	      provider->setIntValue(name,val);
+	      ind += 2;
+	      i1  += 1;
+	      ret = 0;
+	    }
+	  else
+	    {
+	      printf("ERROR: unknown datasize\n");
+	      ret = -1;
+	    }
+	}
     }
-    else if(namelist_datasize[i] == 16) // bit
-    {
-      printf("**DEBUG DATA read = %s ,ind: %d , i1: %d , %i: %d , namelist_count[i]:%d**\n",data,ind,i1,i,namelist_count[i]);
-      printf("**DEBUG DATA read = %d*256 + %d **\n",data[ind],data[ind+1]);
-      val = data[ind]*256 + data[ind+1];
-      if(debug) printf("write short %s=%d to shared memory\n", name, val);
-      provider->setIntValue(name,val);
-      ind += 2;
-      i1  += 1;
-    }
-    else
-    {
-      printf("ERROR: unknown datasize\n");
-      return -1;
-    }
-  }  
-  return 0;
+  delete data;
+  return ret;
 }
 
 int main(int argc,char *argv[])
@@ -463,6 +486,7 @@ int main(int argc,char *argv[])
       strcpy(var,cell->text());
       // thread->lock();   // done in modbusCycle
       readModbus(i);
+
       // thread->unlock(); // done in modbusCycle
       cell = cell->getNextCell();
     }
