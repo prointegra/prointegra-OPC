@@ -105,7 +105,6 @@ typedef struct
   
 } tableParameters;
 
-
 class ConfigParser 
 {
  public:
