@@ -324,6 +324,7 @@ static int init(int ac, char **av)
   {
     mysocket = new rlSocket(ip,port,1);
     modbus->registerSocket(mysocket);
+    //delete mysocket;
     mysocket->connect();
     if(mysocket->isConnected()) printf("success connecting to %s:%d\n", ip, port);
     else                        printf("WARNING: could not connect to %s:%d\n", ip, port);
@@ -380,15 +381,11 @@ static int modbusCycle(int slave, int function, int start_adr, int num_register,
 	  if(cnt >= 256*256) cnt = 0;
 	  provider->setReadErrorCount(cnt);
 	  poll_slave_counter[slave] = n_poll_slave;
-	  //ADDED
-	  printf("RESETTING MODBUS! \n");
-	  delete modbus;
-	  modbus = new rlModbus(1024,protocol);
-	  delete mysocket;
-	  mysocket = new rlSocket(ip,port,1);
-	  modbus->registerSocket(mysocket);
-	  mysocket->connect();
-	  ////
+	  if(use_socket)
+	    {
+	      mysocket->disconnect();
+	      mysocket->connect();
+	    }
 	}
       thread->unlock();
       if(debug) printf("modbusResponse: ret=%d slave=%d function=%d data=%02x %02x %02x %02x\n",
