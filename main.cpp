@@ -35,13 +35,13 @@ int main(int ac, char **av)
   a.addLibraryPath ( "C:/Qt/Qt5.6.0/5.6/mingw49_32/plugins/sqldrivers");
 #endif
 
-  int ret;
+  int ret =0;
   std::cout << "INFO: Prointegra OPC version: " << sVERSION << std::endl;
   server = new ProintegraOPC();
   server->startCommunications();
   std::cout << "INFO: start capturing..." << std::endl;
   ret = server->loop();
-
+  delete server;
+  std::cout << "INFO: Thanks for using Prointegra OPC!" << std::endl; 
   return ret;
 }
-

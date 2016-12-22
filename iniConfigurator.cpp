@@ -45,7 +45,7 @@ int IniConfigurator::iniCreate(char *iniFile, mbSlaves* parameters)
       socket = usingSocket(parameters);
       fprintf(pFile,"USE_SOCKET=%d\n",socket);
       //by default (TO IMPROVE?)
-      fprintf(pFile,"DEBUG=1\n");
+      fprintf(pFile,"DEBUG=0\n");
       fprintf(pFile,"CYCLETIME=1000\n");
       fprintf(pFile,"N_POLL_SLAVE=10\n");      
       fprintf(pFile,"\n");

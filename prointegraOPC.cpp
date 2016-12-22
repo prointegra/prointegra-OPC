@@ -81,6 +81,13 @@ int ProintegraOPC::checkComm()
 
   return 0;   
 }
+/*!checking communication processes if running or not
+TODO: it's in fact still not be used*/
+int ProintegraOPC::stopComm()
+{
+  delete commDaemonManager;
+  return 0;   
+}
 /*data capturing process
 it should takes data from communications mailboxes and save it to it's slave structure*/
 int ProintegraOPC::dataCapture()
@@ -167,19 +174,34 @@ int ProintegraOPC::startCommunications()
 TODO: we don't manage daemons!*/
 int ProintegraOPC::loop()
 {
+  //exit handling
+  struct sigaction sigIntHandler;
+
+  sigIntHandler.sa_handler = ProintegraOPC::exitHandler;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+  sigaction(SIGINT, &sigIntHandler, NULL);
+  
   while(1)
     {
-      Sleep(1000);
-      std::cout << "INFO: checking communications ..." << std::endl;     
-      checkComm();
-      std::cout << "INFO: taking data from communications ..." << std::endl;  
-      dataCapture();
-      std::cout << "INFO: store data to Databases ..." << std::endl;        
-      dataToDB();
-      storeDB();
-      //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
-      //showDBData();
-
+      if(!lExit)
+	{
+	  std::cout << "INFO: checking communications ..." << std::endl;     
+	  checkComm();
+	  std::cout << "INFO: taking data from communications ..." << std::endl;  
+	  dataCapture();
+	  std::cout << "INFO: store data to Databases ..." << std::endl;        
+	  dataToDB();
+	  storeDB();
+	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
+	  //showDBData();	  
+	}
+      else
+	{
+	  std::cout << "INFO: EXITING! ..." << std::endl;
+	  stopComm();
+	  return 0;
+	}
     }
   return 0;   
 }

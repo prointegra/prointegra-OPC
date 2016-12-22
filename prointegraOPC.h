@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+#include <signal.h>
 
 #include <time.h>
 
@@ -41,6 +42,7 @@
 #define Sleep(x) usleep((x)*1000)
 #endif
 
+static int lExit = 0;
 
 /*!server capture class, it setup capture and run&check it */
 class ProintegraOPC 
@@ -61,6 +63,9 @@ class ProintegraOPC
   int storeDB();
   //DEBUGGING FUNCTIONS
   int showDBData();
+  //EXIT HANDLER
+  static void exitHandler(int s){lExit = 1;};
+  int stopComm();
 
   
  private:
@@ -76,8 +81,6 @@ class ProintegraOPC
   int nSlaves;
   CommInterface** hSlaves;
   CommDaemon* commDaemonManager;
-
-  
 };
 
 

@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 <slave name="test" protocol="MODBUSTCP" port="">
 	<MODBUSTCP addr="172.26.0.17" port="502">
 		<tag name="mbus_1" addr="100" type="WORD"/>

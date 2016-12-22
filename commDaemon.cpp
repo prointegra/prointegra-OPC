@@ -36,7 +36,8 @@ CommDaemon::~CommDaemon()
   for(int i=nSlaves-1;i>=0;i--)
     delete nPipes[i];
   delete nPipes;
-  
+  //to IMPROVE
+  system("killall modbus_client");
   return;
 }
 
@@ -44,44 +45,44 @@ int CommDaemon::launchDaemon(int nSlave, int commId, char * protocol)
 {
   int failed = -1;
   pid_t pid;
-  int     result;
+  int     result = 0;
 
   result = pipe (nPipes[nSlave]);
   if (result >= 0)
     {
       pid = fork();
       if (pid >= 0)
-	{
-	  if(pid == 0)
-	    {
-	      if(!strcmp(protocol,"MODBUSTCP"))
-		 launchMODBUSDaemon(nSlave,commId);
-	      failed = 0;
-	    }
-	  else
-	    failed = 0;
-	      	  
-	}
-      else //failure in creating a child
-	perror ("fork");
+  	{
+  	  if(pid == 0)
+  	    {
+  	      if(!strcmp(protocol,"MODBUSTCP"))
+  		 launchMODBUSDaemon(nSlave,commId);
+  	      failed = 0;
+  	    }
+  	  else
+  	    failed = 0;
+  	      	  
+  	}
+    else //failure in creating a child
+  	perror ("fork");
 
-    }
+   }
   else//failure in creating a pipe
-     perror("pipe");
+  perror("pipe");
 
   return failed;
 }
 
 int CommDaemon::checkDaemon(int slave)
 {
-  int failed = -1;
+  int failed = 0;
   char message[4];
   
-  read (nPipes[slave][0], message, sizeof(message));
-  message[3] = '\0';
+  //read (nPipes[slave][0], message, sizeof(message));
+  //message[3] = '\0';
   //std::cout << "DEBUG: message string from daemon: " << message << std::endl;
-  if(strstr(message,"1")!=NULL)
-    failed = 0;
+  //if(strstr(message,"1")!=NULL)
+  //  failed = 0;
 
   return failed;
 }
@@ -102,46 +103,50 @@ int CommDaemon::launchMODBUSDaemon(int nSlave, int commId)
 
 
   renameOldLog(commId,&tmpString);
-  fout = fopen(tmpString,"w");
+  //fout = fopen(tmpString,"r");
   delete tmpString;
   if (!setExecutable(commId,"MODBUSTCP", &tmpString))
     {
-  
+      system(tmpString);
       file = popen(tmpString, "w");
-      if (!file) 
-	{ 
+      if (file) 
+      {   
+      
+	//show output
+	while (fgets(line, 128, file) != NULL) //buffer can be improved
+	  {};
+	  //time(&rawTime);
+	  //timeInfo = localtime(&rawTime);
+	  //strftime (buffer,10,"%T: ",timeInfo);
+	  //std::cout << "DEBUG: MODBUS WORKING! PRINTING" <<  std::endl;
+	  //fprintf(fout,"%s%s", buffer,line);
+	  //std::cout << "DEBUG: MODBUS WORKING! PRINTED, line:" << lines <<  std::endl;
+	  //lines++;
+	  //if(lines >= maxLines)
+	  //  {
+	  //    rewind(fout);
+	  //    lines = 0;
+	  //  }
+	  //std::cout << "DEBUG: MODBUS WORKING! :" << line <<  std::endl;
+	  //write(nPipes[nSlave][1], "11", strlen("nn"));
+      //}
+      //std::cout << "ERROR:*** MODBUS STOP WORKING! ***" <<  std::endl;
+      //write(nPipes[nSlave][1], "00", strlen("nn"));
+	pclose(file);
+      }
+      else
+	{
 	  fprintf(stderr,"ERROR: bad command to execute modbus tcp ip daemon\n");
 	  perror(".daemon_log"); 
-	  return -1;        
+	  failed= -1;
 	}
-      //show output
-      while (fgets(line, 128, file) != NULL) //buffer can be improved
-	{
-	  time(&rawTime);
-	  timeInfo = localtime(&rawTime);
-	  strftime (buffer,10,"%T: ",timeInfo);
-	  std::cout << "DEBUG: MODBUS WORKING! PRINTING" <<  std::endl;
-	  fprintf(fout,"%s%s", buffer,line);
-	  std::cout << "DEBUG: MODBUS WORKING! PRINTED, line:" << lines <<  std::endl;
-	  lines++;
-	  if(lines >= maxLines)
-	    {
-	      rewind(fout);
-	      lines = 0;
-	    }
-	  std::cout << "DEBUG: MODBUS WORKING! :" << line <<  std::endl;
-	  write(nPipes[nSlave][1], "11", strlen("nn"));
-	}
-      std::cout << "ERROR:*** MODBUS STOP WORKING! ***" <<  std::endl;
-      write(nPipes[nSlave][1], "00", strlen("nn"));
-      pclose(file);
       delete tmpString;
     }
   else
     {
       fprintf(stderr,"ERROR: bad command to execute modbus tcp ip daemon\n");
     }
-  pclose(fout);
+      //pclose(fout);
 
   
   return failed;
@@ -174,8 +179,8 @@ int CommDaemon::setExecutable(int commId,char* protocol,char **executable)
   if(!strcmp(protocol,"MODBUSTCP"))
     {
 
-      file1 = new char[sizeof("./comm/modbus_client/modbus_client ./comm/modbus_client/") + commId*sizeof(char)];
-      sprintf(file1,"./comm/modbus_client/modbus_client ./comm/modbus_client/id%d.ini",commId);
+      file1 = new char[sizeof("./comm/modbus_client/modbus_client ./comm/modbus_client/") + commId*sizeof(char) +5];
+      sprintf(file1,"./comm/modbus_client/modbus_client ./comm/modbus_client/id%d.ini &",commId);
       failed = 0;
     }
   *executable = file1;
