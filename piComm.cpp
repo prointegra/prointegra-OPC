@@ -88,10 +88,9 @@ int CommInterface::readData()
     {
 
       if(parameters.stRegisters[i].isValid)
-	readTag(i);
+	failed = failed & readTag(i);
       //std::cout << "DEBUG: reading tag: " <<  parameters.stRegisters[i].tagName << ", int value: " << parameters.stRegisters[i].iValue << std::endl;
     }
-  failed  = 0;
 
   return failed;
 }
@@ -113,7 +112,10 @@ int CommInterface::readTag(int index)
       else
 	parameters.stRegisters[index].valueValid = 1;
     }
-
+  else
+    parameters.stRegisters[index].valueValid = 0;
+  if(parameters.stRegisters[index].valueValid)
+    ret = 0;
   return ret;
 }
 /*function to read a slave's int tag

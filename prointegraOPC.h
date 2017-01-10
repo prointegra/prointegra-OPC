@@ -15,6 +15,7 @@
 /*!
 @File capture.h
 */
+
 #ifndef _CAPTURE_
 #define _CAPTURE_
 
@@ -28,7 +29,6 @@
 
 #include "piDatabase.h"
 #include "piComm.h"
-#include "dataManaging.h"
 #include "libgStools.h"
 #include "config.h"
 

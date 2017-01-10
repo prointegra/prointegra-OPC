@@ -180,8 +180,8 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
   for (pugi::xml_node table = db->child("table"); table; table = table.next_sibling("table"))
     {
       retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbName,"name");
-      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbTrigger,"tagTrigger");
-      retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeTrigger");
+      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbTrigger,"tagReadTrigger");
+      retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeReadTrigger");
       retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbType,"type");
       //tags
       tablesParams[dbNumber][i].numFields = retrieveNumberofNodes(&table,"tag");

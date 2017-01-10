@@ -92,9 +92,10 @@ int ProintegraOPC::stopComm()
 it should takes data from communications mailboxes and save it to it's slave structure*/
 int ProintegraOPC::dataCapture()
 {
+  int failed = -1;
   for(int i=0; i < nSlaves; i++)
-    hSlaves[i]->readData();
-  return 0;   
+    failed= failed & hSlaves[i]->readData();
+  return failed;   
 }
 /*data to database process
 it takes data from slave structures and save it to our tables structures
@@ -176,6 +177,7 @@ int ProintegraOPC::loop()
 {
   //exit handling
   struct sigaction sigIntHandler;
+  int failed = -1;
 
   sigIntHandler.sa_handler = ProintegraOPC::exitHandler;
   sigemptyset(&sigIntHandler.sa_mask);
@@ -186,13 +188,21 @@ int ProintegraOPC::loop()
     {
       if(!lExit)
 	{
+	  failed = 0;
 	  std::cout << "INFO: checking communications ..." << std::endl;     
 	  checkComm();
 	  std::cout << "INFO: taking data from communications ..." << std::endl;  
-	  dataCapture();
-	  std::cout << "INFO: store data to Databases ..." << std::endl;        
-	  dataToDB();
-	  storeDB();
+	  if(dataCapture())
+	    {
+	      failed = -1;
+	      std::cout << "ERROR: NO DATA CAPTURED! ..." << std::endl;   
+	    }
+	  if(!failed)
+	    {
+	      std::cout << "INFO: store data to Databases ..." << std::endl;        
+	      dataToDB();
+	      storeDB();
+	    }
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  
 	}
