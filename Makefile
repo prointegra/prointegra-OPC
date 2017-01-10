@@ -53,6 +53,8 @@ SOURCES       = main.cpp \
 		qtdatabase.cpp \
 		commDaemon.cpp \
 		piDatabase.cpp \
+		piTable.cpp \
+		piDataTable.cpp \
 		piComm.cpp \
 		iniConfigurator.cpp \
 		config.cpp \
@@ -62,6 +64,8 @@ OBJECTS       = main.o \
 		qtdatabase.o \
 		commDaemon.o \
 		piDatabase.o \
+		piTable.o \
+		piDataTable.o \
 		piComm.o \
 		iniConfigurator.o \
 		config.o \
@@ -154,6 +158,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		qtdatabase.h \
 		commDaemon.h \
 		piDatabase.h \
+		piTable.h \
+		piDataTable.h \
 		piComm.h \
 		iniConfigurator.h \
 		config.h \
@@ -163,6 +169,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		qtdatabase.cpp \
 		commDaemon.cpp \
 		piDatabase.cpp \
+		piTable.cpp \
+		piDataTable.cpp \
 		piComm.cpp \
 		iniConfigurator.cpp \
 		config.cpp \
@@ -386,8 +394,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents pvapp.h prointegraOPC.h qtdatabase.h commDaemon.h piDatabase.h piComm.h iniConfigurator.h config.h lib/pugixml-1.7/src/pugixml.hpp lib/pugixml-1.7/src/pugiconfig.hpp $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp prointegraOPC.cpp qtdatabase.cpp commDaemon.cpp piDatabase.cpp piComm.cpp iniConfigurator.cpp config.cpp lib/pugixml-1.7/src/pugixml.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents pvapp.h prointegraOPC.h qtdatabase.h commDaemon.h piDatabase.h piTable.h piDataTable.h piComm.h iniConfigurator.h config.h lib/pugixml-1.7/src/pugixml.hpp lib/pugixml-1.7/src/pugiconfig.hpp $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp prointegraOPC.cpp qtdatabase.cpp commDaemon.cpp piDatabase.cpp piTable.cpp piDataTable.cpp piComm.cpp iniConfigurator.cpp config.cpp lib/pugixml-1.7/src/pugixml.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -440,6 +448,8 @@ main.o: main.cpp pvapp.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
+		piDataTable.h \
+		piTable.h \
 		piComm.h \
 		iniConfigurator.h \
 		lib/gStools/libgStools.h \
@@ -464,6 +474,8 @@ prointegraOPC.o: prointegraOPC.cpp prointegraOPC.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
+		piDataTable.h \
+		piTable.h \
 		piComm.h \
 		iniConfigurator.h \
 		lib/gStools/libgStools.h \
@@ -496,8 +508,33 @@ piDatabase.o: piDatabase.cpp piDatabase.h \
 		/opt/pvb/rllib/lib/rldefine.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
-		/opt/pvb/rllib/lib/rlwthread.h
+		/opt/pvb/rllib/lib/rlwthread.h \
+		piDataTable.h \
+		piTable.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piDatabase.o piDatabase.cpp
+
+piTable.o: piTable.cpp piTable.h \
+		config.h \
+		lib/pugixml-1.7/src/pugixml.hpp \
+		lib/pugixml-1.7/src/pugiconfig.hpp \
+		/opt/pvb/rllib/lib/rldataacquisition.h \
+		/opt/pvb/rllib/lib/rldefine.h \
+		/opt/pvb/rllib/lib/rlmailbox.h \
+		/opt/pvb/rllib/lib/rlsharedmemory.h \
+		/opt/pvb/rllib/lib/rlwthread.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piTable.o piTable.cpp
+
+piDataTable.o: piDataTable.cpp piDataTable.h \
+		config.h \
+		lib/pugixml-1.7/src/pugixml.hpp \
+		lib/pugixml-1.7/src/pugiconfig.hpp \
+		/opt/pvb/rllib/lib/rldataacquisition.h \
+		/opt/pvb/rllib/lib/rldefine.h \
+		/opt/pvb/rllib/lib/rlmailbox.h \
+		/opt/pvb/rllib/lib/rlsharedmemory.h \
+		/opt/pvb/rllib/lib/rlwthread.h \
+		piTable.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piDataTable.o piDataTable.cpp
 
 piComm.o: piComm.cpp piComm.h \
 		config.h \

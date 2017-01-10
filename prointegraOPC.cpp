@@ -199,7 +199,9 @@ int ProintegraOPC::loop()
 	    }
 	  if(!failed)
 	    {
-	      std::cout << "INFO: store data to Databases ..." << std::endl;        
+	      std::cout << "INFO: store data to Databases ..." << std::endl;
+	      //getTriggers();
+	      //dataToComm();
 	      dataToDB();
 	      storeDB();
 	    }

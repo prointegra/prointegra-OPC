@@ -27,41 +27,8 @@
 
 #include "qtdatabase.h"
 #include "config.h"
-
-
-/*! Database table interface class */
-class DBTable
-{
- public:
-  DBTable(tableParameters tableParams);
-  ~DBTable();
-  //creation
-  int create(databaseParameters* parameters,int ** nQueries,char ***query);
-  int creationSqlite(char **sql);
-  int creationMysql(char **sql);
-  int initValuesSqlite(int num,char ***sql);
-  int initValuesMysql(int num,char ***sql);
-  //storing
-  int store(databaseParameters* parameters,char **query);
-  int storeSqlite(char **sql);
-  int insertSqlite(char **sql);
-  int updateSqlite(char **sql);
-  int storeMysql(char **sql);
-  int insertMysql(char **sql);
-  int updateMysql(char **sql); 
-  //return private members
-  int retNumFields(){return parameters.numFields;};
-  char * retFieldTag(int field);
-  int retFieldValid(int field);
-  int retFieldValue(int field);
-  int* retLink(int field);
-  //set attributes
-  int setFieldValid(int field, int valid);
-  int setFieldValue(int field, int value);
-  int setLink(int field, int slave, int tag);
-private:  
-  tableParameters parameters;
-};
+//#include "piTriggersTable.h"
+#include "piDataTable.h"
 
 /*! Database interface class, derived from pvbrowser addons examples */
 class DBInterface : public qtDatabase
@@ -70,6 +37,7 @@ class DBInterface : public qtDatabase
  DBInterface() : qtDatabase(){
   };
   int setup(databaseParameters dbParams,tableParameters* tablesParams);
+  int createTriggersTable();
   int start();
   //sql functions
   int storeData();
@@ -89,7 +57,8 @@ class DBInterface : public qtDatabase
   
  private:
   databaseParameters parameters;
-  DBTable** tables;
+  DBDataTable** tables;
+  //DBTriggersTable triggersTable;
 };
 
 

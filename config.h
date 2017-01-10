@@ -77,6 +77,9 @@ typedef struct
   int fromSlave= -1;
   int fromTag= -1;
   
+  int forRTable=-1;
+  int forWTable=-1;
+  
 } field;
 
 //database parameters
@@ -98,7 +101,10 @@ typedef struct
   int isValid = 0;
   char * tbName = NULL;
   char * tbTrigger = NULL;
-  int tbTriggerTime;
+  int tbTriggerTime = 0;
+  int RTrigger = -1;
+  char * tbWTrigger = NULL;
+  int WTrigger = -1;
   int numFields;
   char * tbType = NULL;
   field* stField; 
