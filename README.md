@@ -23,10 +23,12 @@ prointegra-OPC is a C++ application to take/send tags from/to industrial automat
 
 ##Docs
 
-Inside the docs folder you'll find documentation about installing, setting, etc.
+Inside the docs folder you'll find documentation
+ about installing, setting, etc.
 
 + [installing prointegra-OPC](docs/installing.md)
 + [configuring prointegra-OPC](docs/configuring.md)
+
 
 ##Contact
 
