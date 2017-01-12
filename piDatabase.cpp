@@ -24,6 +24,7 @@ checks config and create dinamically databases connections and schemas'''
 int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
   char **sqlQuery = NULL;
+  char *triggersQuery = NULL;
   char *initValues = NULL;
   int* nQueries = NULL;
   int ret;
@@ -40,9 +41,10 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
       for(int i=0;i<parameters.numTables;i++)
 	{
 	  tables[i] = new DBDataTable(tablesParams[i]);
-	  std::cout << "DEBUG: going to SQL creation!" << std::endl;
-	  tables[i]->create(&parameters,&nQueries,&sqlQuery);
-	  std::cout << "DEBUG: returned from creation! created:" << *nQueries <<"  SQL queries "<< std::endl;
+	  //std::cout << "DEBUG: (inside DBInterface::setup) checking tablesParams.tbTrigger = "<< tablesParams[i].tbTrigger << "  of table = " << i+1 << std::endl;
+	  //std::cout << "DEBUG: going to SQL creation!" << std::endl;
+	  tables[i]->create(&parameters,nQueries,&sqlQuery);
+	  //std::cout << "DEBUG: returned from creation! created:" << *nQueries <<"  SQL queries "<< std::endl;
 	  //TODO: we should catch exceptions!
 	  if (*nQueries > 0)
 	    {
@@ -56,11 +58,20 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 
 		}
 	    }
-	  createTriggersTable();
 	}
+
       //building triggers table
-      
+      for(int i=*nQueries-1;i>=0;i--)
+	delete sqlQuery[i];
+      createTriggersTable();
+      triggersTable->create(&parameters,triggersQuery,sqlQuery);
+      //TODO: we should catch exceptions!
+      if(!query(NULL,triggersQuery))
+	if(!query(NULL,sqlQuery[0]))
+	  if(!query(NULL,sqlQuery[1]))
+	    ret = 0;
     }
+ 
   delete sqlQuery;
   delete initValues;
   return 0;
@@ -70,9 +81,10 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 int DBInterface::createTriggersTable()
 {
   int failed = -1;
-  field** triggers;
+  field* triggers;
   int numFields = 0;
   int j = 0;
+  tableParameters tablesParams;
   for(int i=0;i<parameters.numTables;i++)
     {
       if(tables[i]->isReadTriggered())
@@ -80,25 +92,32 @@ int DBInterface::createTriggersTable()
       if(tables[i]->isWriteTriggered())
 	numFields++;
     }
-  triggers = new field*[numFields];
+  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating structure of " << numFields << " fields!" << std::endl;
+  triggers = new field[numFields];
   for(int i=0;i<parameters.numTables;i++)
     {
       if(tables[i]->isReadTriggered())
 	{
-	  triggers[j] = new field;
-	  tables[i]->retReadTrigger(triggers[j]);
-	  triggers[j]->forRTable = i;
+	  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) read trigger found!" << std::endl;
+	  //triggers[j] = new field;
+	  tables[i]->retReadTrigger(&triggers[j]);
+	  triggers[j].forRTable = i;
 	  j++;
 	}
       if(tables[i]->isWriteTriggered())
 	{
-	  triggers[j] = new field;
-	  tables[i]->retWriteTrigger(triggers[j]);
-	  triggers[j]->forWTable = i;
+	  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) write trigger found!" << std::endl;
+	  //triggers[j] = new field;
+	  tables[i]->retWriteTrigger(&triggers[j]);
+	  triggers[j].forWTable = i;
 	  j++;
 	}
     }
-   
+  numFields = j;
+  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating table parameters!" << std::endl;
+  tableParameters triggersTableParams = { 0, "triggers",NULL,0,-1,NULL,-1,numFields,NULL, triggers}; 
+  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating triggers class!" << std::endl; 
+  triggersTable = new DBTriggersTable(triggersTableParams);
 
   return failed;
 }

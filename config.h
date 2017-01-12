@@ -98,15 +98,15 @@ typedef struct
 //table parameters
 typedef struct
 {
-  int isValid = 0;
-  char * tbName = NULL;
-  char * tbTrigger = NULL;
-  int tbTriggerTime = 0;
-  int RTrigger = -1;
-  char * tbWTrigger = NULL;
-  int WTrigger = -1;
+  int isValid;
+  char * tbName;
+  char * tbTrigger;
+  int tbTriggerTime;
+  int RTrigger;
+  char * tbWTrigger;
+  int WTrigger;
   int numFields;
-  char * tbType = NULL;
+  char * tbType;
   field* stField; 
   
 } tableParameters;

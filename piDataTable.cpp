@@ -24,52 +24,46 @@ creates it dinamically and store retrieve data'''
 /*!function for creating database tables dinamycally
 TODO: only implemented sqlite,MySQL tables!
 */
-int DBDataTable::create(databaseParameters* dbParameters,int** nQueries, char ***query)
+int DBDataTable::create(databaseParameters* dbParameters,int* nQueries, char ***query)
 {
   char **sqlQuery = NULL;
   int ret=-1;
-  int* num;
 
   sqlQuery = *query;
-  num = *nQueries;
-  std::cout << "DEBUG: (inside DBTable::create) asigning 0 to *num "<< std::endl;
-  *num = 0;
-  std::cout << "DEBUG: (inside DBTable::create) creating an array of:asigning values to *num =" << *num << std::endl;
+
+  //std::cout << "DEBUG: (inside DBDataTable::create) asigning 1 to *nQueries "<< std::endl;
+  *nQueries = 1;
+  //std::cout << "DEBUG: (inside DBDataTable::create) creating an array of:asigning values to *nQueries =" << *nQueries << std::endl;
   if(!strcmp(parameters.tbType,"LASTVALUE"))
-    {
-      *num = 3;
-    }
-  else
-    *num=1;
-  std::cout << "DEBUG: (inside DBTable::create) creating an array of:" << *num << " SQL queries" << std::endl;
-  sqlQuery = new char*[*num];
-  std::cout << "DEBUG: (inside DBTable::create) created an array of:"<< *num << " SQL queries" << std::endl;
-  for(int i=0;i<*num;i++)
+      *nQueries = 3;
+  //std::cout << "DEBUG: (inside DBDataTable::create) creating an array of:" << *nQueries << " SQL queries" << std::endl;
+  sqlQuery = new char*[*nQueries];
+  //std::cout << "DEBUG: (inside DBTable::create) created an array of:"<< *num << " SQL queries" << std::endl;
+  for(int i=0;i<*nQueries;i++)
     sqlQuery[i]=NULL;
   
   if(!strcmp(dbParameters->type,"QSQLITE"))
     {
-      std::cout << "DEBUG: (inside DBTable::create) creating SQLITE quieres" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::create) creating SQLITE quieres" << std::endl;
       creationSqlite(&sqlQuery[0]);
-      if(*num>1)
-	initValuesSqlite(*num,&sqlQuery);
+      if(*nQueries>1)
+	initValuesSqlite(*nQueries,&sqlQuery);
       ret = 0;
     }
    else if(!strcmp(dbParameters->type,"QMYSQL"))
     {
-      std::cout << "DEBUG: (inside DBTable::create) creating MySQL queries" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::create) creating MySQL queries" << std::endl;
       creationMysql(&sqlQuery[0]);
-      if(*num>1)
-	initValuesMysql(*num,&sqlQuery);
+      if(*nQueries>1)
+	initValuesMysql(*nQueries,&sqlQuery);
       ret = 0;
     }
   if(ret)
     {
       delete sqlQuery;
-      *num = 0;
+      *nQueries = 0;
     }
-  std::cout << "DEBUG: (inside DBTable::create) copying back pointers, ret:" << ret << std::endl;
-  *nQueries = num;
+  //std::cout << "DEBUG: (inside DBTable::create) copying back pointers, ret:" << ret << std::endl;
   *query =  sqlQuery;
   std::cout << "DEBUG: (inside DBTable::create) returning ret:" << ret << std::endl;
   return ret;
@@ -632,7 +626,8 @@ int DBDataTable::retReadTrigger(field* trigger)
       
       trigger->type = new char[strlen("INT")+5];
       strcpy(trigger->type,"INT");
-
+      std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) read trigger = " << trigger->name << std::endl;
+      std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) PARAMETERS read trigger = " << parameters.tbTrigger << std::endl;
       failed = 0;
     }
 

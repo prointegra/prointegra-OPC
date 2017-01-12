@@ -24,7 +24,7 @@
         <tag name="INT_TSX_R[6]" tagName="INT_TSX_R[6]" type="INT" />
         <tag name="INT_TSX_R[7]" tagName="INT_TSX_R[7]" type="INT" />
 	</table>
-	<table name="READ" tagReadTrigger="rTrigger2" timeReadTrigger="" tagWriteTrigger="wTrigger2" type="LASTVALUE">
+	<table name="TABLAP" tagReadTrigger="rTrigger2" timeReadTrigger="" tagWriteTrigger="wTrigger2" type="LASTVALUE">
         <tag name="mbus_1" tagName="mbus_1" type="INT" />
         <tag name="mbus_2" tagName="mbus_2" type="INT" />
         <tag name="mbus_3" tagName="mbus_3" type="INT" />

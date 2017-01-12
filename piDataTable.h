@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <sstream>
 #include <time.h>
+#include <initializer_list>
 
 #include "config.h"
 
@@ -37,7 +38,7 @@ class DBDataTable : public DBTable
   DBDataTable(tableParameters tableParams) : DBTable(tableParams) {}
   ~DBDataTable();
   //creation
-  int create(databaseParameters* parameters,int ** nQueries,char ***query);
+  int create(databaseParameters* parameters,int * nQueries,char ***query);
   int creationSqlite(char **sql);
   int creationMysql(char **sql);
   int initValuesSqlite(int num,char ***sql);
@@ -66,7 +67,7 @@ class DBDataTable : public DBTable
   int setLink(int field, int slave, int tag);
   
 private:  
-  tableParameters parameters;
+
   
 };
 

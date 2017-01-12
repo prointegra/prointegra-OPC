@@ -174,7 +174,7 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
   //defining number of tables in db
   i = numTables;
   std::cout << "INFO: " << numTables << " tables found..." << std::endl;
-  tablesParams[dbNumber] = new tableParameters[i];
+  tablesParams[dbNumber] = new tableParameters[i]{};
   //retrieving table parameters
   i=0;
   for (pugi::xml_node table = db->child("table"); table; table = table.next_sibling("table"))

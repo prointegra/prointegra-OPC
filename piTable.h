@@ -59,7 +59,7 @@ class DBTable
   int setFieldValue(int field, int value);
   int setLink(int field, int slave, int tag);
   
-private:  
+protected:  
   tableParameters parameters;
   
 };

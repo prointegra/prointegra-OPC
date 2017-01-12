@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_SQL_LIB -DQT_CORE_LIB
 CFLAGS        = -m64 -pipe -O2 -D_REENTRANT -Wall -W -fPIC $(DEFINES)
-CXXFLAGS      = -m64 -pipe -O2 -D_REENTRANT -Wall -W -fPIC $(DEFINES)
+CXXFLAGS      = -m64 -pipe -std=gnu++11 -O2 -D_REENTRANT -Wall -W -fPIC $(DEFINES)
 INCPATH       = -I. -I/opt/pvb/pvserver -I/opt/pvb/rllib/lib -Ilib/gStools -Ilib/pugixml-1.7/src -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtSql -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64
 QMAKE         = /usr/lib/x86_64-linux-gnu/qt5/bin/qmake
 DEL_FILE      = rm -f
@@ -54,6 +54,7 @@ SOURCES       = main.cpp \
 		commDaemon.cpp \
 		piDatabase.cpp \
 		piTable.cpp \
+		piTriggersTable.cpp \
 		piDataTable.cpp \
 		piComm.cpp \
 		iniConfigurator.cpp \
@@ -65,6 +66,7 @@ OBJECTS       = main.o \
 		commDaemon.o \
 		piDatabase.o \
 		piTable.o \
+		piTriggersTable.o \
 		piDataTable.o \
 		piComm.o \
 		iniConfigurator.o \
@@ -159,6 +161,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		commDaemon.h \
 		piDatabase.h \
 		piTable.h \
+		piTriggersTable.h \
 		piDataTable.h \
 		piComm.h \
 		iniConfigurator.h \
@@ -170,6 +173,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		commDaemon.cpp \
 		piDatabase.cpp \
 		piTable.cpp \
+		piTriggersTable.cpp \
 		piDataTable.cpp \
 		piComm.cpp \
 		iniConfigurator.cpp \
@@ -394,8 +398,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents pvapp.h prointegraOPC.h qtdatabase.h commDaemon.h piDatabase.h piTable.h piDataTable.h piComm.h iniConfigurator.h config.h lib/pugixml-1.7/src/pugixml.hpp lib/pugixml-1.7/src/pugiconfig.hpp $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp prointegraOPC.cpp qtdatabase.cpp commDaemon.cpp piDatabase.cpp piTable.cpp piDataTable.cpp piComm.cpp iniConfigurator.cpp config.cpp lib/pugixml-1.7/src/pugixml.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents pvapp.h prointegraOPC.h qtdatabase.h commDaemon.h piDatabase.h piTable.h piTriggersTable.h piDataTable.h piComm.h iniConfigurator.h config.h lib/pugixml-1.7/src/pugixml.hpp lib/pugixml-1.7/src/pugiconfig.hpp $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp prointegraOPC.cpp qtdatabase.cpp commDaemon.cpp piDatabase.cpp piTable.cpp piTriggersTable.cpp piDataTable.cpp piComm.cpp iniConfigurator.cpp config.cpp lib/pugixml-1.7/src/pugixml.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -448,8 +452,9 @@ main.o: main.cpp pvapp.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
-		piDataTable.h \
+		piTriggersTable.h \
 		piTable.h \
+		piDataTable.h \
 		piComm.h \
 		iniConfigurator.h \
 		lib/gStools/libgStools.h \
@@ -474,8 +479,9 @@ prointegraOPC.o: prointegraOPC.cpp prointegraOPC.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
-		piDataTable.h \
+		piTriggersTable.h \
 		piTable.h \
+		piDataTable.h \
 		piComm.h \
 		iniConfigurator.h \
 		lib/gStools/libgStools.h \
@@ -509,8 +515,9 @@ piDatabase.o: piDatabase.cpp piDatabase.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
-		piDataTable.h \
-		piTable.h
+		piTriggersTable.h \
+		piTable.h \
+		piDataTable.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piDatabase.o piDatabase.cpp
 
 piTable.o: piTable.cpp piTable.h \
@@ -523,6 +530,18 @@ piTable.o: piTable.cpp piTable.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piTable.o piTable.cpp
+
+piTriggersTable.o: piTriggersTable.cpp piTriggersTable.h \
+		config.h \
+		lib/pugixml-1.7/src/pugixml.hpp \
+		lib/pugixml-1.7/src/pugiconfig.hpp \
+		/opt/pvb/rllib/lib/rldataacquisition.h \
+		/opt/pvb/rllib/lib/rldefine.h \
+		/opt/pvb/rllib/lib/rlmailbox.h \
+		/opt/pvb/rllib/lib/rlsharedmemory.h \
+		/opt/pvb/rllib/lib/rlwthread.h \
+		piTable.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o piTriggersTable.o piTriggersTable.cpp
 
 piDataTable.o: piDataTable.cpp piDataTable.h \
 		config.h \

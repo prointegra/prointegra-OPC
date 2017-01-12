@@ -27,7 +27,7 @@
 
 #include "qtdatabase.h"
 #include "config.h"
-//#include "piTriggersTable.h"
+#include "piTriggersTable.h"
 #include "piDataTable.h"
 
 /*! Database interface class, derived from pvbrowser addons examples */
@@ -58,7 +58,7 @@ class DBInterface : public qtDatabase
  private:
   databaseParameters parameters;
   DBDataTable** tables;
-  //DBTriggersTable triggersTable;
+  DBTriggersTable* triggersTable;
 };
 
 
