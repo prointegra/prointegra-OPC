@@ -35,26 +35,29 @@ class DBTriggersTable : public DBTable
   DBTriggersTable(tableParameters tableParams) : DBTable(tableParams) {}
   ~DBTriggersTable();
   //creation
-  int create(databaseParameters* dbParameters,char *query, char **initQuery);
-  int creationSqlite(char *sql);
-  int creationMysql(char *sql);
-  int initValuesSqlite(char **sql);
-  int initValuesMysql(char **sql);
+  int create(databaseParameters* dbParameters,char **query, char ***initQuery, int **nTrigs);
+  int creationSqlite(char **sql);
+  int creationMysql(char **sql);
+  int initValuesSqlite(char ***sql, int ** nTrigs);
+  int initValuesMysql(char ***sql, int ** nTrigs);
   //storing
-  int store(databaseParameters* parameters,char **query);
-  int storeSqlite(char **sql);
-  int insertSqlite(char **sql);
-  int updateSqlite(char **sql);
-  int storeMysql(char **sql);
-  int insertMysql(char **sql);
-  int updateMysql(char **sql); 
+  //int store(databaseParameters* parameters,char **query);
+  //int storeSqlite(char **sql);
+  //int insertSqlite(char **sql);
+  //int updateSqlite(char **sql);
+  //int storeMysql(char **sql);
+  //int insertMysql(char **sql);
+  //int updateMysql(char **sql);
+  //retrieving
+  int sqlTgsTgd(char **sql);
+  
   //return private members
   int retNumFields(){return parameters.numFields;};
-  char * retFieldTag(int field);
+  char* retFieldTag(int field);
   int retFieldValid(int field);
   int retFieldValue(int field);
   int* retLink(int field);
-  int retNoRepeatedFields(char**);
+  int retNoRepeatedFields(char***);
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);

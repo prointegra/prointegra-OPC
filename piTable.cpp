@@ -86,7 +86,7 @@ int DBTable::create(databaseParameters* dbParameters,int** nQueries, char ***que
 /*!function for creating the database schema, for SQLite databases*/
 int DBTable::creationSqlite(char **sql)
 {
-  char *sqlQuery = NULL;
+  static char *sqlQuery = NULL;
   char * temp = NULL;
   char * field = NULL;
   
@@ -136,7 +136,7 @@ int DBTable::creationSqlite(char **sql)
 /*!function for creating the database schema, for MySQL databases*/
 int DBTable::creationMysql(char **sql)
 {
-  char *sqlQuery = NULL;
+  static char *sqlQuery = NULL;
   char * temp = NULL;
   char * field = NULL;
   
@@ -190,7 +190,7 @@ int DBTable::creationMysql(char **sql)
 */
 int DBTable::initValuesSqlite(int num,char ***sql)
 {
-  char **sqlQuery = NULL;
+  static char **sqlQuery = NULL;
   int ret = -1;
   
   sqlQuery = *sql;
@@ -218,7 +218,7 @@ int DBTable::initValuesSqlite(int num,char ***sql)
 */
 int DBTable::initValuesMysql(int num,char ***sql)
 {
-  char **sqlQuery = NULL;
+  static char **sqlQuery = NULL;
   int ret = -1;
   sqlQuery = *sql;
 
@@ -242,6 +242,7 @@ int DBTable::initValuesMysql(int num,char ***sql)
   *sql = sqlQuery;
   return ret;
 }
+
 /*!function for store data to the table
 TODO: only implemented sqlite,MySQL tables!
 */
@@ -276,6 +277,7 @@ int DBTable::store(databaseParameters* parameters,char **query)
   
   return ret;
 }
+
 /*!function for storing data to a SQLITE table
 */
 int DBTable::storeSqlite(char **sql)

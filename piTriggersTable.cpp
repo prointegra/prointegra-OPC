@@ -29,166 +29,124 @@ DBTriggersTable::~DBTriggersTable()
 /*!function for creating database tables dinamycally
 TODO: only implemented sqlite,MySQL tables!
 */
-int DBTriggersTable::create(databaseParameters* dbParameters, char *query, char **initQuery)
+int DBTriggersTable::create(databaseParameters* dbParameters, char **query, char ***initQuery, int **nTrigs)
 {
   //std::cout << "DEBUG: (inside DBTriggersTable::create)" << std::endl;
   int ret=-1;
+  int *nTs = NULL;
+  static char * sql = NULL;
+  static char ** sqlInit = NULL;
+
+  sql = *query;
+  sqlInit = *initQuery;
+  nTs = *nTrigs;
  
   if(!strcmp(dbParameters->type,"QSQLITE"))
     {
-      creationSqlite(query);
-      initValuesSqlite(initQuery);
+      creationSqlite(&sql);
+      initValuesSqlite(&sqlInit,&nTs);
       ret = 0;
     }
    else if(!strcmp(dbParameters->type,"QMYSQL"))
     {
-      creationMysql(query);
-      initValuesMysql(initQuery);
+      creationMysql(&sql);
+      initValuesMysql(&sqlInit,&nTs);
       ret = 0;
     }
-  if(ret)
-      delete query;
+  
+  *query = sql;
+  *initQuery = sqlInit;
+  *nTrigs = nTs;
   
   return ret;
 }
 /*!function for creating the database schema, for SQLite databases*/
-int DBTriggersTable::creationSqlite(char *sql)
+int DBTriggersTable::creationSqlite(char **sqlQuery)
 {
-
-  char * temp = NULL;
-  char * field = NULL;
-
-  char **noRepeatedFields;
-  int numNoRepeatedFields=0;
-
+  //std::cout << "DEBUG: (inside DBTriggersTable::creationSqlite)" << std::endl; 
+  char * sql = NULL;
   
-  if(sql != NULL)
-    delete(sql);
+  sql = *sqlQuery;
   
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
-  strcat(temp,parameters.tbName);
-  strcat(temp," (ID INTEGER PRIMARY KEY AUTOINCREMENT,");
+  sql = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT, TRIGGER TEXT, VALUE INT) ")+5];
+  sprintf(sql,"CREATE TABLE IF NOT EXISTS %s (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT, VALUE INT)", parameters.tbName);
 
-  sql = new char[strlen(temp)+5];
-  strcpy(sql,temp);
+  *sqlQuery = sql;
 
-  numNoRepeatedFields = retNoRepeatedFields(noRepeatedFields);
-  for (int i = 0; i < numNoRepeatedFields;i++)
-    {
-      delete temp;
-      temp = new char[strlen(sql)+5];
-      strcpy(temp,sql);
-      delete sql;
-	
-      field = new char[strlen("INT") + strlen(noRepeatedFields[i]) + 5];
-      strcpy(field,noRepeatedFields[i]);
-      //NO different types, trigger always bool (INT)
-      strcat(field," INT");    
-      if(i < (numNoRepeatedFields-1))
-	strcat(field,",");
-      /////
-      sql = new char[strlen(temp)+strlen(field)+5];
-      strcpy(sql,temp);
-      strcat(sql,field);
-      delete field;
-    }
-  strcat(sql,")");
-  delete temp;
-
-  return 0; 
+  return 0;
 }
 /*!function for creating the database schema, for MySQL databases*/
-int DBTriggersTable::creationMysql(char *sql)
+int DBTriggersTable::creationMysql(char **sqlQuery)
 {
-
-  char * temp = NULL;
-  char * field = NULL;
-  
-  char **noRepeatedFields;
-  int numNoRepeatedFields=0;
-
-  
-  if(sql != NULL)
-    delete(sql);
-  
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + 2 + strlen(" (ID INTEGER PRIMARY KEY AUTO_INCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS `");
-  strcat(temp,parameters.tbName);
-  strcat(temp,"`");
-  strcat(temp," (ID INTEGER PRIMARY KEY AUTO_INCREMENT,");
-
-  sql = new char[strlen(temp)+5];
-  strcpy(sql,temp);
-  numNoRepeatedFields = retNoRepeatedFields(noRepeatedFields);
-  std::cout << "DEBUG: (inside DBTriggersTable::creationMysql) number of no repeated fields: " << numNoRepeatedFields << std::endl;
-  for (int i = 0; i < numNoRepeatedFields;i++)
-    {
-      delete temp;
-      temp = new char[strlen(sql)+5];
-      strcpy(temp,sql);
-      delete sql;
-      std::cout << "DEBUG: (inside DBTriggersTable::creationMysql) taking field: " << noRepeatedFields[i] << std::endl;
-      field = new char[strlen("INT") + strlen(noRepeatedFields[i]) + 7];
-      strcpy(field,"`");
-      strcat(field,noRepeatedFields[i]);
-      strcat(field,"`");
-      //NO different types, triggers always BOOL (INT)
-      strcat(field," INT");
+  //std::cout << "DEBUG: (inside DBTriggersTable::creationMysql)" << std::endl; 
+  char * sql = NULL;
     
-      if(i < (numNoRepeatedFields-1))
-	strcat(field,",");
-      /////
-      sql = new char[strlen(temp)+strlen(field)+5];
-      strcpy(sql,temp);
-      strcat(sql,field);
-      delete field;
-    }
-  strcat(sql,")");
-  delete temp;
-  std::cout << "DEBUG: (inside DBTriggersTable::creationMysql) final sql: " << sql << std::endl;
+  sql = *sqlQuery;
+  
+  sql = new char[strlen("CREATE TABLE IF NOT EXISTS `") + strlen(parameters.tbName) + strlen("` (ID INTEGER PRIMARY KEY AUTOINCREMENT, TRIGGER TEXT, VALUE INT) ")+5];
+  sprintf(sql,"CREATE TABLE IF NOT EXISTS `%s` (ID INTEGER PRIMARY KEY AUTOINCREMENT, `NAME` TEXT, `VALUE` INT)", parameters.tbName);
+
+  *sqlQuery = sql;
+
   return 0;
+
 }
 /*!function for insert initialization NULL data to a SQLITE NOT LOG type table
 */
-int DBTriggersTable::initValuesSqlite(char **sql)
+int DBTriggersTable::initValuesSqlite(char ***sqlQuery, int **nTrs)
 {
   //std::cout << "DEBUG: (inside DBTriggersTable::initValuesSqlite)" << std::endl;
   int ret = -1;
-  
-  if(sql !=NULL)
-    delete sql; //It really should be better done
-  
-  sql = new char*[2];
-  sql[0] = new char[strlen("DELETE FROM  ") + strlen(parameters.tbName) + 7];
-  sprintf(sql[0],"DELETE FROM `%s`",parameters.tbName );
-  sql[1] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+7];
-  sprintf(sql[1],"INSERT INTO `%s` () VALUES ()",parameters.tbName );
+  char ** sql;
+  char **noRepeatedFields;
+  static int* numNoRepeatedFields=0;
+    
+  sql = *sqlQuery;
+
+  *numNoRepeatedFields = retNoRepeatedFields(&noRepeatedFields);
+  sql = new char*[*numNoRepeatedFields];
+  for (int i = 0; i < *numNoRepeatedFields;i++)
+    {
+      sql[i] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (NAME, VALUE) SELECT * FROM (SELECT ") + strlen(noRepeatedFields[i]) + strlen("AS tmp WHERE NOT EXISTS (SELECT NAME FROM ") + strlen(parameters.tbName) + strlen("WHERE name = ") + strlen(noRepeatedFields[i]) + strlen(") LIMIT 1") + 30];
+      sprintf("INSERT INTO %s (NAME,VALUE) SELECT * FROM (SELECT '%s', 0) AS tmp WHERE NOT EXISTS (SELECT NAME FROM %s WHERE NAME = '%s') LIMIT 1;",parameters.tbName,noRepeatedFields[i],parameters.tbName,noRepeatedFields[i]);      
+    }
   ret = 0;
+
+  *sqlQuery = sql;
+  *nTrs = numNoRepeatedFields;
     
   return ret;
 }
 /*!function for insert initialziation NULL data to a MySQL NOT LOG type table
 */
-int DBTriggersTable::initValuesMysql(char **sql)
+int DBTriggersTable::initValuesMysql(char ***sqlQuery, int **nTrs)
 {
   //std::cout << "DEBUG: (inside DBTable::initValuesMysql)" << std::endl;
   int ret = -1;
+  static char ** sql;
+  char **noRepeatedFields;
+  static int* numNoRepeatedFields=0;
+    
+  sql = *sqlQuery;
 
-  if(sql != NULL)
-    delete(sql);//It really should be better done
-	      
-  sql[0] = new char[strlen("DELETE FROM  ") + strlen(parameters.tbName) + 7];
-  sprintf(sql[0],"DELETE FROM `%s`",parameters.tbName );
-  sql[1] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+7];
-  sprintf(sql[1],"INSERT INTO `%s` () VALUES ()",parameters.tbName );
+ *numNoRepeatedFields = retNoRepeatedFields(&noRepeatedFields);
+  sql = new char*[*numNoRepeatedFields];
+  for (int i = 0; i < *numNoRepeatedFields;i++)
+    {
+      sql[i] = new char[strlen("INSERT INTO `") + strlen(parameters.tbName) + strlen("` (`NAME`, `VALUE`) SELECT * FROM (SELECT `") + strlen(noRepeatedFields[i]) + strlen("` AS tmp WHERE NOT EXISTS (SELECT `NAME` FROM `") + strlen(parameters.tbName) + strlen("` WHERE name = `") + strlen(noRepeatedFields[i]) + strlen("`) LIMIT 1") + 30];
+      sprintf("INSERT INTO `%s` (`NAME`,`VALUE`) SELECT * FROM (SELECT `%s`, 0) AS tmp WHERE NOT EXISTS (SELECT `NAME` FROM `%s` WHERE `NAME` = `%s`) LIMIT 1;",parameters.tbName,noRepeatedFields[i],parameters.tbName,noRepeatedFields[i]);      
+    }
   ret = 0;
 
+  *sqlQuery = sql;
+  *nTrs = numNoRepeatedFields;
+ 
   return ret;
 }
 /*!function for store data to the table
 TODO: only implemented sqlite,MySQL tables!
 */
+/*
 int DBTriggersTable::store(databaseParameters* parameters,char **query)
 {
   char *sqlQuery = NULL;
@@ -220,8 +178,10 @@ int DBTriggersTable::store(databaseParameters* parameters,char **query)
   
   return ret;
 }
+*/
 /*!function for storing data to a SQLITE table
 */
+/*
 int DBTriggersTable::storeSqlite(char **sql)
 {
   char *sqlQuery = NULL;
@@ -235,9 +195,10 @@ int DBTriggersTable::storeSqlite(char **sql)
   
   *sql = sqlQuery;
 }
-
+*/
 /*!function for inserting data to a sqlite table
 */
+/*
 int DBTriggersTable::insertSqlite(char **sql)
 {
   char *sqlQuery = NULL;
@@ -323,9 +284,10 @@ int DBTriggersTable::insertSqlite(char **sql)
 
 
 }
-
+*/
 /*!function for storing data to a SQLITE LASTVALUE type table
 */
+/*
 int DBTriggersTable::updateSqlite(char **sql)
 {
   char *sqlQuery = NULL;
@@ -384,8 +346,10 @@ int DBTriggersTable::updateSqlite(char **sql)
   *sql = sqlQuery;
   return 0;
 }
+*/
 /*!function for store data to a MySQL table
 */
+/*
 int DBTriggersTable::storeMysql(char **sql)
 {
   char *sqlQuery = NULL;
@@ -399,8 +363,10 @@ int DBTriggersTable::storeMysql(char **sql)
   
   *sql = sqlQuery;
 }
+*/
 /*!function for insert data to a MySQL LOG type table
 */
+/*
 int DBTriggersTable::insertMysql(char **sql)
 {
   char *sqlQuery = NULL;
@@ -487,8 +453,10 @@ int DBTriggersTable::insertMysql(char **sql)
   *sql = temp;
   return 0;
 }
+*/
 /*!function for storing data to a MySQL LASTVALUE type table
 */
+/*
 int DBTriggersTable::updateMysql(char **sql)
 {
   char *sqlQuery = NULL;
@@ -550,13 +518,17 @@ int DBTriggersTable::updateMysql(char **sql)
   *sql = sqlQuery;
   return 0;
 }
-
-/*!function to return a field tag
-TODO: it should, for convention, only return once*/
-int DBTriggersTable::showTriggers()
+*/
+int DBTriggersTable::sqlTgsTgd(char **sql)
 {
-  for(int i=0;i < parameters.numFields;i++)
-    std::cout << parameters.stField[i].tag << std::endl;
+  static char *sqlQuery = NULL;
+
+
+  sqlQuery = new char[strlen("SELECT `NAME` from `") + strlen(parameters.tbName) + strlen("` where (`VALUE`= 1)")+5];
+  sprintf("SELECT `NAME` from `%s` where (`VALUE`= 1)", parameters.tbName);
+
+  *sql = sqlQuery;
+
   return 0;
 }
 
@@ -611,13 +583,15 @@ int DBTriggersTable::retFieldValue(int field)
   return ret;
 }
 /*!function for returning not repeated triggers from datatables*/
-int DBTriggersTable::retNoRepeatedFields(char **fieldsNames)
+int DBTriggersTable::retNoRepeatedFields(char ***fieldsNames)
 {
   //std::cout << "DEBUG: (inside DBTriggersTable::retNoRepeatedFields)" << std::endl;
   int ret = -1;
   int noRepeated = 0,j=0;
   int equal = 0;
+  static   char ** fields;
 
+  fields = *fieldsNames;
 
   for(int i = 0; i<parameters.numFields;i++)
     {
@@ -636,13 +610,13 @@ int DBTriggersTable::retNoRepeatedFields(char **fieldsNames)
 	  equal = 0;	    
 	}      
     }
-  fieldsNames = new char*[noRepeated];
+  fields = new char*[noRepeated];
   for(int i = 0; i<parameters.numFields;i++)
     {
       if(i==0 && j == 0)
 	{
-	  fieldsNames[j] = new char[strlen(parameters.stField[i].name)+5];
-	  strcpy(fieldsNames[j],parameters.stField[i].name);
+	  fields[j] = new char[strlen(parameters.stField[i].name)+5];
+	  strcpy(fields[j],parameters.stField[i].name);
 	  j++;
 	}
       else
@@ -656,14 +630,15 @@ int DBTriggersTable::retNoRepeatedFields(char **fieldsNames)
 	    {
 	      if(j<noRepeated)
 		{
-		  fieldsNames[j] = new char[strlen(parameters.stField[i].name)+5];
-		  strcpy(fieldsNames[j],parameters.stField[i].name); 
+		  fields[j] = new char[strlen(parameters.stField[i].name)+5];
+		  strcpy(fields[j],parameters.stField[i].name); 
 		  j++;
 		}
 	    }
 	  equal = 0;	    
 	}      
     }
+  *fieldsNames = fields;
   return noRepeated;
 }
 
@@ -714,4 +689,15 @@ int DBTriggersTable::setLink(int field, int slave, int tag)
   
  return ret;
 
+}
+//
+//DEBUG functions
+//
+/*!function to return a field tag
+TODO: it should, for convention, only return once*/
+int DBTriggersTable::showTriggers()
+{
+  for(int i=0;i < parameters.numFields;i++)
+    std::cout << parameters.stField[i].tag << std::endl;
+  return 0;
 }

@@ -55,7 +55,6 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 		      std::cout << sqlQuery[i] << std::endl;
 		      ret = query(NULL,sqlQuery[i]);
 		    }
-
 		}
 	    }
 	}
@@ -64,20 +63,24 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
       for(int i=*nQueries-1;i>=0;i--)
 	delete sqlQuery[i];
       createTriggersTable();
-      triggersTable->create(&parameters,triggersQuery,sqlQuery);
-      //TODO: we should catch exceptions!
-      std::cout << "DEBUG:(inside DBInterface::setup) sending sql queries for creating the triggers table:"<< std::endl;
-      std::cout <<"creation SQL:"<< triggersQuery << std::endl;
-      std::cout <<"deleting data SQL:"<< sqlQuery[0] << std::endl;
-      std::cout <<"filling with empty data SQL:"<< sqlQuery[1] << std::endl;    
+      triggersTable->create(&parameters,&triggersQuery,&sqlQuery,&nQueries);
+      //TODO: we should catch exceptions!  
       if(!query(NULL,triggersQuery))
-	if(!query(NULL,sqlQuery[0]))
-	  if(!query(NULL,sqlQuery[1]))
-	    ret = 0;
+	{
+	  for(int i=0;i < *nQueries; i++)
+	    {
+	      query(NULL,sqlQuery[i]);
+	    }
+	}
+      ret = 0;
     }
- 
+  
+  for(int i=*nQueries-1;i>=0;i--)
+    delete sqlQuery[i];
   delete sqlQuery;
+  delete nQueries;
   delete initValues;
+  
   return 0;
 }
 
@@ -154,7 +157,9 @@ int DBInterface::storeData()
     }
   return ret;
 }
-
+//
+//RETURNING DATA FUNCTIONS
+//
 /*!function for returning the number of fields private member 
   of a table*/
 int DBInterface::retNumFields(int table)
@@ -198,7 +203,34 @@ int DBInterface::retFieldValue(int table, int field)
   
   return ret;
 }
+/*!function for returning triggers triggered to write/read data to/from tables*/
+int DBInterface::retTriggers(int** numRead, int ***readTrigs, int **numWrite, int ***writeTrigs)
+{
+  int failed = -1;
+  int * nRs;
+  int * nWs;
+  int ** rTs;
+  int ** wTs;
+  char *sql;
 
+  nRs = *numRead;
+  nWs = *numWrite;
+  rTs = *readTrigs;
+  wTs = *writeTrigs;
+  
+  triggersTable->sqlTgsTgd(&sql);
+  
+  *numRead = nRs;
+  *numWrite = nWs;
+  *readTrigs = rTs;
+  *writeTrigs = wTs;
+  
+  return 0;
+}
+
+//
+//SETTING DATA FUNCTIONS
+//
 /////
 /*!function to set a field valid variable from table*/
 int DBInterface::setFieldValid(int table, int field, int valid)
@@ -224,7 +256,16 @@ int DBInterface::setFieldValue(int table, int field, int value)
   
   return ret;
 }
-//linking fields with communications
+/*!function to reset triggers*/
+int DBInterface::resetTriggers()
+{
+
+  return 0;
+}
+
+//
+//linking fields with communications functions
+//
 /*!function to check if a field is already linked*/
 int DBInterface::fieldLinked(int table,int field)
 {

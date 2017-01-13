@@ -178,7 +178,11 @@ int ProintegraOPC::loop()
   //exit handling
   struct sigaction sigIntHandler;
   int failed = -1;
-
+  int * numR = NULL;
+  int * numW = NULL;
+  int ** reads = NULL;
+  int ** writes =NULL;
+  
   sigIntHandler.sa_handler = ProintegraOPC::exitHandler;
   sigemptyset(&sigIntHandler.sa_mask);
   sigIntHandler.sa_flags = 0;
@@ -199,11 +203,20 @@ int ProintegraOPC::loop()
 	    }
 	  if(!failed)
 	    {
-	      std::cout << "INFO: store data to Databases ..." << std::endl;
-	      //getTriggers();
-	      //dataToComm();
-	      dataToDB();
-	      storeDB();
+	      //databases TODO: inside new function all this, and errors checking!
+	      for(int i=0; i< nDBs ; i++)
+		{
+		  std::cout << "INFO: working with Database: " << i+1 << std::endl;
+		  std::cout << "INFO: is Triggered? ... ";
+		  getTriggers(&numR,&reads,&numW,&writes,i);
+		  if(*numR || *numW)
+		    std::cout << "yes! " << std::endl;
+		  else
+		    std::cout << "no! " << std::endl;
+		  //dataToComm();
+		  //dataToDB();
+		  //storeDB();
+		}
 	    }
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  
@@ -216,6 +229,70 @@ int ProintegraOPC::loop()
 	}
     }
   return 0;   
+}
+
+/*!function for getting a complete list of trigered triggers in Database*/
+int ProintegraOPC::getTriggers(int** numRead, int ***readTrigs, int **numWrite, int ***writeTrigs, int DB)
+{
+  int failed = -1;
+  int * nR = NULL;
+  int * nW = NULL;
+  int ** rTr = NULL;
+  int ** wTr = NULL;
+
+  nR = *numRead;
+  nW = *numWrite;
+  rTr = *readTrigs;
+  wTr = *writeTrigs;
+
+  delTriggers(&nR,&rTr,&nW,&wTr);
+  
+  if(DB >= 0 && DB < nDBs)
+    {//database is correct
+      failed = hDatabase[DB]->retTriggers(&nR,&rTr,&nW,&wTr);
+    }
+ 
+  *numRead = nR;
+  *numWrite = nW;
+  *readTrigs = rTr;
+  *writeTrigs = wTr;
+
+  return failed;
+}
+/*!function for cleaning triggers memory allocation*/
+int ProintegraOPC::delTriggers(int** numRead, int ***readTrigs, int **numWrite, int ***writeTrigs)
+{
+  int * nR = NULL;
+  int * nW = NULL;
+  int ** rTr = NULL;
+  int ** wTr = NULL;
+
+  nR = *numRead;
+  nW = *numWrite;
+  rTr = *readTrigs;
+  wTr = *writeTrigs;
+  //Cleaning
+  if(*nR > 0 && nR != NULL)
+    {
+      for(int i = *nR-1; i >= 0; i--)
+	delete rTr[i];
+      delete rTr;
+    }
+  delete nR;
+  if(*nW > 0 && nW != NULL)
+    {
+      for(int i = *nW-1; i >= 0; i--)
+	delete wTr[i];
+      delete wTr;
+    }
+  delete nW; 
+ 
+  *numRead = nR;
+  *numWrite = nW;
+  *readTrigs = rTr;
+  *writeTrigs = wTr;
+
+  return 0;
 }
 
 //DEBUG FUNCTIONS

@@ -41,15 +41,17 @@ class DBInterface : public qtDatabase
   int start();
   //sql functions
   int storeData();
-  //return private members
+  //returning private members data and/or attributes functions
   int retNumTables(){return parameters.numTables;};
   int retNumFields(int table);
   char * retFieldTag(int table,int field);
   int retFieldValid(int table,int field);
   int retFieldValue(int table,int field);
-  //set attributes
+  int retTriggers(int **nRs,int ***rTrs, int **nWs, int ***wTrs);
+  //setting private members data and/or attributes functions
   int setFieldValid(int table,int field, int valid);
   int setFieldValue(int table,int field, int value);
+  int resetTriggers();
   //linking fields with communications
   int fieldLinked(int table,int field);
   int* retFieldLink(int table, int field);
