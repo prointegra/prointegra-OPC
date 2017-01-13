@@ -648,7 +648,8 @@ int DBDataTable::retWriteTrigger(field* trigger)
       
       trigger->type = new char[strlen("INT")+5];
       strcpy(trigger->type,"INT");
-
+      std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) write trigger = " << trigger->name << std::endl;
+      std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) PARAMETERS write trigger = " << parameters.tbWTrigger << std::endl;
       failed = 0;
     }
 

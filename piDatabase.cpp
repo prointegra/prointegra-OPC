@@ -66,6 +66,10 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
       createTriggersTable();
       triggersTable->create(&parameters,triggersQuery,sqlQuery);
       //TODO: we should catch exceptions!
+      std::cout << "DEBUG:(inside DBInterface::setup) sending sql queries for creating the triggers table:"<< std::endl;
+      std::cout <<"creation SQL:"<< triggersQuery << std::endl;
+      std::cout <<"deleting data SQL:"<< sqlQuery[0] << std::endl;
+      std::cout <<"filling with empty data SQL:"<< sqlQuery[1] << std::endl;    
       if(!query(NULL,triggersQuery))
 	if(!query(NULL,sqlQuery[0]))
 	  if(!query(NULL,sqlQuery[1]))
@@ -114,9 +118,9 @@ int DBInterface::createTriggersTable()
 	}
     }
   numFields = j;
-  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating table parameters!" << std::endl;
+  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating table parameters!" << std::endl;
   tableParameters triggersTableParams = { 0, "triggers",NULL,0,-1,NULL,-1,numFields,NULL, triggers}; 
-  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating triggers class!" << std::endl; 
+  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating triggers class!" << std::endl; 
   triggersTable = new DBTriggersTable(triggersTableParams);
 
   return failed;

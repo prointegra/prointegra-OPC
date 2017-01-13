@@ -121,13 +121,14 @@ int DBTriggersTable::creationMysql(char *sql)
   sql = new char[strlen(temp)+5];
   strcpy(sql,temp);
   numNoRepeatedFields = retNoRepeatedFields(noRepeatedFields);
+  std::cout << "DEBUG: (inside DBTriggersTable::creationMysql) number of no repeated fields: " << numNoRepeatedFields << std::endl;
   for (int i = 0; i < numNoRepeatedFields;i++)
     {
       delete temp;
       temp = new char[strlen(sql)+5];
       strcpy(temp,sql);
       delete sql;
-	
+      std::cout << "DEBUG: (inside DBTriggersTable::creationMysql) taking field: " << noRepeatedFields[i] << std::endl;
       field = new char[strlen("INT") + strlen(noRepeatedFields[i]) + 7];
       strcpy(field,"`");
       strcat(field,noRepeatedFields[i]);
@@ -145,6 +146,7 @@ int DBTriggersTable::creationMysql(char *sql)
     }
   strcat(sql,")");
   delete temp;
+  std::cout << "DEBUG: (inside DBTriggersTable::creationMysql) final sql: " << sql << std::endl;
   return 0;
 }
 /*!function for insert initialization NULL data to a SQLITE NOT LOG type table
@@ -611,6 +613,7 @@ int DBTriggersTable::retFieldValue(int field)
 /*!function for returning not repeated triggers from datatables*/
 int DBTriggersTable::retNoRepeatedFields(char **fieldsNames)
 {
+  //std::cout << "DEBUG: (inside DBTriggersTable::retNoRepeatedFields)" << std::endl;
   int ret = -1;
   int noRepeated = 0,j=0;
   int equal = 0;
@@ -622,9 +625,9 @@ int DBTriggersTable::retNoRepeatedFields(char **fieldsNames)
 	noRepeated++;
       else
 	{
-	  for(int j = (i-1) ; j >= 0; j--)
+	  for(int k = (i-1) ; k >= 0; k--)
 	    {
-	      if(!strcmp(parameters.stField[i].name,parameters.stField[j].name))
+	      if(!strcmp(parameters.stField[i].name,parameters.stField[k].name))
 		  equal++;
 	    }
 	  if(!equal)
@@ -636,13 +639,11 @@ int DBTriggersTable::retNoRepeatedFields(char **fieldsNames)
   fieldsNames = new char*[noRepeated];
   for(int i = 0; i<parameters.numFields;i++)
     {
-      if(i==0)
+      if(i==0 && j == 0)
 	{
-	  fieldsNames[i] = new char[strlen(parameters.stField[i].name)+5];
-	  if(j<noRepeated)
-	    strcpy(fieldsNames[j],parameters.stField[i].name);
+	  fieldsNames[j] = new char[strlen(parameters.stField[i].name)+5];
+	  strcpy(fieldsNames[j],parameters.stField[i].name);
 	  j++;
-
 	}
       else
 	{
@@ -654,13 +655,16 @@ int DBTriggersTable::retNoRepeatedFields(char **fieldsNames)
 	  if(!equal)
 	    {
 	      if(j<noRepeated)
-		strcpy(fieldsNames[j],parameters.stField[i].name);	      
-	      j++;
+		{
+		  fieldsNames[j] = new char[strlen(parameters.stField[i].name)+5];
+		  strcpy(fieldsNames[j],parameters.stField[i].name); 
+		  j++;
+		}
 	    }
 	  equal = 0;	    
 	}      
-    }  
-  return 0;
+    }
+  return noRepeated;
 }
 
 //
