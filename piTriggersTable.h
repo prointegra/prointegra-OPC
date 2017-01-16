@@ -50,7 +50,8 @@ class DBTriggersTable : public DBTable
   //int updateMysql(char **sql);
   //retrieving
   int sqlTgsTgd(char **sql);
-  
+  int updateTriggersOn(char ** triggers, int numberOf);
+ 
   //return private members
   int retNumFields(){return parameters.numFields;};
   char* retFieldTag(int field);
@@ -58,6 +59,7 @@ class DBTriggersTable : public DBTable
   int retFieldValue(int field);
   int* retLink(int field);
   int retNoRepeatedFields(char***);
+  int retTgsTgd(field ***, int **);
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);

@@ -143,6 +143,7 @@ int DBTriggersTable::initValuesMysql(char ***sqlQuery, int **nTrs)
   
   return ret;
 }
+
 /*!function for store data to the table
 TODO: only implemented sqlite,MySQL tables!
 */
@@ -519,8 +520,10 @@ int DBTriggersTable::updateMysql(char **sql)
   return 0;
 }
 */
+/*!funtion for retunring a sql command to take every trigger triggered in database table*/
 int DBTriggersTable::sqlTgsTgd(char **sql)
 {
+  std::cout << "DEBUG: (inside DBTriggersTable::sqlTgsTgd)" << std::endl;
   static char *sqlQuery = NULL;
 
 
@@ -531,7 +534,23 @@ int DBTriggersTable::sqlTgsTgd(char **sql)
 
   return 0;
 }
-
+/*!function for setting on triggers*/
+int DBTriggersTable::updateTriggersOn(char **triggers, int numberOf)
+{
+  std::cout << "DEBUG: (inside DBTriggersTable::updateTriggersOn)" << std::endl; 
+  for(int i = 0; i < numberOf;i++)
+    {
+      for(int j=0; j < parameters.numFields; j++)
+	{
+	  if(!strcmp(triggers[i], parameters.stField[j].name))
+	    {
+	      parameters.stField[j].iValue = 1;
+	      parameters.stField[j].isValid = 1;	      
+	    }
+	}
+    }
+  return 0;
+}
 
 /*!function to return a field tag
 TODO: it should, for convention, only return once*/
@@ -641,6 +660,40 @@ int DBTriggersTable::retNoRepeatedFields(char ***fieldsNames)
   return noRepeated;
 }
 
+/*!function for returning all triggered fields */
+ int DBTriggersTable::retTgsTgd(field*** triggers, int **numberOf)
+{
+  std::cout << "DEBUG:(inside DBTriggersTable::retTgsTgd)" << std::endl;
+  int ret = -1;
+  static field ** fields = NULL;
+  static int *nFields = new int(0);
+  int k = 0;
+  
+  for(int i = 0; i < parameters.numFields ; i++)
+    {
+      if(parameters.stField[i].iValue && !parameters.stField[i].isDone)
+	*nFields++;
+    }
+  if(*nFields >0)
+    {
+      fields = new field*[*nFields];
+      for(int j = 0; j < parameters.numFields ; j++)
+	{
+	  if(parameters.stField[j].iValue && !parameters.stField[j].isDone)
+	    {
+	      if(k<*nFields)
+		{
+		  fields[k] = new field(parameters.stField[j]);
+		  k++;
+		}
+	    }
+	}
+    }
+  *triggers = fields;
+  *numberOf = nFields;
+  return ret;
+}
+ 
 //
 /*!function to set a field valid variable*/
 int DBTriggersTable::setFieldValid(int field, int valid)

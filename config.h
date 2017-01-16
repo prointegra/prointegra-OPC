@@ -73,10 +73,13 @@ typedef struct
 
   int isValid = 0;
   int iValue = 0;
+  //trigger
+  int isDone = 0;
 
   int fromSlave= -1;
   int fromTag= -1;
   
+  //triggers
   int forRTable=-1;
   int forWTable=-1;
   

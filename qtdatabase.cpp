@@ -146,6 +146,84 @@ int qtDatabase::populateTable(PARAM *p, int id)
   return 0;
 }
 
+int qtDatabase::retData(PARAM *p, char ****table, int **px, int **py)
+{
+  int x,y,xmax,ymax;
+  static char ***retTable;
+  static int * pointX = new int(0);
+  static int * pointY = new int(0);
+
+  retTable = *table;
+  pointX = *px;
+  pointY = *py;
+  
+  if(db == NULL)
+  {
+    pvStatusMessage(p,255,0,0,"ERROR: qtDatabase::populateTable() db==NULL");
+    return -1;
+  }  
+
+  // set table dimension
+  xmax = result->record().count();
+  //
+  // Using SQLITE a user from our forum found an issue
+  // getting ymax.
+  // With SQLITE numRowsAffected() does not return the correct value.
+  // Other database systems do.
+  //
+  if(db->driverName() == "QSQLITE")
+  {
+    result->last();
+    ymax = result->at()+1;
+    result->first();
+    //printf("SQLITE ymax = %d \n",ymax);
+  }
+  else
+  {
+    ymax = result->numRowsAffected();
+    //printf("no SQLITE, ymax = %d \n",ymax);
+  }
+  retTable = new char**[xmax];
+  for(int i =0; i < xmax; i++)
+	retTable[i] = new char*[ymax];
+  *pointX = xmax;
+  *pointY = ymax;
+  // populate table
+  QSqlRecord record = result->record();
+  if(record.isEmpty())
+  {
+    pvStatusMessage(p,255,0,0,"ERROR: qtDatabase::populateTable() record is empty");
+    return -1;
+  }
+
+  result->next();
+  for(y=0; y<ymax; y++)
+  { // write fields
+    QSqlRecord record = result->record();
+    for(x=0; x<xmax; x++)
+    {
+      QSqlField f = record.field(x);
+      if(f.isValid())
+      {
+        QVariant v = f.value();
+        retTable[y][x] = new char[strlen(v.toString().toUtf8())];
+		sprintf(retTable[y][x],"%s",v.toString().toUtf8());
+      }
+      else
+      {
+		retTable[y][x] = new char[strlen("ERROR")];
+		sprintf(retTable[y][x],"ERROR");
+      }
+    }
+    result->next();
+  }
+	*table = retTable;
+
+  *px = pointX;
+  *py = pointY;
+  return 0;
+}
+
 const char *qtDatabase::recordFieldValue(PARAM *p, int x)
 {
   QSqlRecord record = result->record();
@@ -160,7 +238,8 @@ const char *qtDatabase::recordFieldValue(PARAM *p, int x)
     QVariant v = f.value();
     //return v.toString().toUtf8();
     //printf("%s\n", v.toString());
-    return "999";
+	//modified by Joa
+    return v.toByteArray().data();
   }
   else
   {

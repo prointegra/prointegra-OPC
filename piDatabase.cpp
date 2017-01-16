@@ -206,26 +206,53 @@ int DBInterface::retFieldValue(int table, int field)
   return ret;
 }
 /*!function for returning triggers triggered to write/read data to/from tables*/
-int DBInterface::retTriggers(int** numRead, int ***readTrigs, int **numWrite, int ***writeTrigs)
+int DBInterface::retTriggers(field*** triggers, int** nTriggers)
 {
   int failed = -1;
-  int * nRs;
-  int * nWs;
-  int ** rTs;
-  int ** wTs;
+  field ** stTriggers;
+  int * numTriggers;
   char *sql;
+  char ***table;
+  char **triggersOn;
+  int *x = new int(0);
+  int *y = new int(0);
 
-  nRs = *numRead;
-  nWs = *numWrite;
-  rTs = *readTrigs;
-  wTs = *writeTrigs;
+  stTriggers = *triggers;
+  numTriggers = *nTriggers;
   
   triggersTable->sqlTgsTgd(&sql);
+  std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
+  query(NULL,sql);
+  retData(NULL,&table,&x,&y);
+  triggersOn = new char*[*y];
   
-  *numRead = nRs;
-  *numWrite = nWs;
-  *readTrigs = rTs;
-  *writeTrigs = wTs;
+  for (int i=0;i<*y;i++)
+    {
+      triggersOn[i] = new char[strlen(table[i][0])+5];
+      strcpy(triggersOn[i],table[i][0]);
+    }
+    
+  triggersTable->updateTriggersOn(triggersOn,*y);
+  triggersTable->retTgsTgd(&stTriggers,&numTriggers);
+
+  //cleaning
+  for(int j =*y-1;j>=0;j--)
+    {
+      for(int k = *x-1;k>=0;k--)
+	delete (table[j][k]);
+      delete table[j];
+    }
+  delete table;
+  delete x;
+  for(int l = *y-1;l>=0;l--)
+    delete triggersOn[l];
+  delete triggersOn;
+  delete y;
+  delete sql;
+  //
+  
+  *triggers = stTriggers;
+  *nTriggers = numTriggers;
   
   return 0;
 }

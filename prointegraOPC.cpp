@@ -178,10 +178,8 @@ int ProintegraOPC::loop()
   //exit handling
   struct sigaction sigIntHandler;
   int failed = -1;
-  int * numR = NULL;
-  int * numW = NULL;
-  int ** reads = NULL;
-  int ** writes =NULL;
+  field ** stTriggers = NULL;
+  int *numFields = NULL;
   
   sigIntHandler.sa_handler = ProintegraOPC::exitHandler;
   sigemptyset(&sigIntHandler.sa_mask);
@@ -192,8 +190,6 @@ int ProintegraOPC::loop()
     {
       if(!lExit)
 	{
-	  Sleep(1000);
-	  /*
 	  failed = 0;
 	  std::cout << "INFO: checking communications ..." << std::endl;     
 	  checkComm();
@@ -210,17 +206,25 @@ int ProintegraOPC::loop()
 		{
 		  std::cout << "INFO: working with Database: " << i+1 << std::endl;
 		  std::cout << "INFO: is Triggered? ... ";
-		  getTriggers(&numR,&reads,&numW,&writes,i);
-		  if(*numR || *numW)
+		  getTriggers(&stTriggers,&numFields,i);
+		  if(*numFields > 0 && *numFields != NULL)
 		    std::cout << "yes! " << std::endl;
 		  else
 		    std::cout << "no! " << std::endl;
 		  //dataToComm();
 		  //dataToDB();
 		  //storeDB();
+		  //cleaning
+		  if(*numFields >0)
+		    {
+		      for(int i = *numFields-1; i >=0;i--)
+			delete stTriggers[i];
+		      delete stTriggers;
+		    }
+		  //
 		}
 	    }
-	  */
+	  
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  
 	}
@@ -235,68 +239,28 @@ int ProintegraOPC::loop()
 }
 
 /*!function for getting a complete list of trigered triggers in Database*/
-int ProintegraOPC::getTriggers(int** numRead, int ***readTrigs, int **numWrite, int ***writeTrigs, int DB)
+int ProintegraOPC::getTriggers(field *** triggers, int **nTriggers, int DB)
 {
+  std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
   int failed = -1;
-  int * nR = NULL;
-  int * nW = NULL;
-  int ** rTr = NULL;
-  int ** wTr = NULL;
+  int * numTriggers = NULL;
+  field ** stTriggers = NULL;
 
-  nR = *numRead;
-  nW = *numWrite;
-  rTr = *readTrigs;
-  wTr = *writeTrigs;
 
-  delTriggers(&nR,&rTr,&nW,&wTr);
+  numTriggers = *nTriggers;
+  stTriggers = *triggers;
   
   if(DB >= 0 && DB < nDBs)
     {//database is correct
-      failed = hDatabase[DB]->retTriggers(&nR,&rTr,&nW,&wTr);
+      failed = hDatabase[DB]->retTriggers(&stTriggers,&numTriggers);
     }
  
-  *numRead = nR;
-  *numWrite = nW;
-  *readTrigs = rTr;
-  *writeTrigs = wTr;
+  *nTriggers = numTriggers;
+  *triggers = stTriggers;
 
   return failed;
 }
-/*!function for cleaning triggers memory allocation*/
-int ProintegraOPC::delTriggers(int** numRead, int ***readTrigs, int **numWrite, int ***writeTrigs)
-{
-  int * nR = NULL;
-  int * nW = NULL;
-  int ** rTr = NULL;
-  int ** wTr = NULL;
 
-  nR = *numRead;
-  nW = *numWrite;
-  rTr = *readTrigs;
-  wTr = *writeTrigs;
-  //Cleaning
-  if(*nR > 0 && nR != NULL)
-    {
-      for(int i = *nR-1; i >= 0; i--)
-	delete rTr[i];
-      delete rTr;
-    }
-  delete nR;
-  if(*nW > 0 && nW != NULL)
-    {
-      for(int i = *nW-1; i >= 0; i--)
-	delete wTr[i];
-      delete wTr;
-    }
-  delete nW; 
- 
-  *numRead = nR;
-  *numWrite = nW;
-  *readTrigs = rTr;
-  *writeTrigs = wTr;
-
-  return 0;
-}
 
 //DEBUG FUNCTIONS
 /*show data in memory structures, data to be written in databases*/
