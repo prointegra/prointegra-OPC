@@ -31,11 +31,11 @@ TODO: only implemented sqlite,MySQL tables!
 */
 int DBTriggersTable::create(databaseParameters* dbParameters, char **query, char ***initQuery, int **nTrigs)
 {
-  //std::cout << "DEBUG: (inside DBTriggersTable::create)" << std::endl;
+  std::cout << "DEBUG: (inside DBTriggersTable::create)" << std::endl;
   int ret=-1;
   int *nTs = NULL;
-  static char * sql = NULL;
-  static char ** sqlInit = NULL;
+  char * sql = NULL;
+  char ** sqlInit = NULL;
 
   sql = *query;
   sqlInit = *initQuery;
@@ -63,8 +63,8 @@ int DBTriggersTable::create(databaseParameters* dbParameters, char **query, char
 /*!function for creating the database schema, for SQLite databases*/
 int DBTriggersTable::creationSqlite(char **sqlQuery)
 {
-  //std::cout << "DEBUG: (inside DBTriggersTable::creationSqlite)" << std::endl; 
-  char * sql = NULL;
+  std::cout << "DEBUG: (inside DBTriggersTable::creationSqlite)" << std::endl; 
+  static char * sql = NULL;
   
   sql = *sqlQuery;
   
@@ -78,13 +78,13 @@ int DBTriggersTable::creationSqlite(char **sqlQuery)
 /*!function for creating the database schema, for MySQL databases*/
 int DBTriggersTable::creationMysql(char **sqlQuery)
 {
-  //std::cout << "DEBUG: (inside DBTriggersTable::creationMysql)" << std::endl; 
-  char * sql = NULL;
+  std::cout << "DEBUG: (inside DBTriggersTable::creationMysql)" << std::endl; 
+  static char * sql = NULL;
     
   sql = *sqlQuery;
   
   sql = new char[strlen("CREATE TABLE IF NOT EXISTS `") + strlen(parameters.tbName) + strlen("` (ID INTEGER PRIMARY KEY AUTOINCREMENT, TRIGGER TEXT, VALUE INT) ")+5];
-  sprintf(sql,"CREATE TABLE IF NOT EXISTS `%s` (ID INTEGER PRIMARY KEY AUTOINCREMENT, `NAME` TEXT, `VALUE` INT)", parameters.tbName);
+  sprintf(sql,"CREATE TABLE IF NOT EXISTS `%s` (ID INTEGER PRIMARY KEY AUTO_INCREMENT, `NAME` TEXT, `VALUE` INT)", parameters.tbName);
 
   *sqlQuery = sql;
 
@@ -95,20 +95,20 @@ int DBTriggersTable::creationMysql(char **sqlQuery)
 */
 int DBTriggersTable::initValuesSqlite(char ***sqlQuery, int **nTrs)
 {
-  //std::cout << "DEBUG: (inside DBTriggersTable::initValuesSqlite)" << std::endl;
-  int ret = -1;
-  char ** sql;
+  std::cout << "DEBUG: (inside DBTriggersTable::initValuesSqlite)" << std::endl;
+  int ret = -1, i = 0;
+  static char ** sql;
   char **noRepeatedFields;
-  static int* numNoRepeatedFields=0;
+  static int* numNoRepeatedFields= new int(0);
     
   sql = *sqlQuery;
 
   *numNoRepeatedFields = retNoRepeatedFields(&noRepeatedFields);
   sql = new char*[*numNoRepeatedFields];
-  for (int i = 0; i < *numNoRepeatedFields;i++)
+  for (i = 0; i < *numNoRepeatedFields;i++)
     {
-      sql[i] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (NAME, VALUE) SELECT * FROM (SELECT ") + strlen(noRepeatedFields[i]) + strlen("AS tmp WHERE NOT EXISTS (SELECT NAME FROM ") + strlen(parameters.tbName) + strlen("WHERE name = ") + strlen(noRepeatedFields[i]) + strlen(") LIMIT 1") + 30];
-      sprintf("INSERT INTO %s (NAME,VALUE) SELECT * FROM (SELECT '%s', 0) AS tmp WHERE NOT EXISTS (SELECT NAME FROM %s WHERE NAME = '%s') LIMIT 1;",parameters.tbName,noRepeatedFields[i],parameters.tbName,noRepeatedFields[i]);      
+      sql[i] = new char[strlen("INSERT OR REPLACE INTO `") + strlen(parameters.tbName) + strlen("` (ID,NAME, VALUE) VALUES(COALESCE((SELECT ID from `") + strlen(parameters.tbName) + strlen("` WHERE NAME = '")+ strlen(noRepeatedFields[i]) + strlen("'),100),'") + strlen(noRepeatedFields[i]) + strlen("\',0)")+ 10];
+      sprintf(sql[i],"INSERT OR REPLACE INTO `%s` (ID,NAME, VALUE) VALUES(COALESCE((SELECT ID from `%s` WHERE NAME = '%s'),%d),'%s',0)",parameters.tbName,parameters.tbName,noRepeatedFields[i],i+1,noRepeatedFields[i]);  
     }
   ret = 0;
 
@@ -121,26 +121,26 @@ int DBTriggersTable::initValuesSqlite(char ***sqlQuery, int **nTrs)
 */
 int DBTriggersTable::initValuesMysql(char ***sqlQuery, int **nTrs)
 {
-  //std::cout << "DEBUG: (inside DBTable::initValuesMysql)" << std::endl;
-  int ret = -1;
+  std::cout << "DEBUG: (inside DBTable::initValuesMysql)" << std::endl;
+  int ret = -1, i = 0;
   static char ** sql;
   char **noRepeatedFields;
-  static int* numNoRepeatedFields=0;
+  static int* numNoRepeatedFields= new int(0);
     
   sql = *sqlQuery;
-
- *numNoRepeatedFields = retNoRepeatedFields(&noRepeatedFields);
+  
+  *numNoRepeatedFields = retNoRepeatedFields(&noRepeatedFields);
   sql = new char*[*numNoRepeatedFields];
-  for (int i = 0; i < *numNoRepeatedFields;i++)
+  for (i = 0; i < *numNoRepeatedFields;i++)
     {
-      sql[i] = new char[strlen("INSERT INTO `") + strlen(parameters.tbName) + strlen("` (`NAME`, `VALUE`) SELECT * FROM (SELECT `") + strlen(noRepeatedFields[i]) + strlen("` AS tmp WHERE NOT EXISTS (SELECT `NAME` FROM `") + strlen(parameters.tbName) + strlen("` WHERE name = `") + strlen(noRepeatedFields[i]) + strlen("`) LIMIT 1") + 30];
-      sprintf("INSERT INTO `%s` (`NAME`,`VALUE`) SELECT * FROM (SELECT `%s`, 0) AS tmp WHERE NOT EXISTS (SELECT `NAME` FROM `%s` WHERE `NAME` = `%s`) LIMIT 1;",parameters.tbName,noRepeatedFields[i],parameters.tbName,noRepeatedFields[i]);      
+      sql[i] = new char[strlen("INSERT INTO `") + strlen(parameters.tbName) + strlen("` (ID,NAME, VALUE) VALUES(") + strlen(noRepeatedFields[i]) + strlen(", 0) ON DUPLICATE KEY UPDATE NAME=\"") + strlen(noRepeatedFields[i]) + strlen("\", VALUE=0") + 10];
+      sprintf(sql[i],"INSERT INTO `%s` (ID,NAME, VALUE) VALUES(%d,\"%s\", 0) ON DUPLICATE KEY UPDATE NAME=\"%s\", VALUE=0",parameters.tbName,i+1,noRepeatedFields[i],noRepeatedFields[i]);    
     }
+ 
   ret = 0;
-
   *sqlQuery = sql;
   *nTrs = numNoRepeatedFields;
- 
+  
   return ret;
 }
 /*!function for store data to the table
@@ -585,7 +585,6 @@ int DBTriggersTable::retFieldValue(int field)
 /*!function for returning not repeated triggers from datatables*/
 int DBTriggersTable::retNoRepeatedFields(char ***fieldsNames)
 {
-  //std::cout << "DEBUG: (inside DBTriggersTable::retNoRepeatedFields)" << std::endl;
   int ret = -1;
   int noRepeated = 0,j=0;
   int equal = 0;

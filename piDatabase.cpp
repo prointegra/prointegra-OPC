@@ -64,11 +64,13 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 	delete sqlQuery[i];
       createTriggersTable();
       triggersTable->create(&parameters,&triggersQuery,&sqlQuery,&nQueries);
-      //TODO: we should catch exceptions!  
+      //TODO: we should catch exceptions!
+      std::cout << "DEBUG: (inside DBInterface::setup) triggers table sql creation: " << triggersQuery << std::endl;
       if(!query(NULL,triggersQuery))
 	{
 	  for(int i=0;i < *nQueries; i++)
 	    {
+	            std::cout << "DEBUG: (inside DBInterface::setup) triggers table sql creationsending query!: " << sqlQuery[i] << std::endl;
 	      query(NULL,sqlQuery[i]);
 	    }
 	}

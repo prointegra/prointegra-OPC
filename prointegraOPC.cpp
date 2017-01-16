@@ -192,6 +192,8 @@ int ProintegraOPC::loop()
     {
       if(!lExit)
 	{
+	  Sleep(1000);
+	  /*
 	  failed = 0;
 	  std::cout << "INFO: checking communications ..." << std::endl;     
 	  checkComm();
@@ -218,6 +220,7 @@ int ProintegraOPC::loop()
 		  //storeDB();
 		}
 	    }
+	  */
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  
 	}
