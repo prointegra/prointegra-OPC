@@ -61,8 +61,7 @@ class ProintegraOPC
   int dataCapture();
   int dataToDB();
   int storeDB();
-  int getTriggers(field *** stTriggers, int **numFields, int database);
-  int delTriggers(field *** stTriggers, int **numFields);
+  int getTriggers(field *** triggers, int **nTriggers, int database);
   //DEBUGGING FUNCTIONS
   int showDBData();
   //EXIT HANDLER

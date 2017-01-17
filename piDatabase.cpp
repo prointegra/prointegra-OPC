@@ -208,6 +208,7 @@ int DBInterface::retFieldValue(int table, int field)
 /*!function for returning triggers triggered to write/read data to/from tables*/
 int DBInterface::retTriggers(field*** triggers, int** nTriggers)
 {
+  std::cout << "DEBUG:(inside DBInterface::retTriggers)" << std::endl;
   int failed = -1;
   field ** stTriggers;
   int * numTriggers;

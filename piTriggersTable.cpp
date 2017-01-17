@@ -528,7 +528,7 @@ int DBTriggersTable::sqlTgsTgd(char **sql)
 
 
   sqlQuery = new char[strlen("SELECT `NAME` from `") + strlen(parameters.tbName) + strlen("` where (`VALUE`= 1)")+5];
-  sprintf("SELECT `NAME` from `%s` where (`VALUE`= 1)", parameters.tbName);
+  sprintf(sqlQuery,"SELECT `NAME` from `%s` where (`VALUE`= 1)", parameters.tbName);
 
   *sql = sqlQuery;
 
