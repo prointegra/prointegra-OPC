@@ -148,8 +148,8 @@ int qtDatabase::populateTable(PARAM *p, int id)
 
 int qtDatabase::retData(PARAM *p, char ****table, int **px, int **py)
 {
-  int x,y,xmax,ymax;
-  static char ***retTable;
+  int x,y,xmax,ymax, failed = -1;
+  static char ***retTable = NULL;
   static int * pointX = new int(0);
   static int * pointY = new int(0);
 
@@ -157,71 +157,67 @@ int qtDatabase::retData(PARAM *p, char ****table, int **px, int **py)
   pointX = *px;
   pointY = *py;
   
-  if(db == NULL)
+  if(db != NULL)
   {
-    pvStatusMessage(p,255,0,0,"ERROR: qtDatabase::populateTable() db==NULL");
-    return -1;
-  }  
-
-  // set table dimension
-  xmax = result->record().count();
-  //
-  // Using SQLITE a user from our forum found an issue
-  // getting ymax.
-  // With SQLITE numRowsAffected() does not return the correct value.
-  // Other database systems do.
-  //
-  if(db->driverName() == "QSQLITE")
-  {
-    result->last();
-    ymax = result->at()+1;
-    result->first();
-    //printf("SQLITE ymax = %d \n",ymax);
-  }
-  else
-  {
-    ymax = result->numRowsAffected();
-    //printf("no SQLITE, ymax = %d \n",ymax);
-  }
-  retTable = new char**[xmax];
-  for(int i =0; i < xmax; i++)
-	retTable[i] = new char*[ymax];
-  *pointX = xmax;
-  *pointY = ymax;
-  // populate table
-  QSqlRecord record = result->record();
-  if(record.isEmpty())
-  {
-    pvStatusMessage(p,255,0,0,"ERROR: qtDatabase::populateTable() record is empty");
-    return -1;
-  }
-
-  result->next();
-  for(y=0; y<ymax; y++)
-  { // write fields
+    // set table dimension
+    xmax = result->record().count();
+    //
+    // Using SQLITE a user from our forum found an issue
+    // getting ymax.
+    // With SQLITE numRowsAffected() does not return the correct value.
+    // Other database systems do.
+    //
+    if(db->driverName() == "QSQLITE")
+      {
+	result->last();
+	ymax = result->at()+1;
+	result->first();
+	//printf("SQLITE ymax = %d \n",ymax);
+      }
+    else
+      {
+	ymax = result->numRowsAffected();
+	//printf("no SQLITE, ymax = %d \n",ymax);
+      }
+    retTable = new char**[xmax];
+    for(int i =0; i < xmax; i++)
+      retTable[i] = new char*[ymax];
+    *pointX = xmax;
+    *pointY = ymax;
+    // populate table
     QSqlRecord record = result->record();
-    for(x=0; x<xmax; x++)
-    {
-      QSqlField f = record.field(x);
-      if(f.isValid())
+    if(!record.isEmpty())
       {
-        QVariant v = f.value();
-        retTable[y][x] = new char[strlen(v.toString().toUtf8())];
-		sprintf(retTable[y][x],"%s",v.toString().toUtf8());
+	result->next();
+	for(y=0; y<ymax; y++)
+	  { // write fields
+	    QSqlRecord record = result->record();
+	    for(x=0; x<xmax; x++)
+	      {
+		QSqlField f = record.field(x);
+		if(f.isValid())
+		  {
+		    QVariant v = f.value();
+		    //retTable[y][x] = new char[strlen(v.toString().toUtf8())];
+		    //sprintf(retTable[y][x],"%s",v.toString().toUtf8());
+		    retTable[y][x] = new char[strlen(v.toByteArray().data())];
+		    sprintf(retTable[y][x],"%s",v.toByteArray().data());
+		  }
+		else
+		  {
+		    retTable[y][x] = new char[strlen("ERROR")];
+		    sprintf(retTable[y][x],"ERROR");
+		  }
+	      }
+	    result->next();
+	  }
+	failed = 0;
       }
-      else
-      {
-		retTable[y][x] = new char[strlen("ERROR")];
-		sprintf(retTable[y][x],"ERROR");
-      }
-    }
-    result->next();
-  }
-	*table = retTable;
-
+  }	
+  *table = retTable;
   *px = pointX;
   *py = pointY;
-  return 0;
+  return failed;
 }
 
 const char *qtDatabase::recordFieldValue(PARAM *p, int x)

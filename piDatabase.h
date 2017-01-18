@@ -47,7 +47,9 @@ class DBInterface : public qtDatabase
   char * retFieldTag(int table,int field);
   int retFieldValid(int table,int field);
   int retFieldValue(int table,int field);
-  int retTriggers(field *** triggers, int **nTriggers);
+  int retTriggers(field *** triggers, int *& nTriggers);
+  int retDataToWrite(field **, int *, field ****, int **, int ***);
+  int retTablesWList(field **stTriggers, int *nTriggers, int **lTables, int **nTables);
   //setting private members data and/or attributes functions
   int setFieldValid(int table,int field, int valid);
   int setFieldValue(int table,int field, int value);

@@ -206,25 +206,24 @@ int DBInterface::retFieldValue(int table, int field)
   return ret;
 }
 /*!function for returning triggers triggered to write/read data to/from tables*/
-int DBInterface::retTriggers(field*** triggers, int** nTriggers)
+int DBInterface::retTriggers(field*** triggers, int* & nTriggers)
 {
   std::cout << "DEBUG:(inside DBInterface::retTriggers)" << std::endl;
   int failed = -1;
-  field ** stTriggers;
-  int * numTriggers;
+  static field ** stTriggers;
   char *sql;
   char ***table;
   char **triggersOn;
-  int *x = new int(0);
+  int *x  = new int(0);
   int *y = new int(0);
 
   stTriggers = *triggers;
-  numTriggers = *nTriggers;
   
   triggersTable->sqlTgsTgd(&sql);
-  std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
+  //std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
   query(NULL,sql);
-  retData(NULL,&table,&x,&y);
+  if(retData(NULL,&table,&x,&y))
+    std::cout <<"ERROR:(inside DBInterface::retTriggers) retData return error!" << std::endl;
   triggersOn = new char*[*y];
   
   for (int i=0;i<*y;i++)
@@ -234,7 +233,10 @@ int DBInterface::retTriggers(field*** triggers, int** nTriggers)
     }
     
   triggersTable->updateTriggersOn(triggersOn,*y);
-  triggersTable->retTgsTgd(&stTriggers,&numTriggers);
+  triggersTable->retTgsTgd(&stTriggers,&nTriggers);
+  std::cout << "DEBUG:(inside DBInterface::retTriggers) number of triggers:" << *nTriggers << std::endl;
+  *triggers = stTriggers;
+
 
   //cleaning
   for(int j =*y-1;j>=0;j--)
@@ -250,14 +252,94 @@ int DBInterface::retTriggers(field*** triggers, int** nTriggers)
   delete triggersOn;
   delete y;
   delete sql;
-  //
-  
-  *triggers = stTriggers;
-  *nTriggers = numTriggers;
-  
+  // 
   return 0;
 }
 
+/*!function for returning data to write from table, because is triggered*/
+int DBInterface::retDataToWrite(field** stTriggers, int *nTriggers, field ****tagsToWrite, int **nTables, int ***nFields)
+{
+  std::cout <<"DEBUG:(inside DBInterface::retDataToWrite)" << std::endl;
+  int failed = -1;
+  int *lTables;
+  int *num;
+  static field ***dataFields;
+  static int **numFields;
+
+  dataFields = *tagsToWrite;
+  numFields = *nFields;
+  num = *nTables;
+
+  std::cout <<"DEBUG:(inside DBInterface::retDataToWrite) number of triggers in database:" << *nTriggers << std::endl;
+  if(!retTablesWList(stTriggers,nTriggers,&lTables, &num))
+    {
+      dataFields = new field**[*num];
+      numFields = new int*[*num];
+      for(int i = 0; i < *num; i++)
+	{
+	  tables[lTables[i]]->retFields(&dataFields[i],&numFields[i]);
+	}
+    }
+  
+  *nTables = num;
+  *tagsToWrite = dataFields;
+  *nFields = numFields;
+  return failed;
+  
+}
+/*!function for returning a list of tables Write triggered*/
+int DBInterface::retTablesWList(field** stTriggers, int *nTriggers,int **lTables, int ** nTables)
+{
+  std::cout <<"DEBUG:(inside DBInterface::retTablesWList)" << std::endl;
+  int failed = -1, size = 0, different = 0;
+  static int *tables = new int[0];
+  int *temp = new int[0];
+  static int *num = new int(0);
+
+  *temp = 0;
+  for(int i=0; i<*nTriggers;i++)
+    {
+      if(stTriggers[i]->forWTable>=0)
+	{
+	  if(*num ==0)
+	    {
+	      size++;
+	      delete tables;
+	      tables = new int[size];
+	      tables[0] = stTriggers[i]->forWTable;
+	      failed = 0;
+	    }
+	  else
+	    {
+	      different = 1;
+	      for(int j=0;j<size;j++)
+		{
+		  if(tables[j] == stTriggers[i]->forWTable)
+		    different = 0;
+		}
+	      if(different)
+		{
+		  delete temp;
+		  temp = new int[size];
+		  for(int j=0;j<size;j++)
+		      temp[j] = tables[j];
+		  delete tables;
+		  size++;
+		  tables = new int[size];
+		  for(int j=0;j<(size-1);j++)
+		      tables[j] = temp[j];
+		  tables[size-1] = stTriggers[i]->forWTable;
+		}    
+	    }
+	}
+    }
+  *num = size;
+  delete temp;
+  
+  *nTables = num;
+  *lTables = tables;
+  return 0;
+}
 //
 //SETTING DATA FUNCTIONS
 //

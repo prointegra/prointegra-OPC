@@ -523,7 +523,7 @@ int DBTriggersTable::updateMysql(char **sql)
 /*!funtion for retunring a sql command to take every trigger triggered in database table*/
 int DBTriggersTable::sqlTgsTgd(char **sql)
 {
-  std::cout << "DEBUG: (inside DBTriggersTable::sqlTgsTgd)" << std::endl;
+  //std::cout << "DEBUG: (inside DBTriggersTable::sqlTgsTgd)" << std::endl;
   static char *sqlQuery = NULL;
 
 
@@ -537,7 +537,7 @@ int DBTriggersTable::sqlTgsTgd(char **sql)
 /*!function for setting on triggers*/
 int DBTriggersTable::updateTriggersOn(char **triggers, int numberOf)
 {
-  std::cout << "DEBUG: (inside DBTriggersTable::updateTriggersOn)" << std::endl; 
+  //std::cout << "DEBUG: (inside DBTriggersTable::updateTriggersOn)" << std::endl; 
   for(int i = 0; i < numberOf;i++)
     {
       for(int j=0; j < parameters.numFields; j++)
@@ -663,16 +663,21 @@ int DBTriggersTable::retNoRepeatedFields(char ***fieldsNames)
 /*!function for returning all triggered fields */
  int DBTriggersTable::retTgsTgd(field*** triggers, int **numberOf)
 {
-  std::cout << "DEBUG:(inside DBTriggersTable::retTgsTgd)" << std::endl;
+  //std::cout << "DEBUG:(inside DBTriggersTable::retTgsTgd)" << std::endl;
   int ret = -1;
   static field ** fields = NULL;
-  static int *nFields = new int(0);
+  static int *nFields = new int();
   int k = 0;
+
+  fields = *triggers;
+  nFields = *numberOf;
+  
+  *nFields = 0;
   
   for(int i = 0; i < parameters.numFields ; i++)
     {
       if(parameters.stField[i].iValue && !parameters.stField[i].isDone)
-	*nFields++;
+	*nFields = *nFields+1;
     }
   if(*nFields >0)
     {
@@ -691,6 +696,7 @@ int DBTriggersTable::retNoRepeatedFields(char ***fieldsNames)
     }
   *triggers = fields;
   *numberOf = nFields;
+  std::cout << "DEBUG:(inside DBTriggersTable::retTgsTgd) number of triggers:" << *nFields << std::endl;
   return ret;
 }
  

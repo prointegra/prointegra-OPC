@@ -658,6 +658,28 @@ int DBTable::retFieldValue(int field)
   return ret;
 }
 
+/*!function to return the complete table field list*/
+int DBTable::retFields(field *** fields, int ** numberOf)
+{
+  //std::cout << "DEBUG: (inside DBTable::retFields)" << std::endl;
+  int failed = -1;
+  static field ** stFields;
+  static int * numFields = new int();
+
+  stFields = *fields;
+  numFields = *numberOf;
+
+  *numFields = parameters.numFields;
+  stFields = new field*[*numFields];
+  for(int i=0; i < *numFields; i++)
+      stFields[i] = new field(parameters.stField[i]);
+
+  *numberOf = numFields;
+  *fields = stFields;
+  return 0;
+}
+
+
 //
 /*!function to set a field valid variable*/
 int DBTable::setFieldValid(int field, int valid)

@@ -74,12 +74,13 @@ int ProintegraOPC::checkDB()
 TODO: it's in fact still not be used*/
 int ProintegraOPC::checkComm()
 {
-  for(int i=0; i < nSlaves; i++)
+  int failed = 0;
+   for(int i=0; i < nSlaves; i++)
     {
-      std::cout << "DEBUG: slave "<< i << " status: " << commDaemonManager->checkDaemon(i)<< std::endl;
+      //std::cout << "DEBUG: slave "<< i << " status: " << commDaemonManager->checkDaemon(i)<< std::endl;
+      failed = failed + commDaemonManager->checkDaemon(i);
     }
-
-  return 0;   
+  return failed;   
 }
 /*!checking communication processes if running or not
 TODO: it's in fact still not be used*/
@@ -97,7 +98,40 @@ int ProintegraOPC::dataCapture()
     failed= failed & hSlaves[i]->readData();
   return failed;   
 }
-/*data to database process
+/*data from DB to communication process (WRITTING)
+it takes data from database table and write it to it's slave*/
+int ProintegraOPC::dataToComm()
+{
+  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm)" << std::endl;
+  int failed = -1;
+  field ***tagsToWrite;
+  int *nTables;
+  int **nFields;
+
+  for(int i=0; i< nDBs ; i++)
+    {
+      if(*nTriggers[i] > 0)
+	{
+	  failed = hDatabase[i]->retDataToWrite(stTriggers[i],nTriggers[i],&tagsToWrite,&nTables,&nFields);
+
+	  for(int j=0;j<*nTables;j++)
+	    {
+	      std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) you have to send from table:" << j << std::endl;
+	      for(int k = 0; k < *nFields[j]; k++)
+		{
+		  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) field nº:" << k << "  tag:" << tagsToWrite[j][k]->tag << std::endl;
+		}
+	    }
+	}
+      else
+	std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) no triggers found for database" << std::endl;
+    }
+
+  return failed;
+}
+
+
+/*data from communication to database process (READING)
 it takes data from slave structures and save it to our tables structures
 TODO: it has to be cut in smaller functions!*/
 int ProintegraOPC::dataToDB()
@@ -178,8 +212,8 @@ int ProintegraOPC::loop()
   //exit handling
   struct sigaction sigIntHandler;
   int failed = -1;
-  field ** stTriggers = NULL;
-  int *numFields = NULL;
+  field *** stTriggers = NULL;
+  int **numFields = NULL;
   
   sigIntHandler.sa_handler = ProintegraOPC::exitHandler;
   sigemptyset(&sigIntHandler.sa_mask);
@@ -201,30 +235,21 @@ int ProintegraOPC::loop()
 	    }
 	  if(!failed)
 	    {
-	      //databases TODO: inside new function all this, and errors checking!
-	      for(int i=0; i< nDBs ; i++)
-		{
-		  std::cout << "INFO: working with Database: " << i+1 << std::endl;
-		  std::cout << "INFO: is Triggered? ... ";
-		  getTriggers(&stTriggers,&numFields,i);
-		  if(*numFields > 0 && *numFields != NULL)
-		    std::cout << "yes! " << std::endl;
-		  else
-		    std::cout << "no! " << std::endl;
-		  //dataToComm();
+	      getTriggers();
+	      dataToComm();
 		  //dataToDB();
 		  //storeDB();
 		  //cleaning
-		  if(*numFields >0)
-		    {
-		      for(int i = *numFields-1; i >=0;i--)
-			delete stTriggers[i];
-		      delete stTriggers;
-		    }
+	      //  if(*numFields >0)
+	      //    {
+	      //      for(int i = *numFields-1; i >=0;i--)
+	      //	delete stTriggers[i];
+	      //      delete stTriggers;
+	      //    }
 		  //
-		}
+	      //}
+	      delTriggers();
 	    }
-	  
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  
 	}
@@ -238,29 +263,53 @@ int ProintegraOPC::loop()
   return 0;   
 }
 
-/*!function for getting a complete list of trigered triggers in Database*/
-int ProintegraOPC::getTriggers(field *** triggers, int **nTriggers, int DB)
+/*!function for getting a complete list of trigered triggers*/
+int ProintegraOPC::getTriggers()
 {
   std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
   int failed = -1;
-  int * numTriggers = NULL;
-  field ** stTriggers = NULL;
 
-
-  numTriggers = *nTriggers;
-  stTriggers = *triggers;
+  stTriggers = new field**[nDBs];
+  nTriggers = new int*[nDBs];
   
-  if(DB >= 0 && DB < nDBs)
-    {//database is correct
-      failed = hDatabase[DB]->retTriggers(&stTriggers,&numTriggers);
+  failed = 0;
+  for(int i=0; i < nDBs; i++)
+    {
+      //std::cout << "INFO: database:" << i+1 <<"  is Triggered? ... ";
+      //std::cout << "DEBUG: (inside ProintegraOPC::getTriggers) database:" << i <<"  triggers:" << *tmpNTriggers << std::endl;
+      failed = failed +  hDatabase[i]->retTriggers(&stTriggers[i],nTriggers[i]);
+      std::cout << "DEBUG: (inside ProintegraOPC::getTriggers) database:" << i <<" definitive  triggers:" << *nTriggers[i] << std::endl;     
+      //if(*nTriggers[i] > 0 && *nTriggers[i] != NULL)
+      //std::cout << "yes! " << std::endl;
+      //else
+      //std::cout << "no! " << std::endl;
     }
  
-  *nTriggers = numTriggers;
-  *triggers = stTriggers;
-
   return failed;
 }
 
+/*!function for deleting the complete list of trigered triggers*/
+int ProintegraOPC::delTriggers()
+{
+  std::cout << "DEBUG:(inside ProintegraOPC::delTriggers)" << std::endl; 
+  int failed = -1;
+
+  for(int i=nDBs-1; i>=0;i--)
+    {
+      if(*nTriggers[i]>0)
+	{
+	  for(int j=*nTriggers[i]-1;j>=0;j--)
+	    delete stTriggers[i][j];
+
+	}
+      //delete nTriggers[i];
+      //delete stTriggers[i];
+    }
+  delete nTriggers;
+  delete stTriggers;
+ 
+  return failed;
+}
 
 //DEBUG FUNCTIONS
 /*show data in memory structures, data to be written in databases*/

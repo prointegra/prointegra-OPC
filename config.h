@@ -61,7 +61,6 @@ typedef struct
   
   int nRegs = 0;
   mbReadData* stRegisters = NULL;
-
 } mbSlaves;
 
 //field parameters
@@ -82,7 +81,6 @@ typedef struct
   //triggers
   int forRTable=-1;
   int forWTable=-1;
-  
 } field;
 
 //database parameters
@@ -111,7 +109,6 @@ typedef struct
   int numFields;
   char * tbType;
   field* stField; 
-  
 } tableParameters;
 
 class ConfigParser 
@@ -177,7 +174,6 @@ class ConfigParser
   mbSlaves* slaveParams;
   mbReadData** allTags;
   int nSlaves;
-
 };
 
 

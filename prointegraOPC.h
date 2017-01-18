@@ -59,9 +59,11 @@ class ProintegraOPC
   //capturing functions
   int loop();
   int dataCapture();
+  int dataToComm();
   int dataToDB();
   int storeDB();
-  int getTriggers(field *** triggers, int **nTriggers, int database);
+  int getTriggers();
+  int delTriggers();
   //DEBUGGING FUNCTIONS
   int showDBData();
   //EXIT HANDLER
@@ -82,6 +84,9 @@ class ProintegraOPC
   int nSlaves;
   CommInterface** hSlaves;
   CommDaemon* commDaemonManager;
+  //triggers
+  field *** stTriggers;
+  int ** nTriggers;
 };
 
 

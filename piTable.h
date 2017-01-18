@@ -54,6 +54,7 @@ class DBTable
   int retFieldValid(int field);
   int retFieldValue(int field);
   int* retLink(int field);
+  int retFields(field ***,int**);
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);
