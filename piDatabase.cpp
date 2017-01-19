@@ -206,50 +206,58 @@ int DBInterface::retFieldValue(int table, int field)
   return ret;
 }
 /*!function for returning triggers triggered to write/read data to/from tables*/
-int DBInterface::retTriggers(field*** triggers, int* & nTriggers)
+int DBInterface::retTriggers(field** & triggers, int* & nTriggers)
 {
-  std::cout << "DEBUG:(inside DBInterface::retTriggers)" << std::endl;
+  //std::cout << "DEBUG:(inside DBInterface::retTriggers)" << std::endl;
   int failed = -1;
-  static field ** stTriggers;
   char *sql;
   char ***table;
   char **triggersOn;
-  int *x  = new int(0);
-  int *y = new int(0);
-
-  stTriggers = *triggers;
-  
-  triggersTable->sqlTgsTgd(&sql);
+  int *x;
+  int *y;
+ 
+  triggersTable->sqlTgsTgd(sql);
   //std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
   query(NULL,sql);
   if(retData(NULL,&table,&x,&y))
     std::cout <<"ERROR:(inside DBInterface::retTriggers) retData return error!" << std::endl;
-  triggersOn = new char*[*y];
+  if(*y > 0)
+    {
+      triggersOn = new char*[*y];
   
-  for (int i=0;i<*y;i++)
-    {
-      triggersOn[i] = new char[strlen(table[i][0])+5];
-      strcpy(triggersOn[i],table[i][0]);
-    }
+      for (int i=0;i<*y;i++)
+	{
+	  triggersOn[i] = new char[strlen(table[i][0])+5];
+	  strcpy(triggersOn[i],table[i][0]);
+	}
     
-  triggersTable->updateTriggersOn(triggersOn,*y);
-  triggersTable->retTgsTgd(&stTriggers,&nTriggers);
-  std::cout << "DEBUG:(inside DBInterface::retTriggers) number of triggers:" << *nTriggers << std::endl;
-  *triggers = stTriggers;
-
-
-  //cleaning
-  for(int j =*y-1;j>=0;j--)
-    {
-      for(int k = *x-1;k>=0;k--)
-	delete (table[j][k]);
-      delete table[j];
+      triggersTable->updateTriggersOn(triggersOn,*y);
+      //std::cout << "DEBUG:(inside DBInterface::retTriggers) calling triggersTable->retTgsTgd"<< std::endl;  
+      triggersTable->retTgsTgd(&triggers,&nTriggers);
+  
+      //std::cout << "DEBUG:(inside DBInterface::retTriggers) number of triggers:" << *nTriggers << std::endl;
     }
-  delete table;
+  else
+    {
+      nTriggers = new int();
+      *nTriggers = 0;
+    }
+  //std::cout << "DEBUG:(inside DBInterface::retTriggers) deleting memory"<< std::endl;
+  if(*y >0)
+    {
+      //cleaning
+      for(int j =*y-1;j>=0;j--)
+	{
+	  for(int k = *x-1;k>=0;k--)
+	    delete (table[j][k]);
+	  delete table[j];
+	}
+      delete table;
+      for(int l = *y-1;l>=0;l--)
+	delete triggersOn[l];
+      delete triggersOn;
+    }
   delete x;
-  for(int l = *y-1;l>=0;l--)
-    delete triggersOn[l];
-  delete triggersOn;
   delete y;
   delete sql;
   // 
@@ -261,25 +269,34 @@ int DBInterface::retDataToWrite(field** stTriggers, int *nTriggers, field ****ta
 {
   std::cout <<"DEBUG:(inside DBInterface::retDataToWrite)" << std::endl;
   int failed = -1;
-  int *lTables;
-  int *num;
-  static field ***dataFields;
-  static int **numFields;
+  int **lTables;
+  int *num = NULL;
+  field ***dataFields = NULL;
+  int **numFields = NULL;
 
-  dataFields = *tagsToWrite;
-  numFields = *nFields;
-  num = *nTables;
+  //dataFields = *tagsToWrite;
+  //numFields = *nFields;
+  //num = *nTables;
 
   std::cout <<"DEBUG:(inside DBInterface::retDataToWrite) number of triggers in database:" << *nTriggers << std::endl;
-  if(!retTablesWList(stTriggers,nTriggers,&lTables, &num))
+  if(!retTablesWList(stTriggers,nTriggers,&lTables,&num))
     {
       dataFields = new field**[*num];
       numFields = new int*[*num];
       for(int i = 0; i < *num; i++)
 	{
-	  tables[lTables[i]]->retFields(&dataFields[i],&numFields[i]);
+	  tables[*lTables[i]]->retFields(&dataFields[i],&numFields[i]);
 	}
+      //freeing lTables
+      for(int j = *num-1; j >= 0; j--)
+	{
+	  delete lTables[j];
+	}     
+      delete lTables;
+      failed = 0;
     }
+  else
+      std::cout <<"DEBUG:(inside DBInterface::retDataToWrite) pointers where not initialized!!"<< std::endl;
   
   *nTables = num;
   *tagsToWrite = dataFields;
@@ -288,54 +305,70 @@ int DBInterface::retDataToWrite(field** stTriggers, int *nTriggers, field ****ta
   
 }
 /*!function for returning a list of tables Write triggered*/
-int DBInterface::retTablesWList(field** stTriggers, int *nTriggers,int **lTables, int ** nTables)
+int DBInterface::retTablesWList(field** stTriggers, int *nTriggers,int ***lTables, int ** nTables)
 {
   std::cout <<"DEBUG:(inside DBInterface::retTablesWList)" << std::endl;
-  int failed = -1, size = 0, different = 0;
-  static int *tables = new int[0];
-  int *temp = new int[0];
-  static int *num = new int(0);
+  int failed = -1, different = 0;
+  static int **tables;
+  int **temp =  new int*[1];
+  static int *num;
 
-  *temp = 0;
+  std::cout <<"DEBUG:(inside DBInterface::retTablesWList) copying initial pointers" << std::endl;
+  num = *nTables;
+  tables = *lTables;
+  
+  num = new int(0);
+  tables = new int*[1];
+  *num = 0;
+
+  std::cout <<"DEBUG:(inside DBInterface::retTablesWList) from 0 to:" << *nTriggers << "  loop" << std::endl;
   for(int i=0; i<*nTriggers;i++)
     {
       if(stTriggers[i]->forWTable>=0)
 	{
 	  if(*num ==0)
 	    {
-	      size++;
+	      std::cout <<"DEBUG:(inside DBInterface::retTablesWList) first! delete tables and create a new one with 1 dimension" << std::endl;
+	      *num = *num+1;
 	      delete tables;
-	      tables = new int[size];
-	      tables[0] = stTriggers[i]->forWTable;
+	      tables = new int*[*num];
+	      tables[0] = new int(stTriggers[i]->forWTable);
 	      failed = 0;
 	    }
 	  else
 	    {
 	      different = 1;
-	      for(int j=0;j<size;j++)
+	      for(int j=0;j<*num;j++)
 		{
-		  if(tables[j] == stTriggers[i]->forWTable)
+		  if(*tables[j] == stTriggers[i]->forWTable)
 		    different = 0;
 		}
 	      if(different)
 		{
+		  std::cout <<"DEBUG:(inside DBInterface::retTablesWList) found different!" << std::endl;
+		  std::cout <<"DEBUG:(inside DBInterface::retTablesWList) deleting temp" << std::endl;
+		  for(int j = *num-1; j>=0;j--)
+		    delete temp[j];
 		  delete temp;
-		  temp = new int[size];
-		  for(int j=0;j<size;j++)
-		      temp[j] = tables[j];
+		  std::cout <<"DEBUG:(inside DBInterface::retTablesWList) creating new temp a copy of table" << std::endl;
+		  temp = new int*[*num];
+		  for(int j=0;j<*num;j++)
+		    temp[j] = new int(*tables[j]);
+		  std::cout <<"DEBUG:(inside DBInterface::retTablesWList) deleting table" << std::endl;	  
+		  for(int j = *num-1; j>=0;j--)
+		    delete tables[j];	  
 		  delete tables;
-		  size++;
-		  tables = new int[size];
-		  for(int j=0;j<(size-1);j++)
-		      tables[j] = temp[j];
-		  tables[size-1] = stTriggers[i]->forWTable;
+		  *num++;
+		  std::cout <<"DEBUG:(inside DBInterface::retTablesWList) creating new table bigger!" << std::endl;	 
+		  tables = new int*[*num];
+		  for(int j=0;j<(*num-1);j++)
+		    tables[j] = new int(*temp[j]);
+		  tables[*num-1] = new int(stTriggers[i]->forWTable);
 		}    
 	    }
 	}
     }
-  *num = size;
-  delete temp;
-  
+  delete temp;  
   *nTables = num;
   *lTables = tables;
   return 0;

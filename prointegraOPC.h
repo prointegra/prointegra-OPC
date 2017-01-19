@@ -73,20 +73,20 @@ class ProintegraOPC
   
  private:
   //database configuration parser
-  ConfigParser* confParser;
+  ConfigParser* confParser = NULL;
   ////databases
   //number of database handlers
   int nDBs;
   //database handler
-  DBInterface** hDatabase;
+  DBInterface** hDatabase = NULL;
   ////communications
   //number of slaves handlers
   int nSlaves;
-  CommInterface** hSlaves;
-  CommDaemon* commDaemonManager;
+  CommInterface** hSlaves = NULL;
+  CommDaemon* commDaemonManager = NULL;
   //triggers
-  field *** stTriggers;
-  int ** nTriggers;
+  field *** stTriggers = NULL;
+  int ** nTriggers = NULL;
 };
 
 

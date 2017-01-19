@@ -664,11 +664,12 @@ int DBTable::retFields(field *** fields, int ** numberOf)
   //std::cout << "DEBUG: (inside DBTable::retFields)" << std::endl;
   int failed = -1;
   static field ** stFields;
-  static int * numFields = new int();
+  static int * numFields;
 
   stFields = *fields;
   numFields = *numberOf;
 
+  numFields = new int(0);
   *numFields = parameters.numFields;
   stFields = new field*[*numFields];
   for(int i=0; i < *numFields; i++)

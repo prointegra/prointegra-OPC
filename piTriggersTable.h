@@ -49,7 +49,7 @@ class DBTriggersTable : public DBTable
   //int insertMysql(char **sql);
   //int updateMysql(char **sql);
   //retrieving
-  int sqlTgsTgd(char **sql);
+  int sqlTgsTgd(char *& sql);
   int updateTriggersOn(char ** triggers, int numberOf);
  
   //return private members

@@ -146,16 +146,16 @@ int qtDatabase::populateTable(PARAM *p, int id)
   return 0;
 }
 
-int qtDatabase::retData(PARAM *p, char ****table, int **px, int **py)
+int qtDatabase::retData(PARAM *p, char **** table, int **columns, int **rows)
 {
+  //std::cout << "DEBUG: (inside qtDatabase::retData)" << std::endl;
   int x,y,xmax,ymax, failed = -1;
-  static char ***retTable = NULL;
-  static int * pointX = new int(0);
-  static int * pointY = new int(0);
+  char ***retTable;
+  int * pointX;
+  int * pointY;
 
-  retTable = *table;
-  pointX = *px;
-  pointY = *py;
+  pointX = new int();
+  pointY = new int();
   
   if(db != NULL)
   {
@@ -179,9 +179,10 @@ int qtDatabase::retData(PARAM *p, char ****table, int **px, int **py)
 	ymax = result->numRowsAffected();
 	//printf("no SQLITE, ymax = %d \n",ymax);
       }
-    retTable = new char**[xmax];
-    for(int i =0; i < xmax; i++)
-      retTable[i] = new char*[ymax];
+    //std::cout << "DEBUG: (inside qtDatabase::retData) return of columns:" << xmax <<"  and rows:" << ymax << std::endl;
+    retTable = new char**[ymax];
+    for(int i =0; i < ymax; i++)
+      retTable[i] = new char*[xmax];
     *pointX = xmax;
     *pointY = ymax;
     // populate table
@@ -213,10 +214,11 @@ int qtDatabase::retData(PARAM *p, char ****table, int **px, int **py)
 	  }
 	failed = 0;
       }
-  }	
+  }
+  //std::cout << "DEBUG: (inside qtDatabase::retData) returning" << std::endl; 
   *table = retTable;
-  *px = pointX;
-  *py = pointY;
+  *columns = pointX;
+  *rows = pointY;
   return failed;
 }
 

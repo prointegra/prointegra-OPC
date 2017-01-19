@@ -521,16 +521,11 @@ int DBTriggersTable::updateMysql(char **sql)
 }
 */
 /*!funtion for retunring a sql command to take every trigger triggered in database table*/
-int DBTriggersTable::sqlTgsTgd(char **sql)
+int DBTriggersTable::sqlTgsTgd(char * & sql)
 {
   //std::cout << "DEBUG: (inside DBTriggersTable::sqlTgsTgd)" << std::endl;
-  static char *sqlQuery = NULL;
-
-
-  sqlQuery = new char[strlen("SELECT `NAME` from `") + strlen(parameters.tbName) + strlen("` where (`VALUE`= 1)")+5];
-  sprintf(sqlQuery,"SELECT `NAME` from `%s` where (`VALUE`= 1)", parameters.tbName);
-
-  *sql = sqlQuery;
+  sql = new char[strlen("SELECT `NAME` from `") + strlen(parameters.tbName) + strlen("` where (`VALUE`= 1)")+5];
+  sprintf(sql,"SELECT `NAME` from `%s` where (`VALUE`= 1)", parameters.tbName);
 
   return 0;
 }
@@ -665,13 +660,10 @@ int DBTriggersTable::retNoRepeatedFields(char ***fieldsNames)
 {
   //std::cout << "DEBUG:(inside DBTriggersTable::retTgsTgd)" << std::endl;
   int ret = -1;
-  static field ** fields = NULL;
-  static int *nFields = new int();
+  field ** fields = NULL;
+  int *nFields = new int();
   int k = 0;
 
-  fields = *triggers;
-  nFields = *numberOf;
-  
   *nFields = 0;
   
   for(int i = 0; i < parameters.numFields ; i++)
@@ -696,7 +688,7 @@ int DBTriggersTable::retNoRepeatedFields(char ***fieldsNames)
     }
   *triggers = fields;
   *numberOf = nFields;
-  std::cout << "DEBUG:(inside DBTriggersTable::retTgsTgd) number of triggers:" << *nFields << std::endl;
+
   return ret;
 }
  
@@ -729,8 +721,6 @@ int DBTriggersTable::setFieldValue(int field, int value)
     }
   
   return ret;
-
-
 }
 
 /*!function to set a linking info to tag

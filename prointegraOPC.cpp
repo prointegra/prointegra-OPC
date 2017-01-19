@@ -104,29 +104,45 @@ int ProintegraOPC::dataToComm()
 {
   std::cout << "DEBUG: (inside ProintegraOPC::dataToComm)" << std::endl;
   int failed = -1;
-  field ***tagsToWrite;
-  int *nTables;
-  int **nFields;
+  field ***tagsToWrite = NULL;
+  int *nTables = NULL;
+  int **nFields = NULL;
 
   for(int i=0; i< nDBs ; i++)
     {
       if(*nTriggers[i] > 0)
 	{
 	  failed = hDatabase[i]->retDataToWrite(stTriggers[i],nTriggers[i],&tagsToWrite,&nTables,&nFields);
-
+	  
 	  for(int j=0;j<*nTables;j++)
 	    {
-	      std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) you have to send from table:" << j << std::endl;
 	      for(int k = 0; k < *nFields[j]; k++)
 		{
-		  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) field nº:" << k << "  tag:" << tagsToWrite[j][k]->tag << std::endl;
+		  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) table nº:"<<j<<"  field nº:" << k << "  tag:" << tagsToWrite[j][k]->tag << std::endl;
 		}
 	    }
+	  
+	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting data!" << std::endl;
+	  for(int j=*nTables-1;j>=0;j--)
+	    {
+	      std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting temporal data in table:" << j << std::endl;
+	      for(int k = *nFields[j]-1; k >= 0; k--)
+		{
+		  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting tagsToWrite[" << j <<"][" << k <<"]"<< std::endl;
+		  delete tagsToWrite[j][k];
+		}
+	      std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting dimension j:" << j << std::endl;
+	      delete nFields[j];
+	      delete tagsToWrite[j];
+	    }
+	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting pointers" << std::endl;
+	  delete nFields;
+	  delete tagsToWrite;
+	  delete nTables;
 	}
       else
 	std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) no triggers found for database" << std::endl;
     }
-
   return failed;
 }
 
@@ -266,9 +282,10 @@ int ProintegraOPC::loop()
 /*!function for getting a complete list of trigered triggers*/
 int ProintegraOPC::getTriggers()
 {
-  std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
+  //std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
   int failed = -1;
 
+  //std::cout << "DEBUG:(inside ProintegraOPC::getTriggers) creating structures for:" << nDBs << "  databases" << std::endl; 
   stTriggers = new field**[nDBs];
   nTriggers = new int*[nDBs];
   
@@ -276,14 +293,17 @@ int ProintegraOPC::getTriggers()
   for(int i=0; i < nDBs; i++)
     {
       //std::cout << "INFO: database:" << i+1 <<"  is Triggered? ... ";
-      //std::cout << "DEBUG: (inside ProintegraOPC::getTriggers) database:" << i <<"  triggers:" << *tmpNTriggers << std::endl;
-      failed = failed +  hDatabase[i]->retTriggers(&stTriggers[i],nTriggers[i]);
+
+      failed = failed +  hDatabase[i]->retTriggers(stTriggers[i],nTriggers[i]);
       std::cout << "DEBUG: (inside ProintegraOPC::getTriggers) database:" << i <<" definitive  triggers:" << *nTriggers[i] << std::endl;     
       //if(*nTriggers[i] > 0 && *nTriggers[i] != NULL)
       //std::cout << "yes! " << std::endl;
       //else
       //std::cout << "no! " << std::endl;
+      //for(int j = 0; j < *nTriggers[i]; j++)
+      //std::cout << "DEBUG: (inside ProintegraOPC::getTriggers) checking trigger n:" << j+1 <<"  name:" << stTriggers[i][j]->name << std::endl;
     }
+  
  
   return failed;
 }
@@ -291,20 +311,29 @@ int ProintegraOPC::getTriggers()
 /*!function for deleting the complete list of trigered triggers*/
 int ProintegraOPC::delTriggers()
 {
-  std::cout << "DEBUG:(inside ProintegraOPC::delTriggers)" << std::endl; 
+  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers)" << std::endl; 
   int failed = -1;
 
   for(int i=nDBs-1; i>=0;i--)
     {
+      //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) database:" << i << std::endl; 
       if(*nTriggers[i]>0)
 	{
+	  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) there are triggers here! *nTriggers[i]:" << *nTriggers[i]<< std::endl; 
 	  for(int j=*nTriggers[i]-1;j>=0;j--)
-	    delete stTriggers[i][j];
-
+	    {
+	      //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) inside loop, deleting trigger:" << j<< std::endl;
+	      delete stTriggers[i][j];
+	    }
+	  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) deletting dimension i:" << i << std::endl;
+	  if(i>0)
+	    {
+	      delete nTriggers[i];
+	      delete stTriggers[i];
+	    }
 	}
-      //delete nTriggers[i];
-      //delete stTriggers[i];
     }
+  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) delete pointers" << std::endl; 
   delete nTriggers;
   delete stTriggers;
  
