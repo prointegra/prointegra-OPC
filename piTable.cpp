@@ -608,6 +608,41 @@ int DBTable::updateMysql(char **sql)
   *sql = sqlQuery;
   return 0;
 }
+/*sql functions TODO: to fill with standard sql functions*/
+/*!select all from table*/
+int DBTable::sqlSelectAll(databaseParameters dbParameters,char* & sql)
+{
+  int failed = -1;
+  if(!strcmp(dbParameters.type,"QSQLITE"))
+    {
+      failed = sqlSelectAllSqlite(sql);
+    }
+  else if(!strcmp(dbParameters.type,"QMYSQL"))
+    {
+      failed = sqlSelectAllMysql(sql);
+    }
+  return failed;
+}
+
+/*!select all from MySQL table*/
+int DBTable::sqlSelectAllMysql(char* & sql)
+{
+  int failed = -1;
+  sql = new char[strlen("SELECT * FROM `") + strlen(parameters.tbName) + strlen("`") +5];
+  sprintf(sql,"SELECT * FROM `%s`",parameters.tbName);
+  failed = 0;
+  return failed;
+}
+/*!select all from SQLITE table*/
+int DBTable::sqlSelectAllSqlite(char* & sql)
+{
+  int failed = -1;
+  sql = new char[strlen("SELECT * FROM ") + strlen(parameters.tbName) +5];
+  sprintf(sql,"SELECT * FROM %s",parameters.tbName);
+  failed = 0;
+  return failed;
+}
+
 /*!function to return a field tag
 TODO: it should, for convention, only return once*/
 char * DBTable::retFieldTag(int field)
@@ -712,6 +747,26 @@ int DBTable::setFieldValue(int field, int value)
   return ret;
 
 
+}
+/*!function to set a all values from table*/
+int DBTable::setAllValues(char ***table,int columns, int rows, int skip)
+{
+  int failed = -1;
+  //sanity checks
+  if(rows > 0 && columns > skip)
+    {
+      if(columns-skip == parameters.numFields)
+	{
+	  for(int i = skip; i < columns; i++)
+	    {
+	      if(strcmp(table[rows-1][i],"NULL"))
+		 parameters.stField[i-skip].iValue=atoi(table[rows-1][i]);
+	    }
+	  failed = 0;
+	}
+    }
+  
+  return failed;
 }
 
 /*!function to set a linking info to tag

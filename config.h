@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <ctype.h>
-#include <string>
+#include <vector>
 #include "rldataacquisition.h"
 
 using namespace std;

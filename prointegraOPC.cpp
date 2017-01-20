@@ -113,7 +113,7 @@ int ProintegraOPC::dataToComm()
       if(*nTriggers[i] > 0)
 	{
 	  failed = hDatabase[i]->retDataToWrite(stTriggers[i],nTriggers[i],&tagsToWrite,&nTables,&nFields);
-	  
+	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) nº of tables"<<*nTables << std::endl;
 	  for(int j=0;j<*nTables;j++)
 	    {
 	      for(int k = 0; k < *nFields[j]; k++)
@@ -121,7 +121,6 @@ int ProintegraOPC::dataToComm()
 		  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) table nº:"<<j<<"  field nº:" << k << "  tag:" << tagsToWrite[j][k]->tag << std::endl;
 		}
 	    }
-	  
 	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting data!" << std::endl;
 	  for(int j=*nTables-1;j>=0;j--)
 	    {

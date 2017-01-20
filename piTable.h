@@ -47,7 +47,12 @@ class DBTable
   int updateSqlite(char **sql);
   int storeMysql(char **sql);
   int insertMysql(char **sql);
-  int updateMysql(char **sql); 
+  int updateMysql(char **sql);
+  //new sql standard functions, january 2017, TODO: to improve and insert the old ones
+  int sqlSelectAll(databaseParameters dbParameters,char* & sql);
+  int sqlSelectAllMysql(char* & sql);
+  int sqlSelectAllSqlite(char* & sql);
+  
   //return private members
   int retNumFields(){return parameters.numFields;};
   char * retFieldTag(int field);
@@ -58,6 +63,7 @@ class DBTable
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);
+  int setAllValues(char ***table, int columns, int rows, int skip);
   int setLink(int field, int slave, int tag);
   
 protected:  

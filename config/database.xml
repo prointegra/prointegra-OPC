@@ -25,26 +25,26 @@
         <tag name="INT_TSX_R[7]" tagName="INT_TSX_R[7]" type="INT" />
 	</table>
 	<table name="TABLAP" tagReadTrigger="rTrigger2" timeReadTrigger="" tagWriteTrigger="wTrigger2" type="LASTVALUE">
-        <tag name="_mbus_1" tagName="mbus_1" type="INT" />
-        <tag name="_mbus_2" tagName="mbus_2" type="INT" />
-        <tag name="_mbus_3" tagName="mbus_3" type="INT" />
-        <tag name="_rplc3_1" tagName="rplc3_1" type="INT" />
-        <tag name="_rplc3_2" tagName="rplc3_2" type="INT" />
-        <tag name="_sinoptico3_1" tagName="sinoptico3_1" type="INT" />
-        <tag name="_sinoptico3_2" tagName="sinoptico3_2" type="INT" />
-        <tag name="_sinoptico3_3" tagName="sinoptico3_3" type="INT" />
-        <tag name="_sinoptico3_4" tagName="sinoptico3_4" type="INT" />
-        <tag name="_sinoptico3_5" tagName="sinoptico3_5" type="INT" />
-        <tag name="_sinoptico3_6" tagName="sinoptico3_6" type="INT" />
-        <tag name="_sinoptico3_7" tagName="sinoptico3_7" type="INT" />
-        <tag name="_sinoptico3_8" tagName="sinoptico3_8" type="INT" />
-        <tag name="_INT_TSX_R[0]" tagName="INT_TSX_R[0]" type="INT" />
-        <tag name="_INT_TSX_R[1]" tagName="INT_TSX_R[1]" type="INT" />
-        <tag name="_INT_TSX_R[2]" tagName="INT_TSX_R[2]" type="INT" />
-        <tag name="_INT_TSX_R[3]" tagName="INT_TSX_R[3]" type="INT" />
-        <tag name="_INT_TSX_R[4]" tagName="INT_TSX_R[4]" type="INT" />
-        <tag name="_INT_TSX_R[5]" tagName="INT_TSX_R[5]" type="INT" />
-        <tag name="_INT_TSX_R[6]" tagName="INT_TSX_R[6]" type="INT" />
-        <tag name="_INT_TSX_R[7]" tagName="INT_TSX_R[7]" type="INT" />
+        <tag name="_mbus_1" tagName="_mbus_1" type="INT" />
+        <tag name="_mbus_2" tagName="_mbus_2" type="INT" />
+        <tag name="_mbus_3" tagName="_mbus_3" type="INT" />
+        <tag name="_rplc3_1" tagName="_rplc3_1" type="INT" />
+        <tag name="_rplc3_2" tagName="_rplc3_2" type="INT" />
+        <tag name="_sinoptico3_1" tagName="_sinoptico3_1" type="INT" />
+        <tag name="_sinoptico3_2" tagName="_sinoptico3_2" type="INT" />
+        <tag name="_sinoptico3_3" tagName="_sinoptico3_3" type="INT" />
+        <tag name="_sinoptico3_4" tagName="_sinoptico3_4" type="INT" />
+        <tag name="_sinoptico3_5" tagName="_sinoptico3_5" type="INT" />
+        <tag name="_sinoptico3_6" tagName="_sinoptico3_6" type="INT" />
+        <tag name="_sinoptico3_7" tagName="_sinoptico3_7" type="INT" />
+        <tag name="_sinoptico3_8" tagName="_sinoptico3_8" type="INT" />
+        <tag name="_INT_TSX_R[0]" tagName="_INT_TSX_R[0]" type="INT" />
+        <tag name="_INT_TSX_R[1]" tagName="_INT_TSX_R[1]" type="INT" />
+        <tag name="_INT_TSX_R[2]" tagName="_INT_TSX_R[2]" type="INT" />
+        <tag name="_INT_TSX_R[3]" tagName="_INT_TSX_R[3]" type="INT" />
+        <tag name="_INT_TSX_R[4]" tagName="_INT_TSX_R[4]" type="INT" />
+        <tag name="_INT_TSX_R[5]" tagName="_INT_TSX_R[5]" type="INT" />
+        <tag name="_INT_TSX_R[6]" tagName="_INT_TSX_R[6]" type="INT" />
+        <tag name="_INT_TSX_R[7]" tagName="_INT_TSX_R[7]" type="INT" />
 	</table>
 </db>
