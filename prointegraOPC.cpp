@@ -44,7 +44,11 @@ ProintegraOPC::ProintegraOPC()
     {
       hSlaves[i] = new CommInterface();
       hSlaves[i]->setup(confParser->retSlaveParams(i));
-    }  
+    }
+  //link database tags with slaves
+  linkTags();
+  //FOR DEBUGGING PURPOSES
+  //showDBDataLinkage();
 
   return;   
 }
@@ -58,8 +62,36 @@ ProintegraOPC::~ProintegraOPC()
   delete hDatabase;
   return;
 }
+/*! function for linking between slaves and databases tags*/ 
+int ProintegraOPC::linkTags()
+{
+  //std::cout << "DEBUG:(inside ProointegraOPC::linkTags)"<< std::endl;
+  //databases
+  for(int i=0; i< nDBs ; i++)
+    {
+      //tables
+      for(int j=0; j < hDatabase[i]->retNumTables();j++)
+	{
+	  //fields
+	  for(int k=0; k < hDatabase[i]->retNumFields(j);k++)
+	    {
+	      for(int slave = 0; slave < nSlaves;slave++)
+		{
+		  for(int tag=0; tag < hSlaves[slave]->retNumTags(); tag++)
+		    {
+		      if(!strcmp(hSlaves[slave]->retTagName(tag),hDatabase[i]->retFieldTag(j,k)))
+			{
+			  hDatabase[i]->fieldLink(j,k,slave,tag);
+			}
+		    }
+		}
+	    }
+	}
+    }
+  return 0;
+}
 
-/*checking database devices and creating it's tables if don't exists*/
+/*!checking database devices and creating it's tables if don't exists*/
 int ProintegraOPC::checkDB()
 {
   //cout<<"DEBUG: checking and creating!" << endl;
@@ -102,42 +134,50 @@ int ProintegraOPC::dataCapture()
 it takes data from database table and write it to it's slave*/
 int ProintegraOPC::dataToComm()
 {
-  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm)" << std::endl;
-  int failed = -1;
+  //std::cout << "DEBUG: (inside ProintegraOPC::dataToComm)" << std::endl;
+  int failed = 0;
+  int completeFail = 0;
+  int tableFail = 0;
   field ***tagsToWrite = NULL;
   int *nTables = NULL;
   int **nFields = NULL;
+  std::vector <std::vector <int>> tagLink;
 
   for(int i=0; i< nDBs ; i++)
     {
       if(*nTriggers[i] > 0)
 	{
 	  failed = hDatabase[i]->retDataToWrite(stTriggers[i],nTriggers[i],&tagsToWrite,&nTables,&nFields);
-	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) nº of tables"<<*nTables << std::endl;
 	  for(int j=0;j<*nTables;j++)
 	    {
 	      for(int k = 0; k < *nFields[j]; k++)
 		{
-		  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) table nº:"<<j<<"  field nº:" << k << "  tag:" << tagsToWrite[j][k]->tag << std::endl;
+		  for(int l = 0; l < tagsToWrite[j][k]->fromTags.size() ; l++)
+		    for(int m = 0; m < tagsToWrite[j][k]->fromTags[l].size() ; m++)
+		      {
+			//TODO if we have floats, char, etc.
+			//std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) writting value:" << tagsToWrite[j][k]->iValue << std::endl;
+			tableFail = hSlaves[l]->writeTag(tagsToWrite[j][k]->fromTags[l].at(m),l+1,tagsToWrite[j][k]->iValue);
+		      }
 		}
+	      //if(!tableFail)
+	      //hDatabase[i]->resetTriggers(stTriggers[i],*nTriggers[i],j);
+	      failed = failed +tableFail;
+	      tableFail = 0;
 	    }
-	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting data!" << std::endl;
+	  
 	  for(int j=*nTables-1;j>=0;j--)
 	    {
-	      std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting temporal data in table:" << j << std::endl;
 	      for(int k = *nFields[j]-1; k >= 0; k--)
 		{
-		  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting tagsToWrite[" << j <<"][" << k <<"]"<< std::endl;
 		  delete tagsToWrite[j][k];
 		}
-	      std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting dimension j:" << j << std::endl;
 	      delete nFields[j];
 	      delete tagsToWrite[j];
 	    }
-	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) deleting pointers" << std::endl;
 	  delete nFields;
 	  delete tagsToWrite;
-	  delete nTables;
+	  delete nTables;	    
 	}
       else
 	std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) no triggers found for database" << std::endl;
@@ -151,6 +191,8 @@ it takes data from slave structures and save it to our tables structures
 TODO: it has to be cut in smaller functions!*/
 int ProintegraOPC::dataToDB()
 {
+  return 0;
+  /*
   int* link = NULL;
   //databases
   for(int i=0; i< nDBs ; i++)
@@ -194,7 +236,7 @@ int ProintegraOPC::dataToDB()
 	    }
 	}
     }
-  return 0;   
+    return 0;   */
 }
 /*data to database process
 it takes data from slave structures and save it to our tables structures
@@ -252,6 +294,7 @@ int ProintegraOPC::loop()
 	    {
 	      getTriggers();
 	      dataToComm();
+	      hSlaves[0]->readData();
 		  //dataToDB();
 		  //storeDB();
 		  //cleaning
@@ -264,6 +307,7 @@ int ProintegraOPC::loop()
 		  //
 	      //}
 	      delTriggers();
+	      Sleep(5000);
 	    }
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  
@@ -369,5 +413,32 @@ int ProintegraOPC::showDBData()
     }
 
 }
-
-
+/*show data links with communication tags*/
+int ProintegraOPC::showDBDataLinkage()
+{
+  std::cout <<"DEBUG:(inside ProintegraOPC::showDBDataLinkage)" << std::endl;
+  std::vector < std::vector <int>> temp;
+   //databases
+  for(int i=0; i< nDBs ; i++)
+    {
+      std::cout << "**************************************************" << std::endl;
+      std::cout << "*DEBUG: showing data links" << std::endl;
+      std::cout << std::endl;
+      std::cout << "*DATABASE: " << i+1 << std::endl;
+      //tables
+      for(int j=0; j < hDatabase[i]->retNumTables();j++)
+	{
+	  std::cout << std::endl;
+	  std::cout << "*--->TABLE: " << j+1 << std::endl;
+	  //fields
+	  for(int k=0; k < hDatabase[i]->retNumFields(j);k++)
+	    {
+	      std::cout << "*----->FIELD: " << k+1 << std::endl;
+	      temp = hDatabase[i]->retFieldLink(j,k);
+	      for(int l=0 ; l < temp.size() ; l++)
+		for(int m=0 ; m < temp[l].size() ; m++)
+		  std::cout << "*------->LINKED WITH SLAVE:" << l <<"  TAG:" << temp[l].at(m) << std::endl;
+	    }
+	}
+    }
+}

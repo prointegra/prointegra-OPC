@@ -53,10 +53,11 @@ class DBInterface : public qtDatabase
   //setting private members data and/or attributes functions
   int setFieldValid(int table,int field, int valid);
   int setFieldValue(int table,int field, int value);
-  int resetTriggers();
+  int resetWTriggers(field ** stTriggers, int numTriggers,int numTable);
   //linking fields with communications
   int fieldLinked(int table,int field);
-  int* retFieldLink(int table, int field);
+  std::vector<std::vector <int>> retFieldLink(int table, int field);
+  int setFieldLink(int table, int field, int slave, int tag);
   int fieldLink(int table, int field, int slave, int tag);
   
  private:

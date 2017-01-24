@@ -60,7 +60,7 @@ class DBDataTable : public DBTable
   char * retFieldTag(int field);
   int retFieldValid(int field);
   int retFieldValue(int field);
-  int* retLink(int field);
+  std::vector<std::vector <int>> retLink(int field);
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);

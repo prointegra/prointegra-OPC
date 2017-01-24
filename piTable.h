@@ -58,13 +58,11 @@ class DBTable
   char * retFieldTag(int field);
   int retFieldValid(int field);
   int retFieldValue(int field);
-  int* retLink(int field);
   int retFields(field ***,int**);
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);
   int setAllValues(char ***table, int columns, int rows, int skip);
-  int setLink(int field, int slave, int tag);
   
 protected:  
   tableParameters parameters;

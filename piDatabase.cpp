@@ -314,9 +314,9 @@ int DBInterface::retDataToWrite(field** stTriggers, int *nTriggers, field ****ta
   *nTables = num;
   *tagsToWrite = dataFields;
   *nFields = numFields;
-  return failed;
-  
+  return failed;  
 }
+
 /*!function for returning a list of tables Write triggered*/
 int DBInterface::retTablesWList(field** stTriggers, int *nTriggers,int ***lTables, int ** nTables)
 {
@@ -408,10 +408,25 @@ int DBInterface::setFieldValue(int table, int field, int value)
   return ret;
 }
 /*!function to reset triggers*/
-int DBInterface::resetTriggers()
+int DBInterface::resetWTriggers(field ** stTriggers, int numTriggers,int numTable)
 {
+  int failed = -1;
+  int tabled = 0;
+  char *sql;
+  for(int i = 0; i < numTriggers;i++)
+    {
+      if(stTriggers[i]->forWTable >= 0)
+	if(tabled == numTable) //it's the table to reset it's trigger
+	  {
+	    //triggersTable->sqlResetTg(sql,stTriggers[i]->name);
+	    query(NULL,sql);
+	    failed = 0;
+	  }
+	else //it isn't 
+	  tabled++;
+    }
 
-  return 0;
+  return failed;
 }
 
 //
@@ -420,6 +435,7 @@ int DBInterface::resetTriggers()
 /*!function to check if a field is already linked*/
 int DBInterface::fieldLinked(int table,int field)
 {
+  /*
   static int* link = NULL;
   int linked = 0;
   if(table >= 0 && table < parameters.numTables)
@@ -429,13 +445,13 @@ int DBInterface::fieldLinked(int table,int field)
       if(link[0]>= 0 && link[1] >= 0)
 	linked = 1;
     }
-  return linked;
+  */
+  return 0;
 }
 /*!function to return a field linking*/
-int* DBInterface::retFieldLink(int table, int field)
+std::vector<std::vector <int>> DBInterface::retFieldLink(int table, int field)
 {
-  static int* link = NULL;
-  
+  std::vector<std::vector <int>> link;
   if(table >= 0 && table < parameters.numTables)
     {
       link = tables[table]->retLink(field);
@@ -444,7 +460,7 @@ int* DBInterface::retFieldLink(int table, int field)
   return link;
 }
 /*!function to link a field with a slave and tag*/
-int DBInterface::fieldLink(int table, int field, int slave, int tag)
+int DBInterface::setFieldLink(int table, int field, int slave, int tag)
 {
   int ret = -1;
   if(table >= 0 && table < parameters.numTables)
@@ -455,4 +471,16 @@ int DBInterface::fieldLink(int table, int field, int slave, int tag)
   return ret;
 
 }
+/*!function to link a field with a slave and tag*/
+int DBInterface::fieldLink(int table, int field, int slave, int tag)
+{
+  //std::cout << "DEBUG: (inside DBInterface::fieldLink)" << std::endl;
+  int ret = -1;
+  if(table >= 0 && table < parameters.numTables)
+    {
+      tables[table]->setLink(field,slave,tag);
+      ret = 0;
+    }
+  return ret;
 
+}

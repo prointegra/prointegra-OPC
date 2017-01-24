@@ -64,8 +64,11 @@ class ProintegraOPC
   int storeDB();
   int getTriggers();
   int delTriggers();
+  //tools
+  int linkTags();
   //DEBUGGING FUNCTIONS
   int showDBData();
+  int showDBDataLinkage();
   //EXIT HANDLER
   static void exitHandler(int s){lExit = 1;};
   int stopComm();

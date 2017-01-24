@@ -654,23 +654,6 @@ char * DBTable::retFieldTag(int field)
 
 }
 
-/*!function to return linking info from tag
-*/
-int * DBTable::retLink(int field)
-{
-  static int link[2];
-  link[0] = -1;
-  link[1] = -1;
-  
-  if(field >= 0 && field < parameters.numFields)
-    {
-      link[0] = parameters.stField[field].fromSlave;
-      link[1] = parameters.stField[field].fromTag;
-    }
-  
- return link;
-
-}
 /*!function to return a field valid variable*/
 int DBTable::retFieldValid(int field)
 {
@@ -769,18 +752,3 @@ int DBTable::setAllValues(char ***table,int columns, int rows, int skip)
   return failed;
 }
 
-/*!function to set a linking info to tag
-*/
-int DBTable::setLink(int field, int slave, int tag)
-{
-  int ret = -1;
-  if(field >= 0 && field < parameters.numFields)
-    {
-      parameters.stField[field].fromSlave = slave;
-      parameters.stField[field].fromTag = tag;
-      ret = 0;
-    }
-  
- return ret;
-
-}

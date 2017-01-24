@@ -77,6 +77,7 @@ typedef struct
 
   int fromSlave= -1;
   int fromTag= -1;
+  std::vector<std::vector <int>> fromTags;
   
   //triggers
   int forRTable=-1;
@@ -162,7 +163,7 @@ class ConfigParser
   int setModbusTCP(int i){MODBUSTCP = i; return 0;}
   int getModbusRTU(){return MODBUSRTU;}
   int getModbusTCP(){return MODBUSTCP;}
-*/
+  */
  private:
   pugi::xml_document doc;
   pugi::xml_document commDoc;  

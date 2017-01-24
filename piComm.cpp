@@ -89,7 +89,7 @@ int CommInterface::readData()
 
       if(parameters.stRegisters[i].isValid)
 	failed = failed & readTag(i);
-      //std::cout << "DEBUG: reading tag: " <<  parameters.stRegisters[i].tagName << ", int value: " << parameters.stRegisters[i].iValue << std::endl;
+      std::cout << "DEBUG: reading tag: " <<  parameters.stRegisters[i].tagName << ", int value: " << parameters.stRegisters[i].iValue << std::endl;
     }
 
   return failed;
@@ -153,6 +153,30 @@ int CommInterface::readWORD(int index)
       parameters.stRegisters[index].iValue = rlMODBUS->intValue(rlCommand);
     }
   return failed;
+}
+//
+//WRITTING FUNCTIONS
+/*! function overloaded for writting int/word tag value*/
+int CommInterface::writeTag(int index, int slaveAmI, int value)
+{
+  //std::cout << "DEBUG: (inside CommInterface::writeTag)" << std::endl;
+  int failed = -1;
+  int iValue = value;
+  char rlCommand[100];
+
+  if(index < parameters.nRegs)
+    {
+      if(!strcmp(parameters.stRegisters[index].dataType,"INT"))
+	iValue = gstInt2Word(value);
+      sprintf(rlCommand,"register(%d,%d)",slaveAmI, parameters.stRegisters[index].iAddress);
+      //write!
+      //std::cout << "DEBUG: (inside CommInterface::writeTag) writting sequence: " << rlCommand << "  value = " << iValue << std::endl;
+      failed = rlMODBUS->writeIntValue(rlCommand,iValue);
+      //std::cout << "DEBUG: (inside CommInterface::writeTag) writting sequencemodbus ret: " << failed << std::endl;
+      failed = 0;
+    }
+  
+  return 0;
 }
 /*!Function for returning a tag name
 TODO: it shoulds return only once*/

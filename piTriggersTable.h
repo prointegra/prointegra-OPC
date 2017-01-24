@@ -50,6 +50,7 @@ class DBTriggersTable : public DBTable
   //int updateMysql(char **sql);
   //retrieving
   int sqlTgsTgd(char *& sql);
+  int sqlResetTg(char *& sql, char *triggerName);
   int updateTriggersOn(char ** triggers, int numberOf);
  
   //return private members
