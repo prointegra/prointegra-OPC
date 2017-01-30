@@ -138,17 +138,40 @@ int ProintegraOPC::dataToComm()
   int failed = 0;
   int completeFail = 0;
   int tableFail = 0;
-  field ***tagsToWrite = NULL;
-  int *nTables = NULL;
-  int **nFields = NULL;
+  field *tagsToWrite = NULL;
+  std::vector<field> tags;
   std::vector <std::vector <int>> tagLink;
+  std::vector<int> tablesList;
 
+  //all databases
   for(int i=0; i< nDBs ; i++)
     {
+      //if triggered for this database
       if(*nTriggers[i] > 0)
 	{
-	  failed = hDatabase[i]->retDataToWrite(stTriggers[i],nTriggers[i],&tagsToWrite,&nTables,&nFields);
-	  for(int j=0;j<*nTables;j++)
+	  //taking data to write from Database
+	  //failed = hDatabase[i]->retDataToWrite(stTriggers[i],nTriggers[i],&tagsToWrite,&nTables,&nFields);
+	  //taking tables wo be written
+	  failed = hDatabase[i]->retWTabsList(stTriggers[i],nTriggers[i],tablesList);
+
+	  for(int j=0; j < tablesList.size() ; j++)
+	    {
+	      tableFail = hDatabase[i]->retrieveData(tablesList.at(j));
+	      tableFail = tableFail + hDatabase[i]->retDataFrTable(tags,tablesList.at(j));
+	      for (int k = 0; k < tags.size(); k++)
+		{
+		  for (int l = 0; l < tags[k].fromTags.size(); l++)
+		    {
+		      for (int m = 0; m < tags[k].fromTags[l].size(); m++)
+			{
+			  tableFail = tableFail + hSlaves[l]->writeTag(tags[k].fromTags[l].at(m),l+1,tags[k].iValue);
+			}
+		    }
+		}
+		  
+	    }
+	  
+	  /*	  for(int j=0;j<*nTables;j++)
 	    {
 	      for(int k = 0; k < *nFields[j]; k++)
 		{
@@ -161,23 +184,25 @@ int ProintegraOPC::dataToComm()
 		      }
 		}
 	      //if(!tableFail)
-	      //hDatabase[i]->resetTriggers(stTriggers[i],*nTriggers[i],j);
-	      failed = failed +tableFail;
+	      //hDatabase[i]->wTriggerDone(j);
+	      failed = failed + tableFail;
 	      tableFail = 0;
 	    }
-	  
-	  for(int j=*nTables-1;j>=0;j--)
+	  if(*nTables > 0) //we had write triggering
 	    {
-	      for(int k = *nFields[j]-1; k >= 0; k--)
+	      for(int j=*nTables-1;j>=0;j--)
 		{
-		  delete tagsToWrite[j][k];
+		  for(int k = *nFields[j]-1; k >= 0; k--)
+		    {
+		      delete tagsToWrite[j][k];
+		    }
+		  delete nFields[j];
+		  delete tagsToWrite[j];
 		}
-	      delete nFields[j];
-	      delete tagsToWrite[j];
-	    }
-	  delete nFields;
-	  delete tagsToWrite;
-	  delete nTables;	    
+	      delete nFields;
+	      delete tagsToWrite;
+	      delete nTables;
+	      }*/
 	}
       else
 	std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) no triggers found for database" << std::endl;
@@ -294,7 +319,7 @@ int ProintegraOPC::loop()
 	    {
 	      getTriggers();
 	      dataToComm();
-	      hSlaves[0]->readData();
+	      //hSlaves[0]->readData();
 		  //dataToDB();
 		  //storeDB();
 		  //cleaning

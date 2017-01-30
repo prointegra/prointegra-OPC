@@ -698,6 +698,18 @@ int DBTable::retFields(field *** fields, int ** numberOf)
   return 0;
 }
 
+/*!function to return the complete table field list in a C++ vector type format*/
+int DBTable::retvFields(std::vector < field> & fields)
+{
+  //std::cout << "DEBUG: (inside DBTable::retFields)" << std::endl;
+  int failed = -1;
+
+  fields.clear();
+  for(int i=0; i < parameters.numFields; i++)
+    fields.push_back(parameters.stField[i]);
+
+  return 0;
+}
 
 //
 /*!function to set a field valid variable*/
@@ -752,3 +764,16 @@ int DBTable::setAllValues(char ***table,int columns, int rows, int skip)
   return failed;
 }
 
+/*!function to set an identification number to table*/
+int DBTable::setId(int id)
+{
+  int failed = -1;
+  //sanity checks
+  if(id >= 0)
+    {
+      parameters.id = id;
+      failed = 0;
+    }
+  
+  return failed;
+}

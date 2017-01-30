@@ -44,6 +44,7 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 	  //std::cout << "DEBUG: (inside DBInterface::setup) checking tablesParams.tbTrigger = "<< tablesParams[i].tbTrigger << "  of table = " << i+1 << std::endl;
 	  //std::cout << "DEBUG: going to SQL creation!" << std::endl;
 	  tables[i]->create(&parameters,nQueries,&sqlQuery);
+	  tables[i]->setId(i);
 	  //std::cout << "DEBUG: returned from creation! created:" << *nQueries <<"  SQL queries "<< std::endl;
 	  //TODO: we should catch exceptions!
 	  if (*nQueries > 0)
@@ -89,18 +90,19 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 /*! function to create the triggers table (if needed) */
 int DBInterface::createTriggersTable()
 {
+  std::cout << "DEBUG:(inside DBInterface::createTriggersTable)" << std::endl;
   int failed = -1;
   field* triggers;
   int numFields = 0;
   int j = 0;
-  tableParameters tablesParams;
+  tableParameters *triggersTableParams = new tableParameters();
   for(int i=0;i<parameters.numTables;i++)
     {
       if(tables[i]->isReadTriggered())
 	numFields++;
       if(tables[i]->isWriteTriggered())
 	numFields++;
-    }
+    } 
   //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating structure of " << numFields << " fields!" << std::endl;
   triggers = new field[numFields];
   for(int i=0;i<parameters.numTables;i++)
@@ -110,7 +112,7 @@ int DBInterface::createTriggersTable()
 	  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) read trigger found!" << std::endl;
 	  //triggers[j] = new field;
 	  tables[i]->retReadTrigger(&triggers[j]);
-	  triggers[j].forRTable = i;
+	  triggers[j].forRTable = tables[i]->retId();
 	  j++;
 	}
       if(tables[i]->isWriteTriggered())
@@ -118,16 +120,36 @@ int DBInterface::createTriggersTable()
 	  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) write trigger found!" << std::endl;
 	  //triggers[j] = new field;
 	  tables[i]->retWriteTrigger(&triggers[j]);
-	  triggers[j].forWTable = i;
+	  triggers[j].forWTable = tables[i]->retId();
 	  j++;
 	}
     }
   numFields = j;
   std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating table parameters!" << std::endl;
-  tableParameters triggersTableParams = { 0, "triggers",NULL,0,-1,NULL,-1,numFields,NULL, triggers}; 
-  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating triggers class!" << std::endl; 
-  triggersTable = new DBTriggersTable(triggersTableParams);
+  triggersTableParams->tbName = new char[strlen("triggers")+5];
+  sprintf(triggersTableParams->tbName,"triggers");
+  triggersTableParams->numFields = numFields;
+  triggersTableParams->stField = new field[numFields];
+   std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating fields!" << std::endl; 
+  for (int i = 0; i < numFields ; i++)
+    {
+      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy1" << std::endl; 
+      triggersTableParams->stField[i].name = new char[strlen(triggers[i].name)+5];
+      sprintf(triggersTableParams->stField[i].name, triggers[i].name);
+      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy2" << std::endl;
+      triggersTableParams->stField[i].tag = new char[strlen(triggers[i].tag)+5];
+      sprintf(triggersTableParams->stField[i].tag, triggers[i].tag);
+      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy3" << std::endl;
+      triggersTableParams->stField[i].type = new char[strlen(triggers[i].type)+5];
+      sprintf(triggersTableParams->stField[i].type, triggers[i].type);
+      triggersTableParams->stField[i].forRTable = triggers[i].forRTable;
+      triggersTableParams->stField[i].forWTable = triggers[i].forWTable;      
+    }
 
+  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating triggers class!" << std::endl; 
+  triggersTable = new DBTriggersTable(*triggersTableParams);
+
+  delete triggersTableParams;
   return failed;
 }
 /*! function to open connection to database */
@@ -159,6 +181,34 @@ int DBInterface::storeData()
     }
   return ret;
 }
+
+/*function for retrieving data from Database to table memory*/
+int DBInterface::retrieveData(int id)
+{
+  int failed = -1;
+  char *sql;
+  char ***table;
+  int *x;
+  int *y;
+
+  for(int i = 0; i <parameters.numTables;i++)
+    {
+      if (tables[i]->retId() == id)
+	{
+	  tables[i]->sqlSelectAll(parameters,sql);
+	  query(NULL,sql);
+	  if(retData(NULL,&table,&x,&y))
+	    std::cout <<"ERROR:(inside DBInterface::retDataFrTable) retData return error!" << std::endl;
+	  tables[i]->setAllValues(table,*x,*y,1); //1 for skipping id field
+	  failed = 0;
+	  
+	  delete sql;
+	}
+    }  
+  return failed;
+}
+
+
 //
 //RETURNING DATA FUNCTIONS
 //
@@ -379,6 +429,45 @@ int DBInterface::retTablesWList(field** stTriggers, int *nTriggers,int ***lTable
   *lTables = tables;
   return 0;
 }
+
+/*!function for returning a list of tables Write triggered*/
+int DBInterface::retWTabsList(field** stTriggers, int *nTriggers,std::vector <int> & tablesList)
+{
+  //std::cout << "DEBUG: (inside DBInterface::retWTabsList)" << std::endl;
+  int failed = -1;
+  int vectorSize = 0;
+  
+  tablesList.clear();
+  if(*nTriggers > 0)
+    {
+      for(int i=0; i < *nTriggers ; i++)
+	{
+	  if(stTriggers[i]->forWTable >= 0)
+	    {
+	      tablesList.push_back(stTriggers[i]->forWTable);
+	      failed = 0;
+	    }
+	}
+    }
+
+  return failed;
+}
+
+/*!function for returning data from a table id*/
+int DBInterface::retDataFrTable(std::vector <field> & fields, int tableId)
+{
+  int failed = -1;
+
+  for(int i = 0; i <parameters.numTables;i++)
+    {
+      if (tables[i]->retId() == tableId)
+	{
+	  tables[i]->retvFields(fields);
+	}
+    }  
+  return failed;
+}
+
 //
 //SETTING DATA FUNCTIONS
 //
@@ -408,11 +497,11 @@ int DBInterface::setFieldValue(int table, int field, int value)
   return ret;
 }
 /*!function to reset triggers*/
-int DBInterface::resetWTriggers(field ** stTriggers, int numTriggers,int numTable)
+int DBInterface::wTriggerDone(int table)
 {
   int failed = -1;
-  int tabled = 0;
-  char *sql;
+
+  /*
   for(int i = 0; i < numTriggers;i++)
     {
       if(stTriggers[i]->forWTable >= 0)
@@ -425,7 +514,7 @@ int DBInterface::resetWTriggers(field ** stTriggers, int numTriggers,int numTabl
 	else //it isn't 
 	  tabled++;
     }
-
+  */
   return failed;
 }
 

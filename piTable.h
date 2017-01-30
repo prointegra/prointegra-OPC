@@ -59,10 +59,13 @@ class DBTable
   int retFieldValid(int field);
   int retFieldValue(int field);
   int retFields(field ***,int**);
+  int retvFields(std::vector < field> & fields);
+  int retId(){return parameters.id;};
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);
   int setAllValues(char ***table, int columns, int rows, int skip);
+  int setId(int id);
   
 protected:  
   tableParameters parameters;

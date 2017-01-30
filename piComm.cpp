@@ -89,7 +89,7 @@ int CommInterface::readData()
 
       if(parameters.stRegisters[i].isValid)
 	failed = failed & readTag(i);
-      std::cout << "DEBUG: reading tag: " <<  parameters.stRegisters[i].tagName << ", int value: " << parameters.stRegisters[i].iValue << std::endl;
+      //std::cout << "DEBUG: reading tag: " <<  parameters.stRegisters[i].tagName << ", int value: " << parameters.stRegisters[i].iValue << std::endl;
     }
 
   return failed;

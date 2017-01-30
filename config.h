@@ -82,11 +82,14 @@ typedef struct
   //triggers
   int forRTable=-1;
   int forWTable=-1;
+  
 } field;
 
 //database parameters
 typedef struct
 {
+  int id = -1; //identification number
+  
   int isValid = 0;
   char *type = NULL;
   char *host = NULL;
@@ -100,16 +103,22 @@ typedef struct
 //table parameters
 typedef struct
 {
+  int id = -1; //identification number
+  
   int isValid;
-  char * tbName;
-  char * tbTrigger;
+  char * tbName; //table name
+  
+  char * tbTrigger; //table read trigger
   int tbTriggerTime;
   int RTrigger;
+  
   char * tbWTrigger;
   int WTrigger;
-  int numFields;
-  char * tbType;
-  field* stField; 
+  
+  int numFields; //number of fields
+  char * tbType; //table type
+  field* stField;  //fields structures
+
 } tableParameters;
 
 class ConfigParser 
