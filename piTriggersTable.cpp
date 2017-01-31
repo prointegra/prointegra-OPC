@@ -144,388 +144,56 @@ int DBTriggersTable::initValuesMysql(char ***sqlQuery, int **nTrs)
   return ret;
 }
 
-/*!function for store data to the table
-TODO: only implemented sqlite,MySQL tables!
-*/
-/*
-int DBTriggersTable::store(databaseParameters* parameters,char **query)
+//SQL functions
+/*!function for returning a sql command to take every trigger triggered in database table*/
+int DBTriggersTable::sqlTrgsTgd(char * & sql)
 {
-  char *sqlQuery = NULL;
-  int ret;
-
-  sqlQuery = *query;
-  
-  if(!strcmp(parameters->type,"QSQLITE"))
-    {
-      storeSqlite(&sqlQuery);
-      ret = 0;
-    }
-  else if(!strcmp(parameters->type,"QMYSQL"))
-    {
-      storeMysql(&sqlQuery);
-      ret = 0;
-    }
-  else if(!strcmp(parameters->type,"QTDS"))
-    {
-      sqlQuery=NULL;
-      ret = -1;
-    }
-  else
-    {
-      sqlQuery=NULL;
-      ret = -1;
-    }
-  *query = sqlQuery;
-  
-  return ret;
-}
-*/
-/*!function for storing data to a SQLITE table
-*/
-/*
-int DBTriggersTable::storeSqlite(char **sql)
-{
-  char *sqlQuery = NULL;
-  int ret = -1;
-
-  sqlQuery = *sql;
-  if(!strcmp(parameters.tbType,"LASTVALUE"))
-    ret = updateSqlite(&sqlQuery);
-  else
-    ret = insertSqlite(&sqlQuery);
-  
-  *sql = sqlQuery;
-}
-*/
-/*!function for inserting data to a sqlite table
-*/
-/*
-int DBTriggersTable::insertSqlite(char **sql)
-{
-  char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-
-  char *values;
-  char *tmpValues;
-  int first = 1;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (")+7];
-  strcpy(temp,"INSERT INTO ");
-  strcat(temp,parameters.tbName);
-  strcat(temp,"(");
-
-  tmpValues = new char[strlen("VALUES (") +5];
-  strcpy(tmpValues,"VALUES (");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-  values =  new char[strlen(tmpValues)+5];
-  strcpy(values,tmpValues);
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      delete tmpValues;
-      temp = new char[strlen(sqlQuery)+5];
-      tmpValues = new char[strlen(values)+5];
-      strcpy(temp,sqlQuery);
-      strcpy(tmpValues,values);
-      delete values;
-      delete sqlQuery;
-      
-      if(parameters.stField[i].isValid)
-	{
-	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	    {
-	      field = new char[parameters.stField[i].iValue +5];
-	      sprintf(field,"%d",parameters.stField[i].iValue);
-	    }
-	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5];
-	  values = new char[strlen(tmpValues)+strlen(field)+5];
-	  strcpy(sqlQuery,temp);
-	  strcpy(values,tmpValues);
-	  if(!first)
-	    {
-	      strcat(values,",");
-	      strcat(sqlQuery,",");
-	    }
-	  else
-	    first = 0;
-	  strcat(values,field);
-	  strcat(sqlQuery,parameters.stField[i].name);
-	  delete field;
-	}
-      else
-	{
-	  sqlQuery = new char[strlen(temp)+5];
-	  values = new char[strlen(tmpValues)+5];
-	  strcpy(sqlQuery,temp);
-	  strcpy(values,tmpValues);
-	}
-    }
-  strcat(sqlQuery,") ");
-  strcat(values,") ");
-  delete temp;
-  delete tmpValues;
-
-  temp = new char[strlen(sqlQuery) + strlen(values) + 10];
-  
-  strcpy(temp,sqlQuery);
-  strcat(temp,values);
-  delete sqlQuery;
-  delete values;
-  
-  *sql = temp;
-  return 0;
-
-
-}
-*/
-/*!function for storing data to a SQLITE LASTVALUE type table
-*/
-/*
-int DBTriggersTable::updateSqlite(char **sql)
-{
-  char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-
-  int first = 1;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("UPDATE ") + strlen(parameters.tbName) + strlen(" SET ")+5];
-  strcpy(temp,"UPDATE ");
-  strcat(temp,parameters.tbName);
-  strcat(temp," SET ");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      temp = new char[strlen(sqlQuery)+5];
-      strcpy(temp,sqlQuery);
-      delete sqlQuery;
-      
-      if(parameters.stField[i].isValid)
-	{
-	  if(!first)
-	      strcat(temp,",");
-	  first = 0;
-	  
-	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	    {
-	      field = new char[parameters.stField[i].iValue +5];
-	      sprintf(field,"%d",parameters.stField[i].iValue);
-	    }
-	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5 + strlen(field)];
-	  strcpy(sqlQuery,temp);
-	  strcat(sqlQuery,parameters.stField[i].name);
-	  strcat(sqlQuery,"=");
-	  strcat(sqlQuery,field);
-
-	  delete field;
-	}
-      else
-	{
-	  sqlQuery = new char[strlen(temp)+5];
-	  strcpy(sqlQuery,temp);
-	}
-    }
-  delete temp;
-
-  *sql = sqlQuery;
-  return 0;
-}
-*/
-/*!function for store data to a MySQL table
-*/
-/*
-int DBTriggersTable::storeMysql(char **sql)
-{
-  char *sqlQuery = NULL;
-  int ret = -1;
-
-  sqlQuery = *sql;
-  if(!strcmp(parameters.tbType,"LASTVALUE"))
-    ret = updateMysql(&sqlQuery);
-  else
-    ret = insertMysql(&sqlQuery);
-  
-  *sql = sqlQuery;
-}
-*/
-/*!function for insert data to a MySQL LOG type table
-*/
-/*
-int DBTriggersTable::insertMysql(char **sql)
-{
-  char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-
-  char *values;
-  char *tmpValues;
-  int first = 1;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (") + 7];
-  strcpy(temp,"INSERT INTO ");
-  strcat(temp,"`");
-  strcat(temp,parameters.tbName);
-  strcat(temp,"`(");
-
-  tmpValues = new char[strlen("VALUES (") +5];
-  strcpy(tmpValues,"VALUES (");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-  values =  new char[strlen(tmpValues)+5];
-  strcpy(values,tmpValues);
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      delete tmpValues;
-      temp = new char[strlen(sqlQuery)+5];
-      tmpValues = new char[strlen(values)+5];
-      strcpy(temp,sqlQuery);
-      strcpy(tmpValues,values);
-      delete values;
-      delete sqlQuery;
-      
-      if(parameters.stField[i].isValid)
-	{
-	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	    {
-	      field = new char[parameters.stField[i].iValue +5];
-	      sprintf(field,"%d",parameters.stField[i].iValue);
-	    }
-	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+7];
-	  values = new char[strlen(tmpValues)+strlen(field)+5];
-	  strcpy(sqlQuery,temp);
-	  strcpy(values,tmpValues);
-	  if(!first)
-	    {
-	      strcat(values,",");
-	      strcat(sqlQuery,",");
-	    }
-	  else
-	    first = 0;
-	  strcat(values,field);
-	  strcat(sqlQuery,"`");
-	  strcat(sqlQuery,parameters.stField[i].name);
-	  strcat(sqlQuery,"`");
-	  delete field;
-	}
-      else
-	{
-	  sqlQuery = new char[strlen(temp)+5];
-	  values = new char[strlen(tmpValues)+5];
-	  strcpy(sqlQuery,temp);
-	  strcpy(values,tmpValues);
-	}
-    }
-  strcat(sqlQuery,") ");
-  strcat(values,") ");
-  delete temp;
-  delete tmpValues;
-
-  temp = new char[strlen(sqlQuery) + strlen(values) + 10];
-  
-  strcpy(temp,sqlQuery);
-  strcat(temp,values);
-  delete sqlQuery;
-  delete values;
-  
-  *sql = temp;
-  return 0;
-}
-*/
-/*!function for storing data to a MySQL LASTVALUE type table
-*/
-/*
-int DBTriggersTable::updateMysql(char **sql)
-{
-  char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-
-  int first = 1;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("UPDATE ") + strlen(parameters.tbName) + strlen(" SET ")+5];
-  strcpy(temp,"UPDATE ");
-  
-  strcat(temp,"`");
-  strcat(temp,parameters.tbName);
-  strcat(temp,"` SET ");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      temp = new char[strlen(sqlQuery)+5];
-      strcpy(temp,sqlQuery);
-      delete sqlQuery;
-      
-      if(parameters.stField[i].isValid)
-	{
-	  if(!first)
-	      strcat(temp,",");
-	  first = 0;
-	  
-	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	    {
-	      field = new char[parameters.stField[i].iValue +5];
-	      sprintf(field,"%d",parameters.stField[i].iValue);
-	    }
-	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5 + strlen(field)];
-	  strcpy(sqlQuery,temp);
-	  strcat(sqlQuery,"`");
-	  strcat(sqlQuery,parameters.stField[i].name);
-	  strcat(sqlQuery,"`=");
-	  strcat(sqlQuery,field);
-
-	  delete field;
-	}
-      else
-	{
-	  sqlQuery = new char[strlen(temp)+5];
-	  strcpy(sqlQuery,temp);
-	}
-    }
-  delete temp;
-
-  *sql = sqlQuery;
-  return 0;
-}
-*/
-/*!funtion for retunring a sql command to take every trigger triggered in database table*/
-int DBTriggersTable::sqlTgsTgd(char * & sql)
-{
-  //std::cout << "DEBUG: (inside DBTriggersTable::sqlTgsTgd)" << std::endl;
+  //std::cout << "DEBUG: (inside DBTriggersTable::sqlTrgsTgd)" << std::endl;
   sql = new char[strlen("SELECT `NAME` from `") + strlen(parameters.tbName) + strlen("` where (`VALUE`= 1)")+5];
   sprintf(sql,"SELECT `NAME` from `%s` where (`VALUE`= 1)", parameters.tbName);
+
+  return 0;
+}
+//SQL functions
+/*!function for returning a sql command to take every trigger triggered in database table*/
+int DBTriggersTable::sqlTrgsDone(char * & sql)
+{
+  //std::cout << "DEBUG: (inside DBTriggersTable::sqlTrgsTgd)" << std::endl;
+  int failed = -1;
+  int strLength = 0;
+  int num = 0, j = 0;
+  char temp[100];
+  sql = NULL;
+  for (int i = 0; i < parameters.numFields; i++)
+    {
+      if (parameters.stField[i].isDone)
+	{
+	  strLength += strlen(parameters.stField[i].name) + strlen("\" or name = \"");
+	  num++;
+	}
+    }
+  if (strLength > 0)
+    {
+      sql = new char[strlen("UPDATE `") + strlen(parameters.tbName) + strlen("` set value = 0 where ( name = \"") + strLength + 5];
+      sprintf(sql,"UPDATE `%s` set value = 0 where ( name = \"");
+      for (int i = 0; i < parameters.numFields; i++)
+	{
+	  if (parameters.stField[i].isDone)
+	    {
+	      if (j == num-1)
+		{
+		  sprintf(temp,"%s\")",parameters.stField[i].name);
+		  strcat(sql,temp);
+		}
+	      else
+		{
+		  sprintf(temp,"%s\" or name = \"",parameters.stField[i].name);
+		  strcat(sql,temp);
+		}
+
+	    }
+	}		        
+    }
 
   return 0;
 }
@@ -547,6 +215,50 @@ int DBTriggersTable::updateTriggersOn(char **triggers, int numberOf)
   return 0;
 }
 
+/*!function for setting on triggers*/
+int DBTriggersTable::updtTrgsOn(std::vector <char*> triggersOn)
+{
+  //std::cout << "DEBUG: (inside DBTriggersTable::updtTrgsOn)" << std::endl;
+  int failed = -1;
+  for (std::vector< char* >::iterator triggerName = triggersOn.begin() ; triggerName != triggersOn.end(); ++triggerName)
+    {
+      for(int j=0; j < parameters.numFields; j++)
+	{
+	  if(!strcmp((*triggerName), parameters.stField[j].name))
+	    {
+	      parameters.stField[j].iValue = 1;
+	      parameters.stField[j].isValid = 1;
+	      parameters.stField[j].isDone = 0;
+	      failed = 0;
+	    }
+	}
+    }
+  return 0;
+}
+
+/*!function for setting on triggers*/
+int DBTriggersTable::updtTrgsDone(std::vector <field*> triggersLst)
+{
+  //std::cout << "DEBUG: (inside DBTriggersTable::updtTrgsOn)" << std::endl;
+  int failed = -1;
+  for (std::vector< field* >::iterator trigger = triggersLst.begin() ; trigger != triggersLst.end(); ++trigger)
+    {
+      if ((*trigger)->isDone != 0)
+	{
+	  for(int j=0; j < parameters.numFields; j++)
+	    {
+	      if(!strcmp((*trigger)->name, parameters.stField[j].name))
+		{
+		  parameters.stField[j].iValue = 1;
+		  parameters.stField[j].isValid = 1;
+		  parameters.stField[j].isDone = 1;
+		  failed = 0;
+		}
+	    }
+	}
+    }
+  return 0;
+}
 /*!function to return a field tag
 TODO: it should, for convention, only return once*/
 char * DBTriggersTable::retFieldTag(int field)
@@ -691,7 +403,32 @@ int DBTriggersTable::retNoRepeatedFields(char ***fieldsNames)
 
   return ret;
 }
- 
+
+/*!function for returning all triggers triggered */
+int DBTriggersTable::retTgsLst(std::vector <field*> & triggers)
+{
+  //std::cout << "DEBUG:(inside DBTriggersTable::retTgsLst)" << std::endl;
+  int failed = -1;
+
+  int k = 0;
+
+  for (std::vector< field* >::iterator it = triggers.begin() ; it != triggers.end(); ++it)
+   {
+     delete (*it);
+   } 
+   triggers.clear();
+  
+  for(int i = 0; i < parameters.numFields ; i++)
+    {
+      if(parameters.stField[i].iValue && !parameters.stField[i].isDone)
+	{
+	  triggers.push_back(new field(parameters.stField[i]));
+	  failed = 0;
+	}
+    }
+
+  return failed;
+} 
 //
 /*!function to set a field valid variable*/
 int DBTriggersTable::setFieldValid(int field, int valid)

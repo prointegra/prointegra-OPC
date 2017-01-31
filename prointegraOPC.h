@@ -69,6 +69,7 @@ class ProintegraOPC
   //DEBUGGING FUNCTIONS
   int showDBData();
   int showDBDataLinkage();
+  int showTriggers();
   //EXIT HANDLER
   static void exitHandler(int s){lExit = 1;};
   int stopComm();
@@ -87,9 +88,7 @@ class ProintegraOPC
   int nSlaves;
   CommInterface** hSlaves = NULL;
   CommDaemon* commDaemonManager = NULL;
-  //triggers
-  field *** stTriggers = NULL;
-  int ** nTriggers = NULL;
+
 };
 
 

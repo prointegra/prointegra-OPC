@@ -48,25 +48,29 @@ class DBInterface : public qtDatabase
   char * retFieldTag(int table,int field);
   int retFieldValid(int table,int field);
   int retFieldValue(int table,int field);
-  int retTriggers(field **& triggers, int *& nTriggers);
-  int retDataToWrite(field **, int *, field ****, int **, int ***);
-  int retTablesWList(field **stTriggers, int *nTriggers, int ***lTables, int **nTables);
-  int retWTabsList(field** stTriggers, int *nTriggers,std::vector <int> & tablesList);
   int retDataFrTable(std::vector <field> & fields, int tableId);
   //setting private members data and/or attributes functions
   int setFieldValid(int table,int field, int valid);
   int setFieldValue(int table,int field, int value);
-  int wTriggerDone(int index);
+  //triggers functions
+  int takeTriggers();
+  int resetTriggers();
+  int wTriggerDoneAt(int index);
+  int retWTabsList(std::vector <int> & tablesList);
   //linking fields with communications
   int fieldLinked(int table,int field);
   std::vector<std::vector <int>> retFieldLink(int table, int field);
   int setFieldLink(int table, int field, int slave, int tag);
   int fieldLink(int table, int field, int slave, int tag);
+  //debug functions
+  int showTriggers();
+  
   
  private:
   databaseParameters parameters;
   DBDataTable** tables;
   DBTriggersTable* triggersTable;
+  std::vector<field*> triggersLst;
 };
 
 

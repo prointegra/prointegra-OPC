@@ -134,11 +134,10 @@ int ProintegraOPC::dataCapture()
 it takes data from database table and write it to it's slave*/
 int ProintegraOPC::dataToComm()
 {
-  //std::cout << "DEBUG: (inside ProintegraOPC::dataToComm)" << std::endl;
-  int failed = 0;
+  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm)" << std::endl;
+  int failed = -1;
   int completeFail = 0;
   int tableFail = 0;
-  field *tagsToWrite = NULL;
   std::vector<field> tags;
   std::vector <std::vector <int>> tagLink;
   std::vector<int> tablesList;
@@ -146,66 +145,33 @@ int ProintegraOPC::dataToComm()
   //all databases
   for(int i=0; i< nDBs ; i++)
     {
-      //if triggered for this database
-      if(*nTriggers[i] > 0)
+      //taking tables wo be written
+      failed = hDatabase[i]->retWTabsList(tablesList);
+      std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) tables list size:" << tablesList.size() << std::endl;
+      for(int j=0; j < tablesList.size() ; j++)
 	{
-	  //taking data to write from Database
-	  //failed = hDatabase[i]->retDataToWrite(stTriggers[i],nTriggers[i],&tagsToWrite,&nTables,&nFields);
-	  //taking tables wo be written
-	  failed = hDatabase[i]->retWTabsList(stTriggers[i],nTriggers[i],tablesList);
-
-	  for(int j=0; j < tablesList.size() ; j++)
+	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) working with table id:" << tablesList.at(j) << std::endl;
+	  tableFail = hDatabase[i]->retrieveData(tablesList.at(j));
+	  tableFail = tableFail + hDatabase[i]->retDataFrTable(tags,tablesList.at(j));
+	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) tags in table:" << tags.size() << std::endl;
+	  for (int k = 0; k < tags.size(); k++)
 	    {
-	      tableFail = hDatabase[i]->retrieveData(tablesList.at(j));
-	      tableFail = tableFail + hDatabase[i]->retDataFrTable(tags,tablesList.at(j));
-	      for (int k = 0; k < tags.size(); k++)
+	      for (int l = 0; l < tags[k].fromTags.size(); l++)
 		{
-		  for (int l = 0; l < tags[k].fromTags.size(); l++)
+		  for (int m = 0; m < tags[k].fromTags[l].size(); m++)
 		    {
-		      for (int m = 0; m < tags[k].fromTags[l].size(); m++)
-			{
-			  tableFail = tableFail + hSlaves[l]->writeTag(tags[k].fromTags[l].at(m),l+1,tags[k].iValue);
-			}
+		      tableFail = tableFail + hSlaves[l]->writeTag(tags[k].fromTags[l].at(m),l+1,tags[k].iValue);
+		      std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) writting tag:" << tags[k].name << " with value:" << tags[k].iValue << std::endl;
 		    }
 		}
-		  
 	    }
-	  
-	  /*	  for(int j=0;j<*nTables;j++)
-	    {
-	      for(int k = 0; k < *nFields[j]; k++)
-		{
-		  for(int l = 0; l < tagsToWrite[j][k]->fromTags.size() ; l++)
-		    for(int m = 0; m < tagsToWrite[j][k]->fromTags[l].size() ; m++)
-		      {
-			//TODO if we have floats, char, etc.
-			//std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) writting value:" << tagsToWrite[j][k]->iValue << std::endl;
-			tableFail = hSlaves[l]->writeTag(tagsToWrite[j][k]->fromTags[l].at(m),l+1,tagsToWrite[j][k]->iValue);
-		      }
-		}
-	      //if(!tableFail)
-	      //hDatabase[i]->wTriggerDone(j);
-	      failed = failed + tableFail;
-	      tableFail = 0;
-	    }
-	  if(*nTables > 0) //we had write triggering
-	    {
-	      for(int j=*nTables-1;j>=0;j--)
-		{
-		  for(int k = *nFields[j]-1; k >= 0; k--)
-		    {
-		      delete tagsToWrite[j][k];
-		    }
-		  delete nFields[j];
-		  delete tagsToWrite[j];
-		}
-	      delete nFields;
-	      delete tagsToWrite;
-	      delete nTables;
-	      }*/
+	  //resetting trigger
+	  if(!tableFail)
+	    hDatabase[i]->wTriggerDoneAt(j);
+	  failed = failed +tableFail;
+	  tableFail = 0;
+	    
 	}
-      else
-	std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) no triggers found for database" << std::endl;
     }
   return failed;
 }
@@ -318,6 +284,7 @@ int ProintegraOPC::loop()
 	  if(!failed)
 	    {
 	      getTriggers();
+	      showTriggers();
 	      dataToComm();
 	      //hSlaves[0]->readData();
 		  //dataToDB();
@@ -350,29 +317,15 @@ int ProintegraOPC::loop()
 /*!function for getting a complete list of trigered triggers*/
 int ProintegraOPC::getTriggers()
 {
-  //std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
+  std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
   int failed = -1;
-
-  //std::cout << "DEBUG:(inside ProintegraOPC::getTriggers) creating structures for:" << nDBs << "  databases" << std::endl; 
-  stTriggers = new field**[nDBs];
-  nTriggers = new int*[nDBs];
-  
+ 
   failed = 0;
   for(int i=0; i < nDBs; i++)
     {
-      //std::cout << "INFO: database:" << i+1 <<"  is Triggered? ... ";
-
-      failed = failed +  hDatabase[i]->retTriggers(stTriggers[i],nTriggers[i]);
-      std::cout << "DEBUG: (inside ProintegraOPC::getTriggers) database:" << i <<" definitive  triggers:" << *nTriggers[i] << std::endl;     
-      //if(*nTriggers[i] > 0 && *nTriggers[i] != NULL)
-      //std::cout << "yes! " << std::endl;
-      //else
-      //std::cout << "no! " << std::endl;
-      //for(int j = 0; j < *nTriggers[i]; j++)
-      //std::cout << "DEBUG: (inside ProintegraOPC::getTriggers) checking trigger n:" << j+1 <<"  name:" << stTriggers[i][j]->name << std::endl;
+      failed = failed +  hDatabase[i]->takeTriggers(); 
     }
   
- 
   return failed;
 }
 
@@ -381,30 +334,12 @@ int ProintegraOPC::delTriggers()
 {
   //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers)" << std::endl; 
   int failed = -1;
-
-  for(int i=nDBs-1; i>=0;i--)
+  
+  for(int i=0; i < nDBs; i++)
     {
-      //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) database:" << i << std::endl; 
-      if(*nTriggers[i]>0)
-	{
-	  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) there are triggers here! *nTriggers[i]:" << *nTriggers[i]<< std::endl; 
-	  for(int j=*nTriggers[i]-1;j>=0;j--)
-	    {
-	      //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) inside loop, deleting trigger:" << j<< std::endl;
-	      delete stTriggers[i][j];
-	    }
-	  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) deletting dimension i:" << i << std::endl;
-	  if(i>0)
-	    {
-	      delete nTriggers[i];
-	      delete stTriggers[i];
-	    }
-	}
+      failed = failed +  hDatabase[i]->resetTriggers(); 
     }
-  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) delete pointers" << std::endl; 
-  delete nTriggers;
-  delete stTriggers;
- 
+  
   return failed;
 }
 
@@ -465,5 +400,21 @@ int ProintegraOPC::showDBDataLinkage()
 		  std::cout << "*------->LINKED WITH SLAVE:" << l <<"  TAG:" << temp[l].at(m) << std::endl;
 	    }
 	}
+    }
+}
+
+/*show triggers ON*/
+int ProintegraOPC::showTriggers()
+{
+  std::cout <<"DEBUG:(inside ProintegraOPC::showTriggers)" << std::endl;
+   //databases
+  for(int i=0; i< nDBs ; i++)
+    {
+      std::cout << "**************************************************" << std::endl;
+      std::cout << "*DEBUG: showing triggers in.." << std::endl;
+      std::cout << std::endl;
+      std::cout << "*DATABASE: " << i+1 << std::endl;
+      //tables
+      hDatabase[i]->showTriggers();
     }
 }

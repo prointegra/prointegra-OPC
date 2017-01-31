@@ -48,10 +48,14 @@ class DBTriggersTable : public DBTable
   //int storeMysql(char **sql);
   //int insertMysql(char **sql);
   //int updateMysql(char **sql);
-  //retrieving
-  int sqlTgsTgd(char *& sql);
+  //sql
+  int sqlTrgsTgd(char *& sql);
   int sqlResetTg(char *& sql, char *triggerName);
+  int sqlTrgsDone(char *& sql);
+  //
   int updateTriggersOn(char ** triggers, int numberOf);
+  int updtTrgsOn(std::vector <char*> triggersOn);
+  int updtTrgsDone(std::vector <field*> triggersLst);
  
   //return private members
   int retNumFields(){return parameters.numFields;};
@@ -61,6 +65,7 @@ class DBTriggersTable : public DBTable
   int* retLink(int field);
   int retNoRepeatedFields(char***);
   int retTgsTgd(field ***, int **);
+  int retTgsLst(std::vector <field*> & triggers);
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);
