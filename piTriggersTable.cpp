@@ -158,7 +158,7 @@ int DBTriggersTable::sqlTrgsTgd(char * & sql)
 /*!function for returning a sql command to take every trigger triggered in database table*/
 int DBTriggersTable::sqlTrgsDone(char * & sql)
 {
-  //std::cout << "DEBUG: (inside DBTriggersTable::sqlTrgsTgd)" << std::endl;
+  //std::cout << "DEBUG: (inside DBTriggersTable::sqlTrgsDone)" << std::endl;
   int failed = -1;
   int strLength = 0;
   int num = 0, j = 0;
@@ -172,10 +172,11 @@ int DBTriggersTable::sqlTrgsDone(char * & sql)
 	  num++;
 	}
     }
+  //std::cout << "DEBUG: (inside DBTriggersTable::sqlTrgsDone) strLength:" << strLength << std::endl;
   if (strLength > 0)
     {
       sql = new char[strlen("UPDATE `") + strlen(parameters.tbName) + strlen("` set value = 0 where ( name = \"") + strLength + 5];
-      sprintf(sql,"UPDATE `%s` set value = 0 where ( name = \"");
+      sprintf(sql,"UPDATE `%s` set value = 0 where ( name = \"",parameters.tbName);
       for (int i = 0; i < parameters.numFields; i++)
 	{
 	  if (parameters.stField[i].isDone)
@@ -192,27 +193,10 @@ int DBTriggersTable::sqlTrgsDone(char * & sql)
 		}
 
 	    }
-	}		        
-    }
-
-  return 0;
-}
-/*!function for setting on triggers*/
-int DBTriggersTable::updateTriggersOn(char **triggers, int numberOf)
-{
-  //std::cout << "DEBUG: (inside DBTriggersTable::updateTriggersOn)" << std::endl; 
-  for(int i = 0; i < numberOf;i++)
-    {
-      for(int j=0; j < parameters.numFields; j++)
-	{
-	  if(!strcmp(triggers[i], parameters.stField[j].name))
-	    {
-	      parameters.stField[j].iValue = 1;
-	      parameters.stField[j].isValid = 1;	      
-	    }
 	}
+      failed = 0;
     }
-  return 0;
+  return failed;
 }
 
 /*!function for setting on triggers*/
@@ -249,7 +233,6 @@ int DBTriggersTable::updtTrgsDone(std::vector <field*> triggersLst)
 	    {
 	      if(!strcmp((*trigger)->name, parameters.stField[j].name))
 		{
-		  parameters.stField[j].iValue = 1;
 		  parameters.stField[j].isValid = 1;
 		  parameters.stField[j].isDone = 1;
 		  failed = 0;
@@ -259,6 +242,7 @@ int DBTriggersTable::updtTrgsDone(std::vector <field*> triggersLst)
     }
   return 0;
 }
+
 /*!function to return a field tag
 TODO: it should, for convention, only return once*/
 char * DBTriggersTable::retFieldTag(int field)

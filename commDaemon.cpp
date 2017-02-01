@@ -43,37 +43,34 @@ CommDaemon::~CommDaemon()
 
 int CommDaemon::launchDaemon(int nSlave, int commId, char * protocol)
 {
+  std::cout << "DEBUG: (inside CommDaemon::launchDaemon)" << std::endl;
   int failed = -1;
-  pid_t pid;
   int     result = 0;
 
-  result = pipe (nPipes[nSlave]);
-  if (result >= 0)
+  pthread_attr_t attr;
+  pthread_t* slaveThread = declareThread(nSlave);
+
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+  if(!strcmp(protocol,"MODBUSTCP"))
     {
-      pid = fork();
-      if (pid >= 0)
-  	{
-  	  if(pid == 0)
-  	    {
-  	      if(!strcmp(protocol,"MODBUSTCP"))
-  		 launchMODBUSDaemon(nSlave,commId);
-  	      failed = 0;
-  	    }
-  	  else
-  	    failed = 0;
-  	      	  
-  	}
-    else //failure in creating a child
-  	perror ("fork");
+      result = pthread_create(slaveThread, &attr, launchMBUS , (void *)commId);
+      failed = 0;
+    }
+  
+  if (result)
+    {
+      std::cout << "ERROR:(inside CommDaemon::launchDaemon) unable to create thread!:" << result << std::endl;
+      failed = -1;
+    }
 
-   }
-  else//failure in creating a pipe
-  perror("pipe");
-
+  pthread_attr_destroy(&attr);
+  
   return failed;
 }
 
-int CommDaemon::checkDaemon(int slave)
+int CommDaemon::checkDaemon(int commId)
 {
   int failed = 0;
   char message[4];
@@ -86,75 +83,70 @@ int CommDaemon::checkDaemon(int slave)
 
   return failed;
 }
-  
-int CommDaemon::launchMODBUSDaemon(int nSlave, int commId)
-{
-  int failed = -1;
-  char *tmpString = NULL;
-  char line[128];
-  FILE *file;
-  FILE *fout; // out file
-  int lines = 0;
-  const int maxLines = 20000;
 
-  char buffer[10];
+void* CommDaemon::launchMBUS(void * commId)
+{
+  char buffer[500];
+  std::string result;
+  char *tmpString = NULL;
+  FILE *fout; // out file
+
+  char timeBuffer[10];
   time_t rawTime;
   struct tm * timeInfo;
+  int lines = 0;
+  const int maxLines = 20000;
+  int id = (long)commId;
 
-
-  renameOldLog(commId,&tmpString);
-  //fout = fopen(tmpString,"r");
+  renameOldLog(id,&tmpString);
+  fout = fopen(tmpString,"w");
   delete tmpString;
-  if (!setExecutable(commId,"MODBUSTCP", &tmpString))
+  if (!setExecutable(id,"MODBUSTCP", &tmpString))
     {
-      system(tmpString);
-      file = popen(tmpString, "w");
-      if (file) 
-      {   
-      
-	//show output
-	while (fgets(line, 128, file) != NULL) //buffer can be improved
-	  {};
-	  //time(&rawTime);
-	  //timeInfo = localtime(&rawTime);
-	  //strftime (buffer,10,"%T: ",timeInfo);
-	  //std::cout << "DEBUG: MODBUS WORKING! PRINTING" <<  std::endl;
-	  //fprintf(fout,"%s%s", buffer,line);
-	  //std::cout << "DEBUG: MODBUS WORKING! PRINTED, line:" << lines <<  std::endl;
-	  //lines++;
-	  //if(lines >= maxLines)
-	  //  {
-	  //    rewind(fout);
-	  //    lines = 0;
-	  //  }
-	  //std::cout << "DEBUG: MODBUS WORKING! :" << line <<  std::endl;
-	  //write(nPipes[nSlave][1], "11", strlen("nn"));
-      //}
-      //std::cout << "ERROR:*** MODBUS STOP WORKING! ***" <<  std::endl;
-      //write(nPipes[nSlave][1], "00", strlen("nn"));
-	pclose(file);
-      }
-      else
+  
+      std::shared_ptr<FILE> pipe(popen(tmpString, "r"), pclose);
+      if (!pipe) throw std::runtime_error("popen() failed!");
+      while (!feof(pipe.get()))
 	{
-	  fprintf(stderr,"ERROR: bad command to execute modbus tcp ip daemon\n");
-	  perror(".daemon_log"); 
-	  failed= -1;
+	  if (fgets(buffer, 128, pipe.get()) != NULL)
+	    {
+	      time(&rawTime);
+	      timeInfo = localtime(&rawTime);
+	      strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	      fprintf(fout,"%s%s", timeBuffer,buffer);
+	      lines++;
+	      if(lines >= maxLines)
+		{
+		  rewind(fout);
+		  lines = 0;
+		}
+	    }
 	}
-      delete tmpString;
+    }
+  fclose(fout);
+  pthread_exit(NULL);
+}
+
+pthread_t* CommDaemon::declareThread(int nSlave)
+{
+  if (threads.size() <= nSlave)
+    {
+      threads.resize(nSlave+1,NULL);
+      threads.at(nSlave) = new pthread_t;
     }
   else
     {
-      fprintf(stderr,"ERROR: bad command to execute modbus tcp ip daemon\n");
+      if(threads.at(nSlave) == NULL)
+	threads.at(nSlave) = new pthread_t;
     }
-      //pclose(fout);
-
   
-  return failed;
+  return  threads.at(nSlave);
+
 }
 
 ////tools
 
-int CommDaemon::renameOldLog(int commId,char** logPath)
+int renameOldLog(int commId,char** logPath)
 {
   char *file1,*file2 = NULL;
 
@@ -171,7 +163,7 @@ int CommDaemon::renameOldLog(int commId,char** logPath)
   return 0;
 }
 
-int CommDaemon::setExecutable(int commId,char* protocol,char **executable)
+int setExecutable(int commId,char* protocol,char **executable)
 {
   int failed = -1;
   char *file1 = NULL;

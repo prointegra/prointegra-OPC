@@ -269,6 +269,7 @@ int DBInterface::retDataFrTable(std::vector <field> & fields, int tableId)
       if (tables[i]->retId() == tableId)
 	{
 	  tables[i]->retvFields(fields);
+	  failed = 0;
 	}
     }  
   return failed;
@@ -315,7 +316,7 @@ int DBInterface::takeTriggers()
   std::vector <char *> triggersOn;
  
   triggersTable->sqlTrgsTgd(sql);
-  //std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
+  std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
   query(NULL,sql);
   if(retData(NULL,&table,&x,&y))
     std::cout <<"ERROR:(inside DBInterface::takeTriggers) retData return error!" << std::endl;
@@ -325,9 +326,14 @@ int DBInterface::takeTriggers()
 	{
 	  triggersOn.push_back(new char[strlen(table[i][0]) + 1]);
 	  strcpy(triggersOn.at(i),table[i][0]); 
-	}      
+	}     
       triggersTable->updtTrgsOn(triggersOn);
-      triggersTable->retTgsLst(triggersLst);
+      for(int i=0; i < triggersLst.size(); i++ )
+	{
+	  std::cout << "DEBUG:(inside DBInterface::takeTriggers) trigger name:" << triggersLst.at(i)->name << std::endl;
+	  std::cout << "DEBUG:(inside DBInterface::takeTriggers) trigger value:" << triggersLst.at(i)->iValue << std::endl;
+	  std::cout << "DEBUG:(inside DBInterface::takeTriggers) trigger is Done?:" << triggersLst.at(i)->isDone << std::endl;	  
+	}
       //cleaning
       for(int j =*y-1;j>=0;j--)
 	{
@@ -338,12 +344,13 @@ int DBInterface::takeTriggers()
       for (std::vector< char * >::iterator it = triggersOn.begin() ; it != triggersOn.end(); ++it)
 	{
 	  delete (*it);
-	} 
+	}
       triggersOn.clear();
       delete table;
+
       failed = 0;
     }
-
+  triggersTable->retTgsLst(triggersLst);
   return failed;
 }
 
@@ -354,16 +361,21 @@ int DBInterface::resetTriggers()
   int failed = -1;
   char *sql;
 
-  triggersTable->updtTrgsDone(triggersLst);
-  triggersTable->sqlTrgsDone(sql);
-  //std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
-  failed = query(NULL,sql);
+  failed = triggersTable->updtTrgsDone(triggersLst);
+  failed = triggersTable->sqlTrgsDone(sql);
+  if (!failed)
+    {
+      std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
+      failed = query(NULL,sql);
+    }
+
   
   return failed;
 }
-/*!function to reset triggers*/
+/*!function to mark the writting trigger to a table as done*/
 int DBInterface::wTriggerDoneAt(int table)
 {
+  //std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt)" << std::endl;
   int failed = -1;
   
   if(triggersLst.size() > 0)
@@ -372,6 +384,7 @@ int DBInterface::wTriggerDoneAt(int table)
 	{
 	  if((*it)->forWTable == table)
 	    {
+	      std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt) marking:"<< (*it)->name << "  as done!" << std::endl;
 	      (*it)->isDone = 1;
 	      failed = 0;
 	    }
