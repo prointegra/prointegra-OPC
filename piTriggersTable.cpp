@@ -166,10 +166,11 @@ int DBTriggersTable::sqlTrgsDone(char * & sql)
   sql = NULL;
   for (int i = 0; i < parameters.numFields; i++)
     {
-      if (parameters.stField[i].isDone)
+      if (parameters.stField[i].isDone && parameters.stField[i].iValue)
 	{
 	  strLength += strlen(parameters.stField[i].name) + strlen("\" or name = \"");
 	  num++;
+	  //std::cout << "DEBUG: (inside DBTriggersTable::sqlTrgsDone) considerando:" << parameters.stField[i].name << "  que está hecho?:" << parameters.stField[i].isDone << "y tiene valor?:" << parameters.stField[i].iValue << std::endl;
 	}
     }
   //std::cout << "DEBUG: (inside DBTriggersTable::sqlTrgsDone) strLength:" << strLength << std::endl;
@@ -185,11 +186,13 @@ int DBTriggersTable::sqlTrgsDone(char * & sql)
 		{
 		  sprintf(temp,"%s\")",parameters.stField[i].name);
 		  strcat(sql,temp);
+		  j++;
 		}
 	      else
 		{
 		  sprintf(temp,"%s\" or name = \"",parameters.stField[i].name);
 		  strcat(sql,temp);
+		  j++;
 		}
 
 	    }
@@ -204,9 +207,12 @@ int DBTriggersTable::updtTrgsOn(std::vector <char*> triggersOn)
 {
   //std::cout << "DEBUG: (inside DBTriggersTable::updtTrgsOn)" << std::endl;
   int failed = -1;
-  for (std::vector< char* >::iterator triggerName = triggersOn.begin() ; triggerName != triggersOn.end(); ++triggerName)
+
+  for(int j=0; j < parameters.numFields; j++)
     {
-      for(int j=0; j < parameters.numFields; j++)
+      if(parameters.stField[j].isDone)
+	parameters.stField[j].iValue = 0;
+      for (std::vector< char* >::iterator triggerName = triggersOn.begin() ; triggerName != triggersOn.end(); ++triggerName)
 	{
 	  if(!strcmp((*triggerName), parameters.stField[j].name))
 	    {

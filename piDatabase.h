@@ -41,6 +41,7 @@ class DBInterface : public qtDatabase
   int start();
   //sql functions
   int storeData();
+  int storeData(int id , std::vector<field> tags);
   int retrieveData(int id);
   //returning private members data and/or attributes functions
   int retNumTables(){return parameters.numTables;};
@@ -56,7 +57,9 @@ class DBInterface : public qtDatabase
   int takeTriggers();
   int resetTriggers();
   int wTriggerDoneAt(int index);
+  int rTriggerDoneAt(int index);  
   int retWTabsList(std::vector <int> & tablesList);
+  int retRTabsList(std::vector <int> & tablesList);
   //linking fields with communications
   int fieldLinked(int table,int field);
   std::vector<std::vector <int>> retFieldLink(int table, int field);

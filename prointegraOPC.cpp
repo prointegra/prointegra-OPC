@@ -134,9 +134,8 @@ int ProintegraOPC::dataCapture()
 it takes data from database table and write it to it's slave*/
 int ProintegraOPC::dataToComm()
 {
-  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm)" << std::endl;
+  //std::cout << "DEBUG: (inside ProintegraOPC::dataToComm)" << std::endl;
   int failed = -1;
-  int completeFail = 0;
   int tableFail = 0;
   std::vector<field> tags;
   std::vector <std::vector <int>> tagLink;
@@ -147,13 +146,10 @@ int ProintegraOPC::dataToComm()
     {
       //taking tables wo be written
       failed = hDatabase[i]->retWTabsList(tablesList);
-      //std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) tables list size:" << tablesList.size() << std::endl;
       for(int j=0; j < tablesList.size() ; j++)
 	{
-	  //std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) working with table id:" << tablesList.at(j) << std::endl;
 	  tableFail = hDatabase[i]->retrieveData(tablesList.at(j));
 	  tableFail = tableFail + hDatabase[i]->retDataFrTable(tags,tablesList.at(j));
-	  //std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) tags in table:" << tags.size() << std::endl;
 	  for (int k = 0; k < tags.size(); k++)
 	    {
 	      for (int l = 0; l < tags[k].fromTags.size(); l++)
@@ -161,7 +157,6 @@ int ProintegraOPC::dataToComm()
 		  for (int m = 0; m < tags[k].fromTags[l].size(); m++)
 		    {
 		      tableFail = tableFail + hSlaves[l]->writeTag(tags[k].fromTags[l].at(m),l+1,tags[k].iValue);
-		      //std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) writting tag:" << tags[k].name << " with value:" << tags[k].iValue << std::endl;
 		    }
 		}
 	    }
@@ -183,52 +178,39 @@ it takes data from slave structures and save it to our tables structures
 TODO: it has to be cut in smaller functions!*/
 int ProintegraOPC::dataToDB()
 {
-  return 0;
-  /*
-  int* link = NULL;
-  //databases
+  //std::cout << "DEBUG: (inside ProintegraOPC::dataToDB)" << std::endl;
+  int failed = -1;
+  std::vector<int> tablesList;
+  std::vector<field> tags;
+  int tableFail = 0;
+  
   for(int i=0; i< nDBs ; i++)
     {
-      //tables
-      for(int j=0; j < hDatabase[i]->retNumTables();j++)
+      //taking tables wo be written
+      failed = hDatabase[i]->retRTabsList(tablesList);
+      
+      for(int j=0; j < tablesList.size() ; j++)
 	{
-	  //fields
-	  for(int k=0; k < hDatabase[i]->retNumFields(j);k++)
+	  failed = failed & hDatabase[i]->retDataFrTable(tags, tablesList.at(j));
+	  for (int k = 0; k < tags.size(); k++)
 	    {
-	      //std::cout << "**DEBUG: field:"<< k << " , from table:" << j << " , database:" << i << std::endl;
-	      //std::cout << "**DEBUG: setting it invalid!"<< std::endl;
-	      hDatabase[i]->setFieldValid(j,k,0);
-	      //std::cout << "**DEBUG: checking linking!"<< std::endl;
-	      if(hDatabase[i]->fieldLinked(j,k))
+	      for (int l = 0; l < tags[k].fromTags.size(); l++)
 		{
-		  link = hDatabase[i]->retFieldLink(j,k);
-		  //std::cout << "**DEBUG: linked! is valid?"<< hSlaves[link[0]]->retTagValid(link[1]) <<  std::endl;		  
-		  hDatabase[i]->setFieldValid(j,k,hSlaves[link[0]]->retTagValid(link[1]));
-		  hDatabase[i]->setFieldValue(j,k,hSlaves[link[0]]->retTagValue(link[1]));
-		}
-	      else
-		{
-		  //std::cout << "**DEBUG: not linked!"<< std::endl;
-		  for(int slave = 0; slave < nSlaves;slave++)
-		    {
-		      for(int tag=0; tag < hSlaves[slave]->retNumTags(); tag++)
-			{
-			  if(!strcmp(hSlaves[slave]->retTagName(tag),hDatabase[i]->retFieldTag(j,k)))
-			    {
-			      //std::cout << "**DEBUG: linking: slave:" << slave << " tag:"<< tag <<" value:"<< hSlaves[slave]->retTagValue(tag) << " isValid?:" << hSlaves[slave]->retTagValid(tag) <<  std::endl;
-			      hDatabase[i]->setFieldValid(j,k,hSlaves[slave]->retTagValid(tag));
-			      hDatabase[i]->setFieldValue(j,k,hSlaves[slave]->retTagValue(tag));
-			      hDatabase[i]->fieldLink(j,k,slave,tag);
-			    }
-			}
-
+		  for (int m = 0; m < tags[k].fromTags[l].size(); m++)
+		    {		 
+		      tableFail = tableFail + hSlaves[l]->readTag(tags[k].fromTags[l].at(m));
+		      tags[k].iValue = hSlaves[l]->retTagValue(tags[k].fromTags[l].at(m));
+		      tags[k].isValid = hSlaves[l]->retTagValid(tags[k].fromTags[l].at(m));
 		    }
-
 		}
 	    }
+	  hDatabase[i]->rTriggerDoneAt(j);
+	  hDatabase[i]->storeData(tablesList.at(j),tags);
+	  failed = failed +tableFail;
 	}
     }
-    return 0;   */
+  
+  return failed;
 }
 /*data to database process
 it takes data from slave structures and save it to our tables structures
@@ -287,8 +269,7 @@ int ProintegraOPC::loop()
 	      getTriggers();
 	      showTriggers();
 	      dataToComm();
-	      //hSlaves[0]->readData();
-		  //dataToDB();
+	      dataToDB();
 		  //storeDB();
 		  //cleaning
 	      //  if(*numFields >0)

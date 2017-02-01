@@ -57,8 +57,7 @@ int CommDaemon::launchDaemon(int nSlave, int commId, char * protocol)
     {
       result = pthread_create(slaveThread, &attr, launchMBUS , (void *)commId);
       failed = 0;
-    }
-  
+    }  
   if (result)
     {
       std::cout << "ERROR:(inside CommDaemon::launchDaemon) unable to create thread!:" << result << std::endl;
@@ -103,12 +102,11 @@ void* CommDaemon::launchMBUS(void * commId)
   delete tmpString;
   if (!setExecutable(id,"MODBUSTCP", &tmpString))
     {
-  
-      std::shared_ptr<FILE> pipe(popen(tmpString, "r"), pclose);
+      std::shared_ptr<FILE> pipe(popen(tmpString, "w"), pclose);
       if (!pipe) throw std::runtime_error("popen() failed!");
       while (!feof(pipe.get()))
 	{
-	  if (fgets(buffer, 128, pipe.get()) != NULL)
+	  if (fgets(buffer, 500, pipe.get()) != NULL)
 	    {
 	      time(&rawTime);
 	      timeInfo = localtime(&rawTime);

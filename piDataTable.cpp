@@ -239,13 +239,11 @@ int DBDataTable::store(databaseParameters* parameters,char **query)
   
   if(!strcmp(parameters->type,"QSQLITE"))
     {
-      storeSqlite(&sqlQuery);
-      ret = 0;
+      ret = storeSqlite(&sqlQuery);
     }
   else if(!strcmp(parameters->type,"QMYSQL"))
     {
-      storeMysql(&sqlQuery);
-      ret = 0;
+      ret = storeMysql(&sqlQuery);
     }
   else if(!strcmp(parameters->type,"QTDS"))
     {
@@ -275,6 +273,7 @@ int DBDataTable::storeSqlite(char **sql)
     ret = insertSqlite(&sqlQuery);
   
   *sql = sqlQuery;
+  return ret;
 }
 
 /*!function for inserting data to a sqlite table
@@ -752,5 +751,27 @@ int DBDataTable::setLink(int field, int slave, int tag)
     }
   
  return ret;
+}
 
+/*!function to update all data
+*/
+int DBDataTable::updateData(std::vector <field> data)
+{
+  //std::cout << "DEBUG: (inside DBDataTable::updateData)" << std::endl;
+  int failed = -1;
+
+  for(int i=0; i < data.size(); i++)
+    {
+      for(int j=0; j < parameters.numFields;j++)
+	{    
+	  if(!strcmp(data.at(i).name, parameters.stField[j].name))
+	    {
+	      failed = 0;
+	      parameters.stField[j].iValue = data.at(i).iValue;
+	      parameters.stField[j].isValid = data.at(i).isValid;
+	    }
+	}
+    }
+  
+ return failed;
 }

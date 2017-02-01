@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <vector>
 #include <stdlib.h>
 #include <sstream>
 #include <time.h>
@@ -61,10 +62,12 @@ class DBDataTable : public DBTable
   int retFieldValid(int field);
   int retFieldValue(int field);
   std::vector<std::vector <int>> retLink(int field);
+  int retTableId(){ return parameters.id;};
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);
   int setLink(int field, int slave, int tag);
+  int updateData(std::vector<field> data);
   
 private:  
 
