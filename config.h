@@ -154,7 +154,7 @@ class ConfigParser
  private:
   int retrieveTablesParams(pugi::xml_node* db, int dbIndex, int numTables);
   int retrieveSlaveTags(pugi::xml_node* slave, int slaveIndex);
-  int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
+  int retrieveCharAttr(pugi::xml_node* db, char*& name, const char* attribute);
   int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
   int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
   int retrieveNumberofNodes(pugi::xml_node* master , const char* concept);

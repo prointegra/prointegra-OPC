@@ -58,17 +58,17 @@ int ConfigParser::retrieveDBParams()
   for (pugi::xml_node db = doc.child("db"); db; db = db.next_sibling("db"))
     {
       //retrieve database name (name of whole entity, database name + hostname +user + password + qtdriver + number of tables...)
-      retrieveCharAttr(&db,&databaseParams[i].internalName,"name");
+      retrieveCharAttr(&db,databaseParams[i].internalName,"name");
       //retrieve database qt driver
-      retrieveCharAttr(&db,&databaseParams[i].type,"qtdriver");
+      retrieveCharAttr(&db,databaseParams[i].type,"qtdriver");
       //retrieve database hostname
-      retrieveCharAttr(&db,&databaseParams[i].host,"hostname");
+      retrieveCharAttr(&db,databaseParams[i].host,"hostname");
       //retrieve database id name
-      retrieveCharAttr(&db,&databaseParams[i].dbName,"dbName");    
+      retrieveCharAttr(&db,databaseParams[i].dbName,"dbName");    
       //retrieve database user
-      retrieveCharAttr(&db,&databaseParams[i].user,"user");
+      retrieveCharAttr(&db,databaseParams[i].user,"user");
       //retrieve database id name user password
-      retrieveCharAttr(&db,&databaseParams[i].pass,"password");
+      retrieveCharAttr(&db,databaseParams[i].pass,"password");
       //number of tables
       databaseParams[i].numTables = retrieveNumberofNodes(&db,"table");
       //is everything ok? 
@@ -179,11 +179,11 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
   i=0;
   for (pugi::xml_node table = db->child("table"); table; table = table.next_sibling("table"))
     {
-      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbName,"name");
-      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbTrigger,"tagReadTrigger");
+      retrieveCharAttr(&table,tablesParams[dbNumber][i].tbName,"name");
+      retrieveCharAttr(&table,tablesParams[dbNumber][i].tbTrigger,"tagReadTrigger");
       retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeReadTrigger");
-      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbWTrigger,"tagWriteTrigger");
-      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbType,"type");
+      retrieveCharAttr(&table,tablesParams[dbNumber][i].tbWTrigger,"tagWriteTrigger");
+      retrieveCharAttr(&table,tablesParams[dbNumber][i].tbType,"type");
       //tags
       tablesParams[dbNumber][i].numFields = retrieveNumberofNodes(&table,"tag");
       
@@ -191,17 +191,11 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
       int k =0;
       for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
 	{
-	  retrieveCharAttr(&tag,&fieldName,"name");
-       	  retrieveCharAttr(&tag,&fieldTagName,"tagName");
-	  retrieveCharAttr(&tag,&fieldType,"type");
-	  tablesParams[dbNumber][i].stField[k].name = new char[sizeof(fieldName)+1];
-	  strcpy(tablesParams[dbNumber][i].stField[k].name,fieldName);
-	  tablesParams[dbNumber][i].stField[k].tag = new char[sizeof(fieldTagName)+1];
-	  strcpy(tablesParams[dbNumber][i].stField[k].tag,fieldTagName);
-	  tablesParams[dbNumber][i].stField[k].type = new char[sizeof(fieldType)+1];
-	  strcpy(tablesParams[dbNumber][i].stField[k].type,fieldType);
+	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].name,"name");
+       	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].tag,"tagName");
+	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].type,"type");
 	  
-	  //std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
 	  
 	  k++;
 	}
@@ -230,17 +224,17 @@ int ConfigParser::retrieveCommParams()
   for (pugi::xml_node slave = commDoc.child("slave"); slave; slave = slave.next_sibling("slave"))
     {
       //retrieve slave name
-      retrieveCharAttr(&slave,&slaveParams[i].slaveName,"name");
+      retrieveCharAttr(&slave,slaveParams[i].slaveName,"name");
       //retrieve communications type
-      retrieveCharAttr(&slave,&slaveParams[i].commType,"protocol");
+      retrieveCharAttr(&slave,slaveParams[i].commType,"protocol");
       //retrieve PC port
-      retrieveCharAttr(&slave,&slaveParams[i].port,"port");
+      retrieveCharAttr(&slave,slaveParams[i].port,"port");
       if (pugi::xml_node protocol = slave.child(slaveParams[i].commType))
 	{
 	  //retrieve id if any
 	  retrieveIntAttr(&protocol,&slaveParams[i].commId,"id");  
 	  //retrieve address if any
-	  retrieveCharAttr(&protocol,&slaveParams[i].commAddr,"addr");
+	  retrieveCharAttr(&protocol,slaveParams[i].commAddr,"addr");
 	  //retrieve port if any
 	  retrieveIntAttr(&protocol,&slaveParams[i].commPort,"port");
 	}
@@ -280,11 +274,11 @@ int ConfigParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 	    {
 	      //tag NAME
 	      //TODO: it should do any check before accept it
-	      retrieveCharAttr(&tag,&slaveParams[index].stRegisters[i].tagName,"name");
+	      retrieveCharAttr(&tag,slaveParams[index].stRegisters[i].tagName,"name");
 	      //tag ADDRESS
 	      retrieveIntAttr(&tag,&slaveParams[index].stRegisters[i].iAddress,"addr");
 	      //tag type
-	      retrieveCharAttr(&tag,&slaveParams[index].stRegisters[i].dataType,"type");   
+	      retrieveCharAttr(&tag,slaveParams[index].stRegisters[i].dataType,"type");   
 	      if(!checkTagData(i))
 		slaveParams[index].stRegisters[i].isValid = 1;
 	      else
@@ -446,24 +440,23 @@ int ConfigParser::retrieveNumberofNodes(pugi::xml_document* master , const char*
 }
 
 /*!(private) function to take a string attribute from XML parsing*/
-int ConfigParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute)
+int ConfigParser::retrieveCharAttr(pugi::xml_node* db, char*& name, const char* attribute)
 {
-  char *newName;
+
   int size=0;
 
-  newName = *name;
-  delete(newName);
+  if(name)
+    delete(name);
   //better strlen than sizeof, sizeof return always 8
   if( strlen(db->attribute(attribute).value()) >0)
     {
       size =strlen(db->attribute(attribute).value()) + 1;
-      newName = new char[size];
-      strcpy(newName,db->attribute(attribute).value());
+      name = new char[size];
+      strcpy(name,db->attribute(attribute).value());
     }
   else
-    newName = NULL;
+    name = NULL;
 
-  *name = newName;
   return 0;  
 }
 /*!(private) function to take a int attribute from XML parsing
