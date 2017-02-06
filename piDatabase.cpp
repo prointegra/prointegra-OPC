@@ -56,9 +56,9 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 		      std::cout << sqlQuery[i] << std::endl;
 		      ret = query(NULL,sqlQuery[i]);
 		    }
+		
 		}
 	    }
-	}
 
       //building triggers table
       for(int i=*nQueries-1;i>=0;i--)
