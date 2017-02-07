@@ -378,6 +378,14 @@ int DBInterface::resetTriggers()
   char *sql;
 
   failed = triggersTable->updtTrgsDone(triggersLst);
+  std::cout << "DEBUG: (inside DBInterface::resetTriggers) triggerLst:"<< std::endl;
+  for(int i = 0 ; i < triggersLst.size();i++)
+    {
+      std::cout << "DEBUG: (inside DBInterface::resetTriggers) name= " << triggersLst.at(i)->name << std::endl;
+      std::cout << "DEBUG: (inside DBInterface::resetTriggers) is done= " << triggersLst.at(i)->isDone << std::endl;
+      std::cout << "DEBUG: (inside DBInterface::resetTriggers) value= " << triggersLst.at(i)->iValue << std::endl;
+
+    }
   failed = triggersTable->sqlTrgsDone(sql);
   if (!failed)
     {

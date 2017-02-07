@@ -180,21 +180,23 @@ int DBTriggersTable::sqlTrgsDone(char * & sql)
       sprintf(sql,"UPDATE `%s` set value = 0 where ( name = \"",parameters.tbName);
       for (int i = 0; i < parameters.numFields; i++)
 	{
-	  if (parameters.stField[i].isDone)
+	  if (parameters.stField[i].isDone  && parameters.stField[i].iValue)
 	    {
-	      if (j == num-1)
+	      if (j < num)
 		{
-		  sprintf(temp,"%s\")",parameters.stField[i].name);
-		  strcat(sql,temp);
-		  j++;
+		  if (j < num-1)
+		    {
+		      sprintf(temp,"%s\" or name = \"",parameters.stField[i].name);
+		      strcat(sql,temp);
+		      j++;
+		    }
+		  else
+		    {
+		      sprintf(temp,"%s\")",parameters.stField[i].name);
+		      strcat(sql,temp);
+		      j++;
+		    }
 		}
-	      else
-		{
-		  sprintf(temp,"%s\" or name = \"",parameters.stField[i].name);
-		  strcat(sql,temp);
-		  j++;
-		}
-
 	    }
 	}
       failed = 0;
