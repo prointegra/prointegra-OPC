@@ -18,7 +18,7 @@
 
 #include "config.h"
 //constants
-const char* sVERSION = "v0.0.2B";
+const char* sVERSION = "v0.0.3B";
 
 /*! Constructor
 TODO:should we have to catch exceptions??¿*/

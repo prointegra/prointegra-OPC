@@ -3,10 +3,13 @@ CHANGELOG
 
 **NEXT: (XXXX/XX/XX)**
 
-+ BETHA, app can now store INT tags values from MODBUS TCP/IP slave, to LOG,LASTVALUE tables of SQLITE3,MYSQL databases.
+**v0.0.3: (2017/02/07)**
++ BETHA, app can now store INT tags values from MODBUS TCP/IP slave, and write to them.
+    - LASTVALUE and LOG tables
+    - triggers table for reading and writting data
     - NEW FEATURES:LASTVALUE tables added, where only last value of a tag is saved
     - BUGFIX: not trying to store data when communications were completely wrong
-    - CLEANING AND POLISHING: old code not needed removed
+    - CLEANING AND POLISHING: some old code not needed removed
 
 **v0.0.2: (2016/12/13)**
 

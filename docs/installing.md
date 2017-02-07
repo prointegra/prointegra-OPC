@@ -11,6 +11,15 @@ first of all you'll need to have installed pvbrowser SCADA suite, it's dependenc
 You can see it's repository [here](https://github.com/pvbrowser/pvb)
 Pay attention that pvbrowser accepts QT5 now, so our application does.
 
+####Known dependencies in ubuntu 16.04(xenial)
+
+packages:
+```
+qt5-defaults
+libqt5sql5-mysql
+libqt5sql5-sqlite
+```
+
 ###prointegra-OPC
 after that, simply doing:
 ```
@@ -28,7 +37,7 @@ pugiXML is added to the project, so it will be automatically recompiled.
 
 ###gStools
 
-gStools is already compiled, but if you encounter problems recompile it!
+gStools is already compiled, but if you encounter problems recompile it! See it's Makefile to change properties, as compilation for 32 or 64 bits
 
 then we have made a launching script for our app ´´´./launch-script.sh´´´, to find libGstools.so, modify it with your preferences.
 
