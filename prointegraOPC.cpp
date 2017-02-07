@@ -270,18 +270,8 @@ int ProintegraOPC::loop()
 	      showTriggers();
 	      dataToComm();
 	      dataToDB();
-		  //storeDB();
-		  //cleaning
-	      //  if(*numFields >0)
-	      //    {
-	      //      for(int i = *numFields-1; i >=0;i--)
-	      //	delete stTriggers[i];
-	      //      delete stTriggers;
-	      //    }
-		  //
-	      //}
 	      delTriggers();
-	      Sleep(5000);
+	      Sleep(500);
 	    }
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <db name="prointegra" qtdriver="QMYSQL" hostname="localhost" dbName="prointegraOPC" user="OPC" password="prointegra">
-	<table name="READ" tagReadTrigger="rTrigger2" timeReadTrigger="" tagWriteTrigger="wTrigger1" type="LASTVALUE">
+	<table name="READ" tagReadTrigger="" timeReadTrigger="3" tagWriteTrigger="" type="LASTVALUE">
         <tag name="mbus_1" tagName="mbus_1" type="INT" />
         <tag name="mbus_2" tagName="mbus_2" type="INT" />
         <tag name="mbus_3" tagName="mbus_3" type="INT" />

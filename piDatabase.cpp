@@ -192,7 +192,7 @@ int DBInterface::storeData(int tableId, std::vector<field> data)
   for(int i=0;i < parameters.numTables;i++)
     {
       failed = 0;
-      if(tables[i]->retTableId() == tableId)
+      if(tables[i]->retId() == tableId)
 	{
 	  tables[i]->updateData(data);
 	  failed = tables[i]->store(&parameters,&sqlQuery);

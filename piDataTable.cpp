@@ -593,6 +593,16 @@ int DBDataTable::updateMysql(char **sql)
 
 //RETURNING DATA FUNCTIONS
 /*!function to return a if table reading is trigger drived*/
+int DBDataTable::isTimeTriggered()
+{
+  int ret = 0;
+  if(parameters.tbTriggerTime > 0)
+    ret = 1;
+
+  return ret;
+}
+
+/*!function to return a if table reading is trigger drived*/
 int DBDataTable::isReadTriggered()
 {
   int ret = 0;
@@ -656,16 +666,6 @@ int DBDataTable::retWriteTrigger(field* trigger)
 }
 
 
-/*!function to return a field tag
-TODO: it should, for convention, only return once*/
-char * DBDataTable::retFieldTag(int field)
-{
-  if(field >= 0 && field < parameters.numFields)
-    return parameters.stField[field].tag;
-  else
-    return NULL;
-
-}
 
 /*!function to return linking info from tag
 */
@@ -681,61 +681,9 @@ std::vector<std::vector <int>> DBDataTable::retLink(int field)
  return temp;
 
 }
-/*!function to return a field valid variable*/
-int DBDataTable::retFieldValid(int field)
-{
-  int ret = -1;
-  if(field >= 0 && field < parameters.numFields)
-    {
-      ret = parameters.stField[field].isValid;
-    }
-  return ret;
-}
 
-/*!function to return a field number value variable*/
-int DBDataTable::retFieldValue(int field)
-{
-  int ret = -1;  
-  if(field >= 0 && field < parameters.numFields)
-    {
-      ret = parameters.stField[field].iValue;      
-    }
-  return ret;
-}
-
-//
-/*!function to set a field valid variable*/
-int DBDataTable::setFieldValid(int field, int valid)
-{
-  int ret = -1;
-  if(field >= 0 && field < parameters.numFields)
-    {
-      // std::cout <<"DEBUG: (inside DBTable::setFieldValid function) field:"<<field<<" isValid:" << valid << std::endl;
-      parameters.stField[field].isValid = valid;
-      ret = 0;
-    }
-  
-  return ret;
-
-}
-/*!function to set a field number value variable*/
-int DBDataTable::setFieldValue(int field, int value)
-{
-  int ret = -1;  
-  if(field >= 0 && field < parameters.numFields)
-    {
-      if(!strcmp(parameters.stField[field].type,"INT"))
-	parameters.stField[field].iValue = value;
-      else
-	parameters.stField[field].iValue = value;
-      ret = 0;
-    }
-  
-  return ret;
-
-
-}
-
+/////
+//Setting data functions
 /*!function to set a linking info to tag
 */
 int DBDataTable::setLink(int field, int slave, int tag)

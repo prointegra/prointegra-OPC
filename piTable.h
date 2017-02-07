@@ -41,17 +41,17 @@ class DBTable
   virtual int initValuesSqlite(int num,char ***sql);
   virtual int initValuesMysql(int num,char ***sql);
   //storing
-  int store(databaseParameters* parameters,char **query);
-  int storeSqlite(char **sql);
-  int insertSqlite(char **sql);
-  int updateSqlite(char **sql);
-  int storeMysql(char **sql);
-  int insertMysql(char **sql);
-  int updateMysql(char **sql);
+  virtual int store(databaseParameters* parameters,char **query);
+  virtual int storeSqlite(char **sql);
+  virtual int insertSqlite(char **sql);
+  virtual int updateSqlite(char **sql);
+  virtual int storeMysql(char **sql);
+  virtual int insertMysql(char **sql);
+  virtual int updateMysql(char **sql);
   //new sql standard functions, january 2017, TODO: to improve and insert the old ones
-  int sqlSelectAll(databaseParameters dbParameters,char* & sql);
-  int sqlSelectAllMysql(char* & sql);
-  int sqlSelectAllSqlite(char* & sql);
+  virtual int sqlSelectAll(databaseParameters dbParameters,char* & sql);
+  virtual int sqlSelectAllMysql(char* & sql);
+  virtual int sqlSelectAllSqlite(char* & sql);
   
   //return private members
   int retNumFields(){return parameters.numFields;};
@@ -61,6 +61,7 @@ class DBTable
   int retFields(field ***,int**);
   int retvFields(std::vector < field> & fields);
   int retId(){return parameters.id;};
+  
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);
