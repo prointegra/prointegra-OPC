@@ -27,34 +27,8 @@
 
 #include "qtdatabase.h"
 #include "config.h"
-
-
-/*! Database table interface class */
-class DBTable
-{
- public:
-  DBTable(tableParameters tableParams);
-  ~DBTable();
-
-  int create(databaseParameters* parameters,char **query);
-  int creationSqlite(char **sql);
-  int creationMysql(char **sql);
-  int store(databaseParameters* parameters,char **query);
-  int storeSqlite(char **sql);
-  int storeMysql(char **sql);
-  //return private members
-  int retNumFields(){return parameters.numFields;};
-  char * retFieldTag(int field);
-  int retFieldValid(int field);
-  int retFieldValue(int field);
-  int* retLink(int field);
-  //set attributes
-  int setFieldValid(int field, int valid);
-  int setFieldValue(int field, int value);
-  int setLink(int field, int slave, int tag);
-private:  
-  tableParameters parameters;
-};
+#include "piTriggersTable.h"
+#include "piDataTable.h"
 
 /*! Database interface class, derived from pvbrowser addons examples */
 class DBInterface : public qtDatabase
@@ -63,26 +37,43 @@ class DBInterface : public qtDatabase
  DBInterface() : qtDatabase(){
   };
   int setup(databaseParameters dbParams,tableParameters* tablesParams);
+  int createTriggersTable();
   int start();
   //sql functions
   int storeData();
-  //return private members
+  int storeData(int id , std::vector<field> tags);
+  int retrieveData(int id);
+  //returning private members data and/or attributes functions
   int retNumTables(){return parameters.numTables;};
   int retNumFields(int table);
   char * retFieldTag(int table,int field);
   int retFieldValid(int table,int field);
   int retFieldValue(int table,int field);
-  //set attributes
+  int retDataFrTable(std::vector <field> & fields, int tableId);
+  //setting private members data and/or attributes functions
   int setFieldValid(int table,int field, int valid);
   int setFieldValue(int table,int field, int value);
+  //triggers functions
+  int takeTriggers();
+  int resetTriggers();
+  int wTriggerDoneAt(int index);
+  int rTriggerDoneAt(int index);  
+  int retWTabsList(std::vector <int> & tablesList);
+  int retRTabsList(std::vector <int> & tablesList);
   //linking fields with communications
   int fieldLinked(int table,int field);
-  int* retFieldLink(int table, int field);
+  std::vector<std::vector <int>> retFieldLink(int table, int field);
+  int setFieldLink(int table, int field, int slave, int tag);
   int fieldLink(int table, int field, int slave, int tag);
+  //debug functions
+  int showTriggers();
+  
   
  private:
   databaseParameters parameters;
-  DBTable** tables;
+  DBDataTable** tables;
+  DBTriggersTable* triggersTable;
+  std::vector<field*> triggersLst;
 };
 
 

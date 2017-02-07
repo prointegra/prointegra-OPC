@@ -23,31 +23,135 @@ checks config and create dinamically databases connections and schemas'''
 /*! function to take database connection and table parameters for our database interface */
 int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
-  char *sqlQuery = NULL;
+  char **sqlQuery = NULL;
+  char *triggersQuery = NULL;
+  char *initValues = NULL;
+  int* nQueries = NULL;
   int ret;
-  
+
+  nQueries = new int;
   //taking db parameters
   parameters = dbParams;
   start();
   if(parameters.isValid)
     {
       //building tables instances
-      tables = new DBTable*[parameters.numTables];
+      tables = new DBDataTable*[parameters.numTables];
 
       for(int i=0;i<parameters.numTables;i++)
 	{
-	  tables[i] = new DBTable(tablesParams[i]);
-	  tables[i]->create(&parameters,&sqlQuery);
-          //TODO: we should catch exceptions!
-	  std::cout << sqlQuery << std::endl;
-	  ret = query(NULL,sqlQuery);
+	  tables[i] = new DBDataTable(tablesParams[i]);
+	  //std::cout << "DEBUG: (inside DBInterface::setup) checking tablesParams.tbTrigger = "<< tablesParams[i].tbTrigger << "  of table = " << i+1 << std::endl;
+	  //std::cout << "DEBUG: going to SQL creation!" << std::endl;
+	  tables[i]->create(&parameters,nQueries,&sqlQuery);
+	  tables[i]->setId(i);
+	  std::cout << "DEBUG: returned from creation! created:" << *nQueries <<"  SQL queries "<< std::endl;
+	  //TODO: we should catch exceptions!
+	  if (*nQueries > 0)
+	    {
+	      for(int i=0;i<*nQueries;i++)
+		{
+		  if(sqlQuery != NULL && sqlQuery[i] != NULL && sqlQuery[i][0] )
+		    {
+		      std::cout << sqlQuery[i] << std::endl;
+		      ret = query(NULL,sqlQuery[i]);
+		    }
+		
+		}
+	    }
+	  for(int i=*nQueries-1;i>=0;i--)
+	    delete sqlQuery[i];
 	}
+
+      createTriggersTable();
+      triggersTable->create(&parameters,&triggersQuery,&sqlQuery,&nQueries);
+      //TODO: we should catch exceptions!
+      //std::cout << "DEBUG: (inside DBInterface::setup) triggers table sql creation: " << triggersQuery << std::endl;
+      if(!query(NULL,triggersQuery))
+	{
+	  for(int i=0;i < *nQueries; i++)
+	    {
+	      //std::cout << "DEBUG: (inside DBInterface::setup) triggers table sql creationsending query!: " << sqlQuery[i] << std::endl;
+	      query(NULL,sqlQuery[i]);
+	    }
+	}
+      ret = 0;
+	
+  
+      for(int i=*nQueries-1;i>=0;i--)
+	delete sqlQuery[i];
+      delete sqlQuery;
+      delete nQueries;
+      delete initValues;
     }
-  delete sqlQuery;
   return 0;
 }
 
+/*! function to create the triggers table (if needed) */
+int DBInterface::createTriggersTable()
+{
+  std::cout << "DEBUG:(inside DBInterface::createTriggersTable)" << std::endl;
+  int failed = -1;
+  field* triggers;
+  int numFields = 0;
+  int j = 0;
+  tableParameters *triggersTableParams = new tableParameters();
+  for(int i=0;i<parameters.numTables;i++)
+    {
+      if(tables[i]->isReadTriggered())
+	numFields++;
+      if(tables[i]->isWriteTriggered())
+	numFields++;
+    } 
+  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating structure of " << numFields << " fields!" << std::endl;
+  triggers = new field[numFields];
+  for(int i=0;i<parameters.numTables;i++)
+    {
+      if(tables[i]->isReadTriggered())
+	{
+	  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) read trigger found!" << std::endl;
+	  //triggers[j] = new field;
+	  tables[i]->retReadTrigger(&triggers[j]);
+	  triggers[j].forRTable = tables[i]->retId();
+	  j++;
+	}
+      if(tables[i]->isWriteTriggered())
+	{
+	  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) write trigger found!" << std::endl;
+	  //triggers[j] = new field;
+	  tables[i]->retWriteTrigger(&triggers[j]);
+	  triggers[j].forWTable = tables[i]->retId();
+	  j++;
+	}
+    }
+  numFields = j;
+  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating table parameters!" << std::endl;
+  triggersTableParams->tbName = new char[strlen("triggers")+5];
+  sprintf(triggersTableParams->tbName,"triggers");
+  triggersTableParams->numFields = numFields;
+  triggersTableParams->stField = new field[numFields];
+   std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating fields!" << std::endl; 
+  for (int i = 0; i < numFields ; i++)
+    {
+      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy1" << std::endl; 
+      triggersTableParams->stField[i].name = new char[strlen(triggers[i].name)+5];
+      sprintf(triggersTableParams->stField[i].name, triggers[i].name);
+      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy2" << std::endl;
+      triggersTableParams->stField[i].tag = new char[strlen(triggers[i].tag)+5];
+      sprintf(triggersTableParams->stField[i].tag, triggers[i].tag);
+      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy3" << std::endl;
+      triggersTableParams->stField[i].type = new char[strlen(triggers[i].type)+5];
+      sprintf(triggersTableParams->stField[i].type, triggers[i].type);
+      triggersTableParams->stField[i].forRTable = triggers[i].forRTable;
+      triggersTableParams->stField[i].forWTable = triggers[i].forWTable;      
+    }
 
+  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating triggers class!" << std::endl; 
+  triggersTable = new DBTriggersTable(*triggersTableParams);
+
+  delete triggersTableParams;
+  return failed;
+}
 /*! function to open connection to database */
 int DBInterface::start()
 {
@@ -72,12 +176,64 @@ int DBInterface::storeData()
     {
       tables[i]->store(&parameters,&sqlQuery);
       //TODO: we should catch exceptions!
-      //std::cout << sqlQuery << std::endl;
+      //std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
       ret = ret + query(NULL,sqlQuery);
     }
   return ret;
 }
 
+/*function for storing data to a  Database's table (by table Id)*/
+int DBInterface::storeData(int tableId, std::vector<field> data)
+{
+  std::cout << "DEBUG: (inside DBInterface::storeData)" << std::endl;
+  int failed = -1;
+  char *sqlQuery = NULL;
+  
+  for(int i=0;i < parameters.numTables;i++)
+    {
+      failed = 0;
+      if(tables[i]->retTableId() == tableId)
+	{
+	  tables[i]->updateData(data);
+	  failed = tables[i]->store(&parameters,&sqlQuery);
+	  //TODO: we should catch exceptions!
+	  std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << std::endl;
+	  failed = failed + query(NULL,sqlQuery);
+	}
+    }
+  return failed;
+}
+
+/*function for retrieving data from Database to table memory*/
+int DBInterface::retrieveData(int id)
+{
+  int failed = -1;
+  char *sql;
+  char ***table;
+  int *x;
+  int *y;
+
+  for(int i = 0; i <parameters.numTables;i++)
+    {
+      if (tables[i]->retId() == id)
+	{
+	  tables[i]->sqlSelectAll(parameters,sql);
+	  query(NULL,sql);
+	  if(retData(NULL,&table,&x,&y))
+	    std::cout <<"ERROR:(inside DBInterface::retDataFrTable) retData return error!" << std::endl;
+	  tables[i]->setAllValues(table,*x,*y,1); //1 for skipping id field
+	  failed = 0;
+	  
+	  delete sql;
+	}
+    }  
+  return failed;
+}
+
+
+//
+//RETURNING DATA FUNCTIONS
+//
 /*!function for returning the number of fields private member 
   of a table*/
 int DBInterface::retNumFields(int table)
@@ -122,12 +278,34 @@ int DBInterface::retFieldValue(int table, int field)
   return ret;
 }
 
+
+
+/*!function for returning data from a table id*/
+int DBInterface::retDataFrTable(std::vector <field> & fields, int tableId)
+{
+  //std::cout << "DEBUG: (inside DBInterface::retDatafrTable)" << std::endl;
+  int failed = -1;
+
+  for(int i = 0; i <parameters.numTables;i++)
+    {
+      if (tables[i]->retId() == tableId)
+	{
+	  tables[i]->retvFields(fields);
+	  failed = 0;
+	}
+    }  
+  return failed;
+}
+
+//
+//SETTING DATA FUNCTIONS
+//
 /////
 /*!function to set a field valid variable from table*/
 int DBInterface::setFieldValid(int table, int field, int valid)
 {
   int ret = -1;
-  if(table > 0 && table < parameters.numTables)
+  if(table >= 0 && table < parameters.numTables)
     {
       ret = tables[table]->setFieldValid(field,valid);      
     }
@@ -140,46 +318,221 @@ from table*/
 int DBInterface::setFieldValue(int table, int field, int value)
 {
   int ret = -1;  
-  if(table > 0 && table < parameters.numTables)
+  if(table >= 0 && table < parameters.numTables)
     {
       ret = tables[table]->setFieldValue(field,value);
     }
   
   return ret;
 }
-//linking fields with communications
+
+/*!fucntion to refresh the internal triggers list*/
+int DBInterface::takeTriggers()
+{
+  //std::cout << "DEBUG:(inside DBInterface::takeTriggers)" << std::endl; 
+  int failed = -1;
+  char *sql;
+  char ***table;
+  int *x;
+  int *y;
+  std::vector <char *> triggersOn;
+ 
+  triggersTable->sqlTrgsTgd(sql);
+  //std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
+  query(NULL,sql);
+  if(retData(NULL,&table,&x,&y))
+    std::cout <<"ERROR:(inside DBInterface::takeTriggers) retData return error!" << std::endl;
+  if(*y > 0)
+    {
+      for(int i =0;i<*y;i++)
+	{
+	  triggersOn.push_back(new char[strlen(table[i][0]) + 1]);
+	  strcpy(triggersOn.at(i),table[i][0]); 
+	}     
+      //cleaning
+      for(int j =*y-1;j>=0;j--)
+	{
+	  for(int k = *x-1;k>=0;k--)
+	    delete (table[j][k]);
+	  delete table[j];
+	}
+      delete table;
+
+      failed = 0;
+    }
+  triggersTable->updtTrgsOn(triggersOn);
+  for (std::vector< char * >::iterator it = triggersOn.begin() ; it != triggersOn.end(); ++it)
+    {
+      delete (*it);
+    }
+  triggersOn.clear();
+  triggersTable->retTgsLst(triggersLst);
+  return failed;
+}
+
+/*!function to reset the triggers done in the internal triggers list*/
+int DBInterface::resetTriggers()
+{
+  //std::cout << "DEBUG:(inside DBInterface::resetTriggers)" << std::endl; 
+  int failed = -1;
+  char *sql;
+
+  failed = triggersTable->updtTrgsDone(triggersLst);
+  std::cout << "DEBUG: (inside DBInterface::resetTriggers) triggerLst:"<< std::endl;
+  for(int i = 0 ; i < triggersLst.size();i++)
+    {
+      std::cout << "DEBUG: (inside DBInterface::resetTriggers) name= " << triggersLst.at(i)->name << std::endl;
+      std::cout << "DEBUG: (inside DBInterface::resetTriggers) is done= " << triggersLst.at(i)->isDone << std::endl;
+      std::cout << "DEBUG: (inside DBInterface::resetTriggers) value= " << triggersLst.at(i)->iValue << std::endl;
+
+    }
+  failed = triggersTable->sqlTrgsDone(sql);
+  if (!failed)
+    {
+      std::cout << "DEBUG: (inside DBInterface::resetTriggers) sql = " << sql << std::endl;
+      failed = query(NULL,sql);
+    }
+
+  
+  return failed;
+}
+/*!function to mark the writting trigger to a table as done*/
+int DBInterface::wTriggerDoneAt(int table)
+{
+  //std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt)" << std::endl;
+  int failed = -1;
+  
+  if(triggersLst.size() > 0)
+    {
+      for(std::vector<field*>::iterator it = triggersLst.begin(); it !=triggersLst.end(); ++it)
+	{
+	  if((*it)->forWTable == table)
+	    {
+	      std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt) marking:"<< (*it)->name << "  as done!" << std::endl;
+	      (*it)->isDone = 1;
+	      failed = 0;
+	    }
+	}
+    }
+
+  return failed;
+}
+
+/*!function to mark the reading trigger from a table as done*/
+int DBInterface::rTriggerDoneAt(int table)
+{
+  //std::cout << "DEBUG:(inside DBInterface::rTriggerDoneAt)" << std::endl;
+  int failed = -1;
+  
+  if(triggersLst.size() > 0)
+    {
+      for(std::vector<field*>::iterator it = triggersLst.begin(); it !=triggersLst.end(); ++it)
+	{
+	  if((*it)->forRTable == table)
+	    {
+	      std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt) marking:"<< (*it)->name << "  as done!" << std::endl;
+	      (*it)->isDone = 1;
+	      failed = 0;
+	    }
+	}
+    }
+
+  return failed;
+}
+/*!function for returning a list of tables Write triggered*/
+int DBInterface::retWTabsList(std::vector <int> & tablesList)
+{
+  //std::cout << "DEBUG: (inside DBInterface::retWTabsList)" << std::endl;
+  int failed = -1;
+  int vectorSize = 0;
+  
+  tablesList.clear();
+  if(triggersLst.size() > 0)
+    {
+      for(std::vector<field*>::iterator it = triggersLst.begin(); it !=triggersLst.end(); ++it)
+	{
+	  if((*it)->forWTable >= 0)
+	    {
+	      tablesList.push_back((*it)->forWTable);
+	      failed = 0;
+	    }
+	}
+    }
+
+  return failed;
+}
+
+/*!function for returning a list of tables Read triggered*/
+int DBInterface::retRTabsList(std::vector <int> & tablesList)
+{
+  //std::cout << "DEBUG: (inside DBInterface::retRTabsList)" << std::endl;
+  int failed = -1;
+  int vectorSize = 0;
+  
+  tablesList.clear();
+  if(triggersLst.size() > 0)
+    {
+      for(std::vector<field*>::iterator it = triggersLst.begin(); it !=triggersLst.end(); ++it)
+	{
+	  if((*it)->forRTable >= 0)
+	    {
+	      tablesList.push_back((*it)->forRTable);
+	      failed = 0;
+	    }
+	}
+    }
+
+  return failed;
+}
+
+//
+//linking fields with communications functions
+//
 /*!function to check if a field is already linked*/
 int DBInterface::fieldLinked(int table,int field)
 {
-  int* link;
+  /*
+  static int* link = NULL;
   int linked = 0;
-  if(table > 0 && table < parameters.numTables)
+  if(table >= 0 && table < parameters.numTables)
     {
       link = tables[table]->retLink(field);
     
       if(link[0]>= 0 && link[1] >= 0)
 	linked = 1;
     }
-  return linked;
+  */
+  return 0;
 }
 /*!function to return a field linking*/
-int* DBInterface::retFieldLink(int table, int field)
+std::vector<std::vector <int>> DBInterface::retFieldLink(int table, int field)
 {
-  int* link;
-  int linked = 0;
-    if(table > 0 && table < parameters.numTables)
+  std::vector<std::vector <int>> link;
+  if(table >= 0 && table < parameters.numTables)
     {
       link = tables[table]->retLink(field);
     }
 
   return link;
+}
+/*!function to link a field with a slave and tag*/
+int DBInterface::setFieldLink(int table, int field, int slave, int tag)
+{
+  int ret = -1;
+  if(table >= 0 && table < parameters.numTables)
+    {
+      tables[table]->setLink(field,slave,tag);
+      ret = 0;
+    }
+  return ret;
 
 }
 /*!function to link a field with a slave and tag*/
 int DBInterface::fieldLink(int table, int field, int slave, int tag)
 {
+  //std::cout << "DEBUG: (inside DBInterface::fieldLink)" << std::endl;
   int ret = -1;
-  if(table > 0 && table < parameters.numTables)
+  if(table >= 0 && table < parameters.numTables)
     {
       tables[table]->setLink(field,slave,tag);
       ret = 0;
@@ -189,452 +542,21 @@ int DBInterface::fieldLink(int table, int field, int slave, int tag)
 }
 
 
-///TABLE FUNCTIONS
-/*! function to take table parameters for our table in database interface*/
-DBTable::DBTable(tableParameters tableParams)
-{
-  parameters = tableParams;
-  return;
-}
-DBTable::~DBTable()
-{
-  return;
-}
-/*!function for creating database tables dinamycally
-TODO: only implemented sqlite,MySQL tables!
-*/
-int DBTable::create(databaseParameters* parameters, char **query)
-{
-  char *sqlQuery = NULL;
-  int ret;
-
-  sqlQuery = *query;
-  
-  if(!strcmp(parameters->type,"QSQLITE"))
-    {
-      creationSqlite(&sqlQuery);
-      ret = 0;
-    }
-   else if(!strcmp(parameters->type,"QMYSQL"))
-    {
-      creationMysql(&sqlQuery);
-      ret = 0;
-    }
-  else if(!strcmp(parameters->type,"QTDS"))
-    {
-      sqlQuery=NULL;
-      ret = -1;
-    }
-  else
-    {
-      sqlQuery=NULL;
-      ret = -1;
-    }
-  *query = sqlQuery;
-  
-  return ret;
-}
-/*!function for creating the database schema, for SQLite databases*/
-int DBTable::creationSqlite(char **sql)
-{
-  char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
-  strcat(temp,parameters.tbName);
-  strcat(temp," (ID INTEGER PRIMARY KEY AUTOINCREMENT,");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      temp = new char[strlen(sqlQuery)+5];
-      strcpy(temp,sqlQuery);
-      delete sqlQuery;
-	
-      field = new char[strlen(parameters.stField[i].type) + strlen(parameters.stField[i].name) + 5];
-      strcpy(field,parameters.stField[i].name);
-      //different types
-      if(!strcmp(parameters.stField[i].type,"DATE"))
-	strcat(field," DATE");
-      if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	strcat(field," INT");
-      if(!strcmp(parameters.stField[i].type,"TIME"))
-	strcat(field," TIME");
-      if(!strcmp(parameters.stField[i].type,"STRING"))
-	strcat(field," TEXT");      
-      if(i < (parameters.numFields-1))
-	strcat(field,",");
-      /////
-      sqlQuery = new char[strlen(temp)+strlen(field)+5];
-      strcpy(sqlQuery,temp);
-      strcat(sqlQuery,field);
-      delete field;
-    }
-  strcat(sqlQuery,")");
-  delete temp;
-  *sql = sqlQuery;
-  return 0; 
-}
-/*!function for creating the database schema, for MySQL databases*/
-int DBTable::creationMysql(char **sql)
-{
-  char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTO_INCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
-  strcat(temp,parameters.tbName);
-  strcat(temp," (ID INTEGER PRIMARY KEY AUTO_INCREMENT,");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      temp = new char[strlen(sqlQuery)+5];
-      strcpy(temp,sqlQuery);
-      delete sqlQuery;
-	
-      field = new char[strlen(parameters.stField[i].type) + strlen(parameters.stField[i].name) + 5];
-      strcpy(field,parameters.stField[i].name);
-      //different types
-      if(!strcmp(parameters.stField[i].type,"DATE"))
-	strcat(field," DATE");
-      if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	strcat(field," INT");
-      if(!strcmp(parameters.stField[i].type,"TIME"))
-	strcat(field," TIME");
-      if(!strcmp(parameters.stField[i].type,"STRING"))
-	strcat(field," TEXT");      
-      if(i < (parameters.numFields-1))
-	strcat(field,",");
-      /////
-      sqlQuery = new char[strlen(temp)+strlen(field)+5];
-      strcpy(sqlQuery,temp);
-      strcat(sqlQuery,field);
-      delete field;
-    }
-  strcat(sqlQuery,")");
-  delete temp;
-  *sql = sqlQuery;
-  return 0;
-}
-
-/*!function for store data to the table
-TODO: only implemented sqlite,MySQL tables!
-*/
-int DBTable::store(databaseParameters* parameters,char **query)
-{
-  char *sqlQuery = NULL;
-  int ret;
-
-  sqlQuery = *query;
-  
-  if(!strcmp(parameters->type,"QSQLITE"))
-    {
-      storeSqlite(&sqlQuery);
-      ret = 0;
-    }
-   else if(!strcmp(parameters->type,"QMYSQL"))
-    {
-      storeMysql(&sqlQuery);
-      ret = 0;
-    }
-  else if(!strcmp(parameters->type,"QTDS"))
-    {
-      sqlQuery=NULL;
-      ret = -1;
-    }
-  else
-    {
-      sqlQuery=NULL;
-      ret = -1;
-    }
-  *query = sqlQuery;
-  
-  return ret;
-}
-/*!function for store data to a sqlite table
-*/
-int DBTable::storeSqlite(char **sql)
-{
-  char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-
-  char *values;
-  char *tmpValues;
-  int first = 1;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (")+5];
-  strcpy(temp,"INSERT INTO ");
-  strcat(temp,parameters.tbName);
-  strcat(temp,"(");
-
-  tmpValues = new char[strlen("VALUES (") +5];
-  strcpy(tmpValues,"VALUES (");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-  values =  new char[strlen(tmpValues)+5];
-  strcpy(values,tmpValues);
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      delete tmpValues;
-      temp = new char[strlen(sqlQuery)+5];
-      tmpValues = new char[strlen(values)+5];
-      strcpy(temp,sqlQuery);
-      strcpy(tmpValues,values);
-      delete values;
-      delete sqlQuery;
-      
-      if(parameters.stField[i].isValid)
-	{
-	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	    {
-	      field = new char[parameters.stField[i].iValue +5];
-	      sprintf(field,"%d",parameters.stField[i].iValue);
-	    }
-	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5];
-	  values = new char[strlen(tmpValues)+strlen(field)+5];
-	  strcpy(sqlQuery,temp);
-	  strcpy(values,tmpValues);
-	  if(!first)
-	    {
-	      strcat(values,",");
-	      strcat(sqlQuery,",");
-	    }
-	  else
-	    first = 0;
-	  strcat(values,field);
-	  strcat(sqlQuery,parameters.stField[i].name);
-	  delete field;
-	}
-      else
-	{
-	  sqlQuery = new char[strlen(temp)+5];
-	  values = new char[strlen(tmpValues)+5];
-	  strcpy(sqlQuery,temp);
-	  strcpy(values,tmpValues);
-	}
-    }
-  strcat(sqlQuery,") ");
-  strcat(values,") ");
-  delete temp;
-  delete tmpValues;
-
-  temp = new char[strlen(sqlQuery) + strlen(values) + 10];
-  
-  strcpy(temp,sqlQuery);
-  strcat(temp,values);
-  delete sqlQuery;
-  delete values;
-  
-  *sql = temp;
-  return 0;
-
-
-}
-/*!function for store data to a MySQL table
-*/
-int DBTable::storeMysql(char **sql)
-{
-  char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-
-  char *values;
-  char *tmpValues;
-  int first = 1;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" (")+5];
-  strcpy(temp,"INSERT INTO ");
-  strcat(temp,parameters.tbName);
-  strcat(temp,"(");
-
-  tmpValues = new char[strlen("VALUES (") +5];
-  strcpy(tmpValues,"VALUES (");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-  values =  new char[strlen(tmpValues)+5];
-  strcpy(values,tmpValues);
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      delete tmpValues;
-      temp = new char[strlen(sqlQuery)+5];
-      tmpValues = new char[strlen(values)+5];
-      strcpy(temp,sqlQuery);
-      strcpy(tmpValues,values);
-      delete values;
-      delete sqlQuery;
-      
-      if(parameters.stField[i].isValid)
-	{
-	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	    {
-	      field = new char[parameters.stField[i].iValue +5];
-	      sprintf(field,"%d",parameters.stField[i].iValue);
-	    }
-	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5];
-	  values = new char[strlen(tmpValues)+strlen(field)+5];
-	  strcpy(sqlQuery,temp);
-	  strcpy(values,tmpValues);
-	  if(!first)
-	    {
-	      strcat(values,",");
-	      strcat(sqlQuery,",");
-	    }
-	  else
-	    first = 0;
-	  strcat(values,field);
-	  strcat(sqlQuery,parameters.stField[i].name);
-	  delete field;
-	}
-      else
-	{
-	  sqlQuery = new char[strlen(temp)+5];
-	  values = new char[strlen(tmpValues)+5];
-	  strcpy(sqlQuery,temp);
-	  strcpy(values,tmpValues);
-	}
-    }
-  strcat(sqlQuery,") ");
-  strcat(values,") ");
-  delete temp;
-  delete tmpValues;
-
-  temp = new char[strlen(sqlQuery) + strlen(values) + 10];
-  
-  strcpy(temp,sqlQuery);
-  strcat(temp,values);
-  delete sqlQuery;
-  delete values;
-  
-  *sql = temp;
-  return 0;
-}
-/*!function to return a field tag
-TODO: it should, for convention, only return once*/
-char * DBTable::retFieldTag(int field)
-{
-  if(field >= 0 && field < parameters.numFields)
-    return parameters.stField[field].tag;
-  else
-    return NULL;
-
-}
-
-/*!function to return linking info from tag
-*/
-int * DBTable::retLink(int field)
-{
-  static int link[2];
-  link[0] = -1;
-  link[1] = -1;
-  
-  if(field >= 0 && field < parameters.numFields)
-    {
-      link[0] = parameters.stField[field].fromSlave;
-      link[1] = parameters.stField[field].fromTag;
-    }
-  
- return link;
-
-}
-/*!function to return a field valid variable*/
-int DBTable::retFieldValid(int field)
-{
-  int ret = -1;
-  if(field >= 0 && field < parameters.numFields)
-    {
-      ret = parameters.stField[field].isValid;
-    }
-  return ret;
-}
-
-/*!function to return a field number value variable*/
-int DBTable::retFieldValue(int field)
-{
-  int ret = -1;  
-  if(field >= 0 && field < parameters.numFields)
-    {
-      ret = parameters.stField[field].iValue;      
-    }
-  return ret;
-}
-
 //
-/*!function to set a field valid variable*/
-int DBTable::setFieldValid(int field, int valid)
+//DEBUG FUNCTIONS
+/*!function to show triggers list members*/
+int DBInterface::showTriggers()
 {
-  int ret = -1;
-  if(field >= 0 && field < parameters.numFields)
+  //std::cout << "DEBUG: (inside DBInterface::showTriggers)" << std::endl;
+  int failed = -1;
+  for (std::vector<field*>::iterator it = triggersLst.begin(); it != triggersLst.end(); ++it)
     {
-      parameters.stField[field].isValid = valid;
-      ret = 0;
+      std::cout << "<******>" << std::endl;
+      std::cout << "<- Name:" << (*it)->name << std::endl;
+      std::cout << "<- isValid:" << (*it)->isValid << std::endl;
+      std::cout << "<- value:" << (*it)->iValue << std::endl;
+      std::cout << "<- isDone:"<< (*it)->isDone << std::endl;
     }
-  
-  return ret;
-
-}
-/*!function to set a field number value variable*/
-int DBTable::setFieldValue(int field, int value)
-{
-  int ret = -1;  
-  if(field >= 0 && field < parameters.numFields)
-    {
-      if(!strcmp(parameters.stField[field].type,"INT"))
-	parameters.stField[field].iValue = value;
-      else
-	parameters.stField[field].iValue = value;
-      ret = 0;
-    }
-  
-  return ret;
-
-
-}
-
-/*!function to set a linking info to tag
-*/
-int DBTable::setLink(int field, int slave, int tag)
-{
-  int ret = -1;
-  if(field >= 0 && field < parameters.numFields)
-    {
-      parameters.stField[field].fromSlave = slave;
-      parameters.stField[field].fromTag = tag;
-      ret = 0;
-    }
-  
- return ret;
+  return failed;
 
 }

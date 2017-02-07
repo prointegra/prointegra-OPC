@@ -45,7 +45,7 @@ int IniConfigurator::iniCreate(char *iniFile, mbSlaves* parameters)
       socket = usingSocket(parameters);
       fprintf(pFile,"USE_SOCKET=%d\n",socket);
       //by default (TO IMPROVE?)
-      fprintf(pFile,"DEBUG=1\n");
+      fprintf(pFile,"DEBUG=0\n");
       fprintf(pFile,"CYCLETIME=1000\n");
       fprintf(pFile,"N_POLL_SLAVE=10\n");      
       fprintf(pFile,"\n");
@@ -67,12 +67,12 @@ int IniConfigurator::iniCreate(char *iniFile, mbSlaves* parameters)
       fprintf(pFile,"SHARED_MEMORY=./comm/id%d.shm\n",parameters->commId);
       fprintf(pFile,"SHARED_MEMORY_SIZE=65536\n");
       fprintf(pFile,"MAILBOX=./comm/id%d.mbx\n",parameters->commId);
-      //cycles CALC?!?!?! TO DO!
       fprintf(pFile,"\n");
       writCycles(pFile,parameters);
   
       fclose(pFile);
     }
+  std::cout << "DEBUG: ini file finished!" << std::endl;
   return ret;
 }
 
@@ -91,16 +91,55 @@ int IniConfigurator::usingSocket(mbSlaves* parameters)
 */
 int IniConfigurator::writCycles(FILE* pFile, mbSlaves* parameters)
 {
-  int cycles = 0;
-  int min,max,i = 0;
-  
+  int cycles=0;
+  int i=0, j=0;
+  int failed=-1;
+  int valid=0;
+  int *first = new int(0);
+
   //INT TAGS
-  while(parameters->stRegisters[i].dataType!=INT && parameters->stRegisters[i].isValid)
+  //  while(tagTypeValid(parameters->stRegisters[i].dataType) && parameters->stRegisters[i].isValid)
+  //  {
+  //    i++;
+  //  }
+  if(parameters->nRegs>0)
     {
-      i++;
+      cycles = rudeCycles(parameters,first);
+      cycles = fineCycles(parameters,first,cycles);
+      fprintf(pFile,"[CYCLES]\n");      
+      fprintf(pFile,"NUM_CYCLES=%d\n",cycles);
+      for(i=0;i < cycles;i++) 
+	{
+	  while(!valid)
+	    {
+	      if(cycleIsValid(parameters,(*first+j*50)))
+		{
+		  fprintf(pFile,"CYCLE%d=50,holdingRegisters(%d,%d)\n",i+1,parameters->commId,*first+j*50);
+		  valid = 1;
+		  j++;
+		}
+	      else
+		  j++;
+
+	    }
+	  valid = 0;
+	}
+      failed = 0;
     }
-  min = max = parameters->stRegisters[i].iAddress;
+
+  delete first;
+  return failed;
+}
+
+
   
+/*! function to rude modbus cycle calculation
+*/
+int IniConfigurator::rudeCycles(mbSlaves* parameters, int * first)
+{
+  int min=0,max=0,cycles=0,i=0;
+  min = max = parameters->stRegisters[0].iAddress;
+  //rude cycles Calc
   for(i=0; i<parameters->nRegs;i++)
     {
       if((min > parameters->stRegisters[i].iAddress) && (parameters->stRegisters[i].isValid))
@@ -109,12 +148,62 @@ int IniConfigurator::writCycles(FILE* pFile, mbSlaves* parameters)
 	max = parameters->stRegisters[i].iAddress;
     }
   cycles = (max - min) / 50 + 1;
-  fprintf(pFile,"[CYCLES]\n");      
-  fprintf(pFile,"NUM_CYCLES=%d\n",cycles);
-  for(i=0;i < cycles;i++)
+
+  *first = min;
+  return cycles;
+}
+
+/*! function to fine modbus cycle calculation
+*/
+int IniConfigurator::fineCycles(mbSlaves* parameters, int * first, int rudeCycles)
+{
+  int i=0,fineCycles = 0,j=0;
+  int valid = 0;
+
+  //fine cycles Calc
+  for(i=0; i < rudeCycles;i++)
     {
-      fprintf(pFile,"CYCLE%d=50,holdingRegisters(%d,%d)\n",i+1,parameters->commId,min+i*50);
+      valid = 0;
+      for(j=0; j <  parameters->nRegs ; j++)
+	{
+	  if(parameters->stRegisters[j].iAddress >= (*first + i*50) && parameters->stRegisters[j].iAddress < (*first + i*50 + 50))
+	    valid = 1;
+	}
+      if (valid)
+	  fineCycles++;
+
     }
 
-  return 0;
+  return fineCycles;
+}
+
+/*! function to check if a cycle of 50 registers from address is useful
+*/
+int IniConfigurator::cycleIsValid(mbSlaves* parameters, int address)
+{
+  int i=0;
+  int valid = 0;
+
+
+  for(i=0; i <  parameters->nRegs ; i++)
+    {
+      if(parameters->stRegisters[i].iAddress >= address && parameters->stRegisters[i].iAddress < address+50)
+	valid = 1;
+    }
+
+  return valid;
+}    
+/*! function to check if a tag type is valid
+*/
+int IniConfigurator::tagTypeValid(const char * type)
+{
+  int valid = 0;
+
+  if(!strcmp(type,"INT"))
+    valid++;
+  else if(!strcmp(type,"WORD"))
+    valid++;
+
+  return valid;
 }     
+

@@ -13,25 +13,32 @@
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 /**
-@file threads.h
+@file commDaemon.h
 */
-#include <iostream>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <unistd.h>
-
-
 
 #ifndef _COMMDAEMON_
 #define _COMMDAEMON_
 
+#include <iostream>
+#include <string.h>
+#include <vector>
+#include <memory>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <time.h>
 
 #include <unistd.h>
 
+//tools
+int renameOldLog(int commId,char** logPath);
+int setExecutable(int commId,char* protocol, char ** executable);
 
+/*launching,checking,logging... communication daemon manager class*/
 class CommDaemon
 {
  public:
@@ -39,15 +46,15 @@ class CommDaemon
   ~CommDaemon();
 
   int launchDaemon(int slave, int commId, char* protocol);
-  int launchMODBUSDaemon(int nSlave, int commId);
+  static void* launchMBUS(void* commId);
   int checkDaemon(int slave);
+  //threads
+  pthread_t* declareThread(int nSlave);
   
- private:
-  //tools
-  int renameOldLog(int commId,char** logPath);
-  int setExecutable(int commId,char* protocol, char ** executable);
  private:
   int **nPipes;
   int nSlaves;
+  std::vector<pthread_t*> threads;
+  
 };
 #endif

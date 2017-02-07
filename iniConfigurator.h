@@ -35,7 +35,13 @@ class IniConfigurator
 
   int iniCreate(char * path, mbSlaves* slaveParams);
   int usingSocket(mbSlaves* parameters);
+  
   int writCycles(FILE* pFile, mbSlaves* parameters);
+  int rudeCycles(mbSlaves* parameters, int * first);
+  int fineCycles(mbSlaves* parameters, int * first, int rudeCycles);
+  int cycleIsValid(mbSlaves* parameters, int address);
+  
+  int tagTypeValid(const char* type);
 
 };
 #endif

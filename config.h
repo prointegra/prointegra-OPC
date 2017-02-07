@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <ctype.h>
-#include <string>
+#include <vector>
 #include "rldataacquisition.h"
 
 using namespace std;
@@ -32,35 +32,13 @@ enum RLLIB_ERRORS
   {
     DAQ_ERROR = 8388608
   };
-enum DATA_TYPES
-  {
-    INT = 0
-  };
-
-//members
-/*!register to save
-typedef struct 
-{
-  int index;
-  char tag_name[12];
-  int valueLL;
-  int valueL;
-  int valueH;
-  int valueHH;
-  char date[20];
-  char time[20];
-  int cycle;
-  char comment[100];
-  int type;
-  int err;
-  } mbRegData;*/
 
 //members
 /*!register trnasmitted*/
 typedef struct 
 {
   char* tagName = NULL;
-  int dataType = 0;
+  char * dataType = NULL;
   int iAddress = 0;
   int isValid = 0;
 
@@ -83,7 +61,6 @@ typedef struct
   
   int nRegs = 0;
   mbReadData* stRegisters = NULL;
-
 } mbSlaves;
 
 //field parameters
@@ -95,15 +72,24 @@ typedef struct
 
   int isValid = 0;
   int iValue = 0;
+  //trigger
+  int isDone = 0;
 
   int fromSlave= -1;
   int fromTag= -1;
+  std::vector<std::vector <int>> fromTags;
+  
+  //triggers
+  int forRTable=-1;
+  int forWTable=-1;
   
 } field;
 
 //database parameters
 typedef struct
 {
+  int id = -1; //identification number
+  
   int isValid = 0;
   char *type = NULL;
   char *host = NULL;
@@ -117,15 +103,23 @@ typedef struct
 //table parameters
 typedef struct
 {
-  int isValid = 0;
-  char * tbName = NULL;
-  char * tbTrigger = NULL;
-  int tbTriggerTime;
-  int numFields;
-  field* stField; 
+  int id = -1; //identification number
   
-} tableParameters;
+  int isValid;
+  char * tbName; //table name
+  
+  char * tbTrigger; //table read trigger
+  int tbTriggerTime;
+  int RTrigger;
+  
+  char * tbWTrigger;
+  int WTrigger;
+  
+  int numFields; //number of fields
+  char * tbType; //table type
+  field* stField;  //fields structures
 
+} tableParameters;
 
 class ConfigParser 
 {
@@ -160,7 +154,7 @@ class ConfigParser
  private:
   int retrieveTablesParams(pugi::xml_node* db, int dbIndex, int numTables);
   int retrieveSlaveTags(pugi::xml_node* slave, int slaveIndex);
-  int retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute);
+  int retrieveCharAttr(pugi::xml_node* db, char*& name, const char* attribute);
   int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
   int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
   int retrieveNumberofNodes(pugi::xml_node* master , const char* concept);
@@ -178,7 +172,7 @@ class ConfigParser
   int setModbusTCP(int i){MODBUSTCP = i; return 0;}
   int getModbusRTU(){return MODBUSRTU;}
   int getModbusTCP(){return MODBUSTCP;}
-*/
+  */
  private:
   pugi::xml_document doc;
   pugi::xml_document commDoc;  
@@ -190,7 +184,6 @@ class ConfigParser
   mbSlaves* slaveParams;
   mbReadData** allTags;
   int nSlaves;
-
 };
 
 

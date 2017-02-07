@@ -14,8 +14,10 @@ HEADERS += pvapp.h
 HEADERS += prointegraOPC.h
 HEADERS += qtdatabase.h
 HEADERS += commDaemon.h
-HEADERS += dataManaging.h
 HEADERS += piDatabase.h
+HEADERS += piTable.h
+HEADERS += piTriggersTable.h
+HEADERS += piDataTable.h
 HEADERS += piComm.h
 HEADERS += iniConfigurator.h
 HEADERS += config.h
@@ -26,14 +28,17 @@ SOURCES += main.cpp
 SOURCES += prointegraOPC.cpp
 SOURCES += qtdatabase.cpp
 SOURCES += commDaemon.cpp
-SOURCES += dataManaging.cpp
 SOURCES += piDatabase.cpp
+SOURCES += piTable.cpp
+SOURCES += piTriggersTable.cpp
+SOURCES += piDataTable.cpp
 SOURCES += piComm.cpp
 SOURCES += iniConfigurator.cpp
 SOURCES += config.cpp
 SOURCES += lib/pugixml-1.7/src/pugixml.cpp
 
 !macx {
+QMAKE_CXXFLAGS += -std=gnu++11
 unix:LIBS         += /usr/lib/libpvsmt.so -lpthread
 #unix:LIBS        += /usr/lib/libpvsid.so
 unix:INCLUDEPATH  += /opt/pvb/pvserver

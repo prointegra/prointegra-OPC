@@ -3,5 +3,5 @@
 export LD_LIBRARY_PATH=/home/prointegra/lib:$LD_LIBRARY_PATH
 #export LD_LIBRARY_PATH=/home/gentooza/lib:$LD_LIBRARY_PATH
 #
-chmod +x ./prointegra-OPC
+#chmod +x ./prointegra-OPC
 ./prointegra-OPC

@@ -18,16 +18,18 @@
 
 #include "config.h"
 //constants
-const char* sVERSION = "v0.0.2B";
+const char* sVERSION = "v0.0.3B";
 
-/*! Constructor*/
+/*! Constructor
+TODO:should we have to catch exceptions??¿*/
 ConfigParser::ConfigParser(char* path, char *slaves)
 {
+  
   //initialization of files
   pugi::xml_parse_result result = doc.load_file(path); 
-  cout << "INFO: database XML Load result: " << result.description()  << endl;
+  std::cout << "INFO: database XML Load result: " << result.description()   << std::endl;
   result = commDoc.load_file(slaves); 
-  cout << "INFO: database XML Load result: " << result.description()  << endl;  
+  std::cout << "INFO: communications XML Load result: " << result.description()   << std::endl;  
   return;   
 }
 /*! Destructor*/
@@ -56,17 +58,17 @@ int ConfigParser::retrieveDBParams()
   for (pugi::xml_node db = doc.child("db"); db; db = db.next_sibling("db"))
     {
       //retrieve database name (name of whole entity, database name + hostname +user + password + qtdriver + number of tables...)
-      retrieveCharAttr(&db,&databaseParams[i].internalName,"name");
+      retrieveCharAttr(&db,databaseParams[i].internalName,"name");
       //retrieve database qt driver
-      retrieveCharAttr(&db,&databaseParams[i].type,"qtdriver");
+      retrieveCharAttr(&db,databaseParams[i].type,"qtdriver");
       //retrieve database hostname
-      retrieveCharAttr(&db,&databaseParams[i].host,"hostname");
+      retrieveCharAttr(&db,databaseParams[i].host,"hostname");
       //retrieve database id name
-      retrieveCharAttr(&db,&databaseParams[i].dbName,"dbName");    
+      retrieveCharAttr(&db,databaseParams[i].dbName,"dbName");    
       //retrieve database user
-      retrieveCharAttr(&db,&databaseParams[i].user,"user");
+      retrieveCharAttr(&db,databaseParams[i].user,"user");
       //retrieve database id name user password
-      retrieveCharAttr(&db,&databaseParams[i].pass,"password");
+      retrieveCharAttr(&db,databaseParams[i].pass,"password");
       //number of tables
       databaseParams[i].numTables = retrieveNumberofNodes(&db,"table");
       //is everything ok? 
@@ -112,11 +114,13 @@ int ConfigParser::checkTableParams(int db, int table)
   return failed;
 }
 
-
-
+/*!function to check tableDatabase type 
+TODO: we only check if driver is either QSQLITE or QMYSQL
+*/
 int ConfigParser::checkDBType(const char* type)
 {
-  char * temp;
+  char * temp = NULL;
+  int failed = -1;
 
   temp = new char[strlen(type)+1];
   strcpy(temp,type);
@@ -124,14 +128,16 @@ int ConfigParser::checkDBType(const char* type)
     temp[i] = toupper(temp[i]);
   if(!strcmp(temp,"QSQLITE") || !strcmp(temp,"QMYSQL"))
     {
-      delete temp;
-      return 0;
+      failed = 0;
     }
-  cout << "ERROR!: DATABASE TYPE " << temp << " DOESN'T EXIST OR IS NOT IMPLEMENTED" << endl;
-  return -1;
+  if(failed)
+    cout << "ERROR!: DATABASE TYPE " << temp << " DOESN'T EXIST OR IS NOT IMPLEMENTED" << endl;
+  delete temp;
+  return failed;
 }
 
-/*!function for retuning a database parameters instance*/
+/*!function for returning a database parameters instance
+TODO:fucntions must have only one return point!*/
 databaseParameters ConfigParser::retDBParams(int database)
 {
   databaseParameters temp;
@@ -143,7 +149,9 @@ databaseParameters ConfigParser::retDBParams(int database)
   else
     return temp;
 }
-/*!function for retuning a table parameters instance array from a given database (by index)*/
+
+/*!function for returning a table parameters instance array from a given database (by index)
+TODO:fucntions must have only one return point!*/
 tableParameters* ConfigParser::retDBTables(int database)
 {
   tableParameters* temp = new tableParameters[0];
@@ -153,8 +161,6 @@ tableParameters* ConfigParser::retDBTables(int database)
     }
   return temp;
 }
-
-
 
 /*! function to retrieve all data from table in database, and creating it in memory struct */
 int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int numTables)
@@ -167,15 +173,17 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
 
   //defining number of tables in db
   i = numTables;
-  std::cout << "INFO: " << numTables << " tables found" << std::endl;
-  tablesParams[dbNumber] = new tableParameters[i];
+  std::cout << "INFO: " << numTables << " tables found..." << std::endl;
+  tablesParams[dbNumber] = new tableParameters[i]{};
   //retrieving table parameters
   i=0;
   for (pugi::xml_node table = db->child("table"); table; table = table.next_sibling("table"))
     {
-      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbName,"name");
-      retrieveCharAttr(&table,&tablesParams[dbNumber][i].tbTrigger,"tagTrigger");
-      retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeTrigger");
+      retrieveCharAttr(&table,tablesParams[dbNumber][i].tbName,"name");
+      retrieveCharAttr(&table,tablesParams[dbNumber][i].tbTrigger,"tagReadTrigger");
+      retrieveIntAttr(&table,&tablesParams[dbNumber][i].tbTriggerTime,"timeReadTrigger");
+      retrieveCharAttr(&table,tablesParams[dbNumber][i].tbWTrigger,"tagWriteTrigger");
+      retrieveCharAttr(&table,tablesParams[dbNumber][i].tbType,"type");
       //tags
       tablesParams[dbNumber][i].numFields = retrieveNumberofNodes(&table,"tag");
       
@@ -183,17 +191,11 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
       int k =0;
       for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
 	{
-	  retrieveCharAttr(&tag,&fieldName,"name");
-       	  retrieveCharAttr(&tag,&fieldTagName,"tagName");
-	  retrieveCharAttr(&tag,&fieldType,"type");
-	  tablesParams[dbNumber][i].stField[k].name = new char[sizeof(fieldName)+1];
-	  strcpy(tablesParams[dbNumber][i].stField[k].name,fieldName);
-	  tablesParams[dbNumber][i].stField[k].tag = new char[sizeof(fieldTagName)+1];
-	  strcpy(tablesParams[dbNumber][i].stField[k].tag,fieldTagName);
-	  tablesParams[dbNumber][i].stField[k].type = new char[sizeof(fieldType)+1];
-	  strcpy(tablesParams[dbNumber][i].stField[k].type,fieldType);
+	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].name,"name");
+       	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].tag,"tagName");
+	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].type,"type");
 	  
-	  //std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
 	  
 	  k++;
 	}
@@ -222,17 +224,17 @@ int ConfigParser::retrieveCommParams()
   for (pugi::xml_node slave = commDoc.child("slave"); slave; slave = slave.next_sibling("slave"))
     {
       //retrieve slave name
-      retrieveCharAttr(&slave,&slaveParams[i].slaveName,"name");
+      retrieveCharAttr(&slave,slaveParams[i].slaveName,"name");
       //retrieve communications type
-      retrieveCharAttr(&slave,&slaveParams[i].commType,"protocol");
+      retrieveCharAttr(&slave,slaveParams[i].commType,"protocol");
       //retrieve PC port
-      retrieveCharAttr(&slave,&slaveParams[i].port,"port");
+      retrieveCharAttr(&slave,slaveParams[i].port,"port");
       if (pugi::xml_node protocol = slave.child(slaveParams[i].commType))
 	{
 	  //retrieve id if any
 	  retrieveIntAttr(&protocol,&slaveParams[i].commId,"id");  
 	  //retrieve address if any
-	  retrieveCharAttr(&protocol,&slaveParams[i].commAddr,"addr");
+	  retrieveCharAttr(&protocol,slaveParams[i].commAddr,"addr");
 	  //retrieve port if any
 	  retrieveIntAttr(&protocol,&slaveParams[i].commPort,"port");
 	}
@@ -254,17 +256,13 @@ int ConfigParser::retrieveCommParams()
 /*! function to retrieve all data from table in database, and creating it in memory struct */
 int ConfigParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 {
-
-  char* tagName = NULL;
-  char* sAddress = NULL;
- 
   int i;
 
   //defining number of tags in slave protocol
   if (pugi::xml_node protocol = slave->child( slaveParams[index].commType))
     {
       slaveParams[index].nRegs = retrieveNumberofNodes(&protocol,"tag");
-      std::cout << "found "<< slaveParams[index].nRegs << " tags!" << std::endl;
+      std::cout << "INFO: "<< slaveParams[index].nRegs << " tags found..." << std::endl;
       if(slaveParams[index].nRegs > 0)
 	{
 	
@@ -276,11 +274,11 @@ int ConfigParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
 	    {
 	      //tag NAME
 	      //TODO: it should do any check before accept it
-	      retrieveCharAttr(&tag,&slaveParams[index].stRegisters[i].tagName,"name");
+	      retrieveCharAttr(&tag,slaveParams[index].stRegisters[i].tagName,"name");
 	      //tag ADDRESS
 	      retrieveIntAttr(&tag,&slaveParams[index].stRegisters[i].iAddress,"addr");
 	      //tag type
-	      retrieveIntAttr(&tag,&slaveParams[index].stRegisters[i].dataType,"type");   
+	      retrieveCharAttr(&tag,slaveParams[index].stRegisters[i].dataType,"type");   
 	      if(!checkTagData(i))
 		slaveParams[index].stRegisters[i].isValid = 1;
 	      else
@@ -295,8 +293,6 @@ int ConfigParser::retrieveSlaveTags(pugi::xml_node* slave, int index)
    
   return 0;
 }
-
-
 
 /*!function to check slave parameters integrity 
 TODO: to improve the check!
@@ -444,32 +440,29 @@ int ConfigParser::retrieveNumberofNodes(pugi::xml_document* master , const char*
 }
 
 /*!(private) function to take a string attribute from XML parsing*/
-int ConfigParser::retrieveCharAttr(pugi::xml_node* db, char** name, const char* attribute)
+int ConfigParser::retrieveCharAttr(pugi::xml_node* db, char*& name, const char* attribute)
 {
-  char *newName;
+
   int size=0;
 
-  newName = *name;
-  delete(newName);
+  if(name)
+    delete(name);
   //better strlen than sizeof, sizeof return always 8
   if( strlen(db->attribute(attribute).value()) >0)
     {
       size =strlen(db->attribute(attribute).value()) + 1;
-      newName = new char[size];
-      strcpy(newName,db->attribute(attribute).value());
+      name = new char[size];
+      strcpy(name,db->attribute(attribute).value());
     }
   else
-    newName = NULL;
+    name = NULL;
 
-  *name = newName;
   return 0;  
 }
-/*!(private) function to take a int attribute from XML parsing*/
+/*!(private) function to take a int attribute from XML parsing
+TODO:error check to improve, returning fail if value is not present(i.e)*/
 int ConfigParser::retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute)
 {
-
-  int size=0;
-
   //as_int() suppose to return 0  if value is empty
   *value = db->attribute(attribute).as_int();
 

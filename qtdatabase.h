@@ -41,6 +41,7 @@ class qtDatabase
     int close();
     int query(PARAM *p, const char *sqlcommand);
     int populateTable(PARAM *p, int id);
+    int retData(PARAM *p, char ****table, int **px, int **py);
     const char *recordFieldValue(PARAM *p, int x);
     int nextRecord();
 

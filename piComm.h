@@ -46,6 +46,9 @@ class CommInterface
   int readData();
   int readTag(int index);
   int readINT(int index);
+  int readWORD(int index);
+  //write data
+  int writeTag(int index, int slaveAmI, int value);
   //return functions
   int retNumTags(){return parameters.nRegs;};
   char * retTagName(int tag);
