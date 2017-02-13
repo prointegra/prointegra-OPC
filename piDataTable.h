@@ -53,13 +53,15 @@ class DBDataTable : public DBTable
   int insertMysql(char **sql);
   int updateMysql(char **sql);
   
-  //return private members
+  //triggering
   int isTimeTriggered();
+  int isTimeInitialized();
   int isReadTriggered();
   int isWriteTriggered();
   int retReadTrigger(field*);
   int retWriteTrigger(field*);
-  int retNumFields(){return parameters.numFields;};
+  int startTiming(){read = time(0); return 0;};
+  //private members
   std::vector<std::vector <int>> retLink(int field);
   
   //set attributes
@@ -67,7 +69,7 @@ class DBDataTable : public DBTable
   int updateData(std::vector<field> data);
   
 private:  
-
+  time_t read = NULL;
   
 };
 

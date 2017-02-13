@@ -3,6 +3,11 @@ CHANGELOG
 
 **NEXT: (XXXX/XX/XX)**
 
++ new features
+    - time triggered read tables implemented
++ polished
++ bugfixes
+
 **v0.0.3: (2017/02/07)**
 + BETHA, app can now store INT tags values from MODBUS TCP/IP slave, and write to them.
     - LASTVALUE and LOG tables

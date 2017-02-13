@@ -55,7 +55,11 @@ class DBInterface : public qtDatabase
   int setFieldValue(int table,int field, int value);
   //triggers functions
   int takeTriggers();
+  int takeTimeTriggers();
+  int takeSQLTriggers();
   int resetTriggers();
+  int resetTimeTriggers();
+  int resetSQLTriggers();
   int wTriggerDoneAt(int index);
   int rTriggerDoneAt(int index);  
   int retWTabsList(std::vector <int> & tablesList);
@@ -74,6 +78,7 @@ class DBInterface : public qtDatabase
   DBDataTable** tables;
   DBTriggersTable* triggersTable;
   std::vector<field*> triggersLst;
+  std::vector<int> timeTriggersLst;
 };
 
 

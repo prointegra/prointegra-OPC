@@ -597,8 +597,28 @@ int DBDataTable::isTimeTriggered()
 {
   int ret = 0;
   if(parameters.tbTriggerTime > 0)
-    ret = 1;
-
+    {
+      if(difftime(time(0), read) >= parameters.tbTriggerTime)
+	{
+	  ret = 1;
+	}
+    }
+  
+  return ret;
+}
+/*!function to return if time trigger is initialized*/
+int DBDataTable::isTimeInitialized()
+{
+  //std::cout << "DEBUG: (inside DBDataTable::isTimeInitialized)" << std::endl;
+  int ret = 1;
+  if (parameters.tbTrigger > 0)
+    {
+      if(read == NULL)
+	{
+	  ret = 0;
+	}
+    }
+  
   return ret;
 }
 

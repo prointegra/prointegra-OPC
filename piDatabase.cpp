@@ -278,8 +278,6 @@ int DBInterface::retFieldValue(int table, int field)
   return ret;
 }
 
-
-
 /*!function for returning data from a table id*/
 int DBInterface::retDataFrTable(std::vector <field> & fields, int tableId)
 {
@@ -326,17 +324,47 @@ int DBInterface::setFieldValue(int table, int field, int value)
   return ret;
 }
 
-/*!fucntion to refresh the internal triggers list*/
+/*!function to take tables triggers*/
 int DBInterface::takeTriggers()
 {
-  //std::cout << "DEBUG:(inside DBInterface::takeTriggers)" << std::endl; 
+  //std::cout << "DEBUG:(inside DBInterface::takeSQLTriggers)" << std::endl; 
+  int failed = -1;
+
+  failed = takeTimeTriggers();
+  failed = failed & takeSQLTriggers();
+  
+  return failed;
+}
+
+/*!function to take timing triggers*/
+int DBInterface::takeTimeTriggers()
+{
+  std::cout << "DEBUG:(inside DBInterface::takeTimeTriggers)" << std::endl; 
+  int failed = -1;
+  for(int i = 0; i < parameters.numTables ; i++)
+    {
+      if(tables[i]->isTimeTriggered())
+	{
+	  timeTriggersLst.push_back(tables[i]->retId()); 
+	}
+      if(!tables[i]->isTimeInitialized())
+	tables[i]->startTiming();
+    }
+
+  return failed;
+}
+
+/*!function to add to the internal triggers list the SQL triggers from triggers table*/
+int DBInterface::takeSQLTriggers()
+{
+  //std::cout << "DEBUG:(inside DBInterface::takeSQLTriggers)" << std::endl; 
   int failed = -1;
   char *sql;
   char ***table;
   int *x;
   int *y;
   std::vector <char *> triggersOn;
- 
+  //SQL triggers
   triggersTable->sqlTrgsTgd(sql);
   //std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
   query(NULL,sql);
@@ -366,14 +394,49 @@ int DBInterface::takeTriggers()
       delete (*it);
     }
   triggersOn.clear();
+  //get the complete list of triggers, with time triggers also
   triggersTable->retTgsLst(triggersLst);
   return failed;
 }
 
-/*!function to reset the triggers done in the internal triggers list*/
+/*!function to reset the triggers done*/
 int DBInterface::resetTriggers()
 {
   //std::cout << "DEBUG:(inside DBInterface::resetTriggers)" << std::endl; 
+  int failed = -1;
+  
+  failed = resetTimeTriggers();
+  failed = failed & resetSQLTriggers();
+  
+  return failed;
+}
+/*!function to reset the triggers done by time triggers*/
+int DBInterface::resetTimeTriggers()
+{
+  //std::cout << "DEBUG:(inside DBInterface::resetTimeTriggers)" << std::endl; 
+  int failed = -1;
+  for(int i = 0; i < timeTriggersLst.size() ; i++)
+    {
+      for(int j=0; j < parameters.numTables;j++)
+	{
+	  if(i>=0)
+	    {
+	      if (timeTriggersLst.at(i) == tables[j]->retId())
+		{
+		  tables[j]->startTiming();
+		  timeTriggersLst.erase(timeTriggersLst.begin()+i);
+		  i--;
+		}
+	    }
+	}
+    }
+  
+  return failed;
+}
+/*!function to reset the triggers done in the internal triggers list*/
+int DBInterface::resetSQLTriggers()
+{
+  //std::cout << "DEBUG:(inside DBInterface::resetSQLTriggers)" << std::endl; 
   int failed = -1;
   char *sql;
 
@@ -481,6 +544,14 @@ int DBInterface::retRTabsList(std::vector <int> & tablesList)
 	    }
 	}
     }
+   if(timeTriggersLst.size() > 0)
+    {
+      for(std::vector<int>::iterator it = timeTriggersLst.begin(); it !=timeTriggersLst.end(); ++it)
+	{	
+	  tablesList.push_back(*it);
+	  failed = 0;  
+	}
+    } 
 
   return failed;
 }
@@ -540,7 +611,6 @@ int DBInterface::fieldLink(int table, int field, int slave, int tag)
   return ret;
 
 }
-
 
 //
 //DEBUG FUNCTIONS
