@@ -65,10 +65,11 @@ class DBInterface : public qtDatabase
   int retWTabsList(std::vector <int> & tablesList);
   int retRTabsList(std::vector <int> & tablesList);
   //linking fields with communications
-  int fieldLinked(int table,int field);
   std::vector<std::vector <int>> retFieldLink(int table, int field);
   int setFieldLink(int table, int field, int slave, int tag);
   int fieldLink(int table, int field, int slave, int tag);
+  //deleting memory functions
+  int delTable(char ***& table, int *&x, int *&y);
   //debug functions
   int showTriggers();
   

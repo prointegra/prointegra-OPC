@@ -243,8 +243,6 @@ int ProintegraOPC::loop()
   //exit handling
   struct sigaction sigIntHandler;
   int failed = -1;
-  field *** stTriggers = NULL;
-  int **numFields = NULL;
   
   sigIntHandler.sa_handler = ProintegraOPC::exitHandler;
   sigemptyset(&sigIntHandler.sa_mask);

@@ -90,7 +90,7 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 /*! function to create the triggers table (if needed) */
 int DBInterface::createTriggersTable()
 {
-  std::cout << "DEBUG:(inside DBInterface::createTriggersTable)" << std::endl;
+  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable)" << std::endl;
   int failed = -1;
   field* triggers;
   int numFields = 0;
@@ -178,6 +178,8 @@ int DBInterface::storeData()
       //TODO: we should catch exceptions!
       //std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
       ret = ret + query(NULL,sqlQuery);
+      if(sqlQuery != NULL)
+	delete sqlQuery;
     }
   return ret;
 }
@@ -199,6 +201,8 @@ int DBInterface::storeData(int tableId, std::vector<field> data)
 	  //TODO: we should catch exceptions!
 	  std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << std::endl;
 	  failed = failed + query(NULL,sqlQuery);
+	  if(sqlQuery != NULL)
+	    delete sqlQuery;
 	}
     }
   return failed;
@@ -208,7 +212,7 @@ int DBInterface::storeData(int tableId, std::vector<field> data)
 int DBInterface::retrieveData(int id)
 {
   int failed = -1;
-  char *sql;
+  char *sqlQuery;
   char ***table;
   int *x;
   int *y;
@@ -217,14 +221,16 @@ int DBInterface::retrieveData(int id)
     {
       if (tables[i]->retId() == id)
 	{
-	  tables[i]->sqlSelectAll(parameters,sql);
-	  query(NULL,sql);
+	  tables[i]->sqlSelectAll(parameters,sqlQuery);
+	  query(NULL,sqlQuery);
 	  if(retData(NULL,&table,&x,&y))
 	    std::cout <<"ERROR:(inside DBInterface::retDataFrTable) retData return error!" << std::endl;
 	  tables[i]->setAllValues(table,*x,*y,1); //1 for skipping id field
 	  failed = 0;
-	  
-	  delete sql;
+
+	  delTable(table,x,y);
+	  if(sqlQuery != NULL)
+	    delete sqlQuery;
 	}
     }  
   return failed;
@@ -339,7 +345,7 @@ int DBInterface::takeTriggers()
 /*!function to take timing triggers*/
 int DBInterface::takeTimeTriggers()
 {
-  std::cout << "DEBUG:(inside DBInterface::takeTimeTriggers)" << std::endl; 
+  //std::cout << "DEBUG:(inside DBInterface::takeTimeTriggers)" << std::endl; 
   int failed = -1;
   for(int i = 0; i < parameters.numTables ; i++)
     {
@@ -359,15 +365,17 @@ int DBInterface::takeSQLTriggers()
 {
   //std::cout << "DEBUG:(inside DBInterface::takeSQLTriggers)" << std::endl; 
   int failed = -1;
-  char *sql;
+  char *sqlQuery;
   char ***table;
   int *x;
   int *y;
   std::vector <char *> triggersOn;
   //SQL triggers
-  triggersTable->sqlTrgsTgd(sql);
+  triggersTable->sqlTrgsTgd(sqlQuery);
   //std::cout << "DEBUG: (inside DBInterface::retTriggers) sql = " << sql << std::endl;
-  query(NULL,sql);
+  query(NULL,sqlQuery);
+  if (sqlQuery != NULL)
+    delete sqlQuery;
   if(retData(NULL,&table,&x,&y))
     std::cout <<"ERROR:(inside DBInterface::takeTriggers) retData return error!" << std::endl;
   if(*y > 0)
@@ -378,14 +386,7 @@ int DBInterface::takeSQLTriggers()
 	  strcpy(triggersOn.at(i),table[i][0]); 
 	}     
       //cleaning
-      for(int j =*y-1;j>=0;j--)
-	{
-	  for(int k = *x-1;k>=0;k--)
-	    delete (table[j][k]);
-	  delete table[j];
-	}
-      delete table;
-
+      delTable(table,x,y);
       failed = 0;
     }
   triggersTable->updtTrgsOn(triggersOn);
@@ -438,25 +439,21 @@ int DBInterface::resetSQLTriggers()
 {
   //std::cout << "DEBUG:(inside DBInterface::resetSQLTriggers)" << std::endl; 
   int failed = -1;
-  char *sql;
+  char *sqlQuery;
 
   failed = triggersTable->updtTrgsDone(triggersLst);
-  std::cout << "DEBUG: (inside DBInterface::resetTriggers) triggerLst:"<< std::endl;
-  for(int i = 0 ; i < triggersLst.size();i++)
-    {
-      std::cout << "DEBUG: (inside DBInterface::resetTriggers) name= " << triggersLst.at(i)->name << std::endl;
-      std::cout << "DEBUG: (inside DBInterface::resetTriggers) is done= " << triggersLst.at(i)->isDone << std::endl;
-      std::cout << "DEBUG: (inside DBInterface::resetTriggers) value= " << triggersLst.at(i)->iValue << std::endl;
-
-    }
-  failed = triggersTable->sqlTrgsDone(sql);
+  /* ONLY FOR DEBUG PURPOSES
+     showTriggers();
+  */
+  failed = triggersTable->sqlTrgsDone(sqlQuery);
   if (!failed)
     {
-      std::cout << "DEBUG: (inside DBInterface::resetTriggers) sql = " << sql << std::endl;
-      failed = query(NULL,sql);
+      //std::cout << "DEBUG: (inside DBInterface::resetTriggers) sql = " << sql << std::endl;
+      failed = query(NULL,sqlQuery);
     }
+  if (sqlQuery != NULL)
+    delete sqlQuery;
 
-  
   return failed;
 }
 /*!function to mark the writting trigger to a table as done*/
@@ -471,7 +468,7 @@ int DBInterface::wTriggerDoneAt(int table)
 	{
 	  if((*it)->forWTable == table)
 	    {
-	      std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt) marking:"<< (*it)->name << "  as done!" << std::endl;
+	      //std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt) marking:"<< (*it)->name << "  as done!" << std::endl;
 	      (*it)->isDone = 1;
 	      failed = 0;
 	    }
@@ -493,7 +490,7 @@ int DBInterface::rTriggerDoneAt(int table)
 	{
 	  if((*it)->forRTable == table)
 	    {
-	      std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt) marking:"<< (*it)->name << "  as done!" << std::endl;
+	      //std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt) marking:"<< (*it)->name << "  as done!" << std::endl;
 	      (*it)->isDone = 1;
 	      failed = 0;
 	    }
@@ -559,22 +556,6 @@ int DBInterface::retRTabsList(std::vector <int> & tablesList)
 //
 //linking fields with communications functions
 //
-/*!function to check if a field is already linked*/
-int DBInterface::fieldLinked(int table,int field)
-{
-  /*
-  static int* link = NULL;
-  int linked = 0;
-  if(table >= 0 && table < parameters.numTables)
-    {
-      link = tables[table]->retLink(field);
-    
-      if(link[0]>= 0 && link[1] >= 0)
-	linked = 1;
-    }
-  */
-  return 0;
-}
 /*!function to return a field linking*/
 std::vector<std::vector <int>> DBInterface::retFieldLink(int table, int field)
 {
@@ -596,8 +577,8 @@ int DBInterface::setFieldLink(int table, int field, int slave, int tag)
       ret = 0;
     }
   return ret;
-
 }
+
 /*!function to link a field with a slave and tag*/
 int DBInterface::fieldLink(int table, int field, int slave, int tag)
 {
@@ -609,7 +590,30 @@ int DBInterface::fieldLink(int table, int field, int slave, int tag)
       ret = 0;
     }
   return ret;
+}
 
+//
+//deleting elements functions
+/*! function for deleting a table returned from a database query function*/
+int DBInterface::delTable(char ***& table, int *&x, int *&y)
+{
+  int rows = 0;
+  //std::cout << "DEBUG: (inside DBInterface::delTable)" << std::endl;
+   if(y != NULL)
+    {
+      delete y;
+    }
+  if(x != NULL)
+    {
+      rows = *x;
+      delete x;
+    }
+  for (int i = (rows-1); i >= 0; i--)
+    delete [] table[i];
+  if (table != NULL)
+    delete table;
+  
+  return 0;
 }
 
 //
