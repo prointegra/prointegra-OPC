@@ -1,11 +1,11 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016,2017 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
- *  License version 3.0 as published by the Free Software Foundation
+ *  License version 3.0 (or any later version of GPL) as published by the Free Software Foundation
  *  and appearing in the file COPYING included in the packaging of
  *  this file.
  *
@@ -78,6 +78,7 @@ int CommInterface::setupMBUSTCP()
   delete sharedMemory;
   return failed;
 }
+
 /*!function to read all data 
 TODO: error returning?*/
 int CommInterface::readData()
@@ -92,6 +93,7 @@ int CommInterface::readData()
 
   return failed;
 }
+
 /*function to read a slave's tag*/
 int CommInterface::readTag(int index)
 {
@@ -116,11 +118,12 @@ int CommInterface::readTag(int index)
     ret = 0;
   return ret;
 }
+
 /*function to read a slave's int tag
 TODO: for now only from holdingRegisters!*/
 int CommInterface::readINT(int index)
 {
-  char *rlCommand;
+  char *rlCommand = NULL;
   int failed = DAQ_ERROR;
 
   rlCommand = new char[sizeof("holdingRegisters(,)") + sizeof(parameters.commId) + sizeof(parameters.stRegisters[index].iAddress) + 5];
@@ -131,7 +134,10 @@ int CommInterface::readINT(int index)
       failed = 0;
       parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->intValue(rlCommand));
     }
-
+  
+  if(rlCommand != NULL)
+    delete rlCommand;
+  
   return failed;
 }
 
@@ -150,8 +156,13 @@ int CommInterface::readWORD(int index)
       failed = 0;
       parameters.stRegisters[index].iValue = rlMODBUS->intValue(rlCommand);
     }
+
+   if(rlCommand != NULL)
+    delete rlCommand;
+   
   return failed;
 }
+
 //
 //WRITTING FUNCTIONS
 /*! function overloaded for writting int/word tag value*/
@@ -176,10 +187,12 @@ int CommInterface::writeTag(int index, int slaveAmI, int value)
   
   return 0;
 }
+
 /*!Function for returning a tag name
 TODO: it shoulds return only once*/
 char* CommInterface::retTagName(int tag)
 {
+  
   if(tag >=0 && tag < parameters.nRegs)
     return parameters.stRegisters[tag].tagName;
   else
@@ -197,8 +210,7 @@ int CommInterface::retTagValue(int tag)
   return ret;
 }
 
-/*!Function for returning if a tag value is valid
-TODO: it shoulds return only once*/
+/*!Function for returning if a tag value is valid*/
 int CommInterface::retTagValid(int tag)
 {
   int ret = 0;
