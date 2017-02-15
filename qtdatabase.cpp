@@ -3,6 +3,7 @@
                              -------------------
     begin                : Fri May 28 2010
     http://pvbrowser.org
+	improved 			: January 2017
  ***************************************************************************/
 
 #include "qtdatabase.h"

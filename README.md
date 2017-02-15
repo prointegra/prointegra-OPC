@@ -36,9 +36,15 @@ Inside the docs folder you'll find documentation
 mail to: jcuellar (at) prointegra.com
 
 ##TODO/ROADMAP
+
 [roadmap](./ROADMAP.md)
 
 ##Changelog
 
 [changelog](./CHANGELOG.md)
+
+##License
+
+Prointegra-OPC is licensed under the GPLv3, and as you wish, any other later version of the GPL.
+see [COPYING](./COPYING)
 
