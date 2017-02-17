@@ -227,19 +227,13 @@ int ConfigParser::retrieveCommParams()
   //capturing data from databasesslaves;
   for (pugi::xml_node slave = commDoc.child("slave"); slave; slave = slave.next_sibling("slave"))
     {
-      //retrieve slave name
       retrieveCharAttr(&slave,slaveParams[i].slaveName,"name");
-      //retrieve communications type
       retrieveCharAttr(&slave,slaveParams[i].commType,"protocol");
-      //retrieve PC port
       retrieveCharAttr(&slave,slaveParams[i].port,"port");
       if (pugi::xml_node protocol = slave.child(slaveParams[i].commType))
 	{
-	  //retrieve id if any
 	  retrieveIntAttr(&protocol,&slaveParams[i].commId,"id");  
-	  //retrieve address if any
 	  retrieveCharAttr(&protocol,slaveParams[i].commAddr,"addr");
-	  //retrieve port if any
 	  retrieveIntAttr(&protocol,&slaveParams[i].commPort,"port");
 	}
 	
@@ -304,14 +298,18 @@ TODO: to improve the check!
 int ConfigParser::checkSlaveParams(int i)
 {
   int failed = -1;
+  checkSlaveId(i);
   if (!checkSlaveName(slaveParams[i].slaveName,i))
     {
       if(!checkSlaveProtocol(slaveParams[i].commType))
 	{
-	  checkSlaveId(i);
 	  failed = 0;		    
 	}
+      else
+	std::cout << "DEBUG: (inside ConfigParser::checkSlaveParams) Wrong protocol!! " << std::endl;
     }
+  else
+    std::cout << "DEBUG: (inside ConfigParser::checkSlaveParams) Wrong slave name!! " << std::endl;
   return failed;
 }
 
@@ -320,14 +318,15 @@ TODO: to improve the check!
 */
 int ConfigParser::checkSlaveName(const char * name,int index)
 {
-  int failed = -1;
+  int failed = 0;
   if (index > 0)
     {
       for (int j = index-1  ; j >= 0 ; j--)
-	failed = failed && strcmp(name,slaveParams[j].slaveName);
+	{
+	  if(!strcmp(name,slaveParams[j].slaveName))
+	    failed = -1;
+	}
     }
-  else
-    failed = 0;
 
   return failed;
 }

@@ -6,10 +6,14 @@ CHANGELOG
 + new features
     - time triggered read tables implemented
 + polished
+    - some info messages improved
     - some debug code removed at piDatabase.cpp
+    - some debug code removed at piDataTable.cpp
+    - some debug code removed at piTriggersTable.cpp
 + bugfixes
     - some memory leaks fixed at piDatabase.cpp
     - some memory leaks fixed at piComm.cpp
+    - at config.cpp (int checkSlaveName fucntion) returned always failed with more than 1 slave
 
 **v0.0.3: (2017/02/07)**
 + BETHA, app can now store INT tags values from MODBUS TCP/IP slave, and write to them.
