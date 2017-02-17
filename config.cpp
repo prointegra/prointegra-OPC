@@ -190,17 +190,20 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
       
       tablesParams[dbNumber][i].stField = new field[tablesParams[dbNumber][i].numFields];
       int k =0;
+      std::cout << "INFO: processing tags ";
       for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
 	{
 	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].name,"name");
        	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].tag,"tagName");
 	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].type,"type");
 	  
-	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  std::cout << ".";
 	  
 	  k++;
 	}
-      
+      std::cout << std::endl;
+      std::cout << k+1 << " tags from table " << i+1 << "!!" << std::endl;
+	  
       if(!checkTableParams(dbNumber,i))
 	tablesParams[dbNumber][i].isValid = 1;
       else

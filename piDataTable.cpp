@@ -65,7 +65,7 @@ int DBDataTable::create(databaseParameters* dbParameters,int* nQueries, char ***
     }
   //std::cout << "DEBUG: (inside DBTable::create) copying back pointers, ret:" << ret << std::endl;
   *query =  sqlQuery;
-  std::cout << "DEBUG: (inside DBTable::create) returning ret:" << ret << std::endl;
+  //std::cout << "DEBUG: (inside DBTable::create) returning ret:" << ret << std::endl;
   return ret;
 }
 /*!function for creating the database schema, for SQLite databases*/
@@ -187,10 +187,10 @@ int DBDataTable::initValuesSqlite(int num,char ***sql)
 	  if(sqlQuery[i] != NULL)
 	    delete(sqlQuery[i]);	
 	}
-      std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:1" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:1" << std::endl;
       sqlQuery[1] = new char[strlen("DELETE FROM  ") + strlen(parameters.tbName) + 7];
       sprintf(sqlQuery[1],"DELETE FROM `%s`",parameters.tbName );
-      std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:2" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:2" << std::endl;
       sqlQuery[2] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+7];
       sprintf(sqlQuery[2],"INSERT INTO `%s` () VALUES ()",parameters.tbName );
       ret = 0;
@@ -215,10 +215,10 @@ int DBDataTable::initValuesMysql(int num,char ***sql)
 	    delete(sqlQuery[i]);
 	
 	}
-      std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:1" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:1" << std::endl;
       sqlQuery[1] = new char[strlen("DELETE FROM  ") + strlen(parameters.tbName) + 7];
       sprintf(sqlQuery[1],"DELETE FROM `%s`",parameters.tbName );
-      std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:2" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:2" << std::endl;
       sqlQuery[2] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+7];
       sprintf(sqlQuery[2],"INSERT INTO `%s` () VALUES ()",parameters.tbName );
       ret = 0;
@@ -655,8 +655,8 @@ int DBDataTable::retReadTrigger(field* trigger)
       
       trigger->type = new char[strlen("INT")+5];
       strcpy(trigger->type,"INT");
-      std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) read trigger = " << trigger->name << std::endl;
-      std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) PARAMETERS read trigger = " << parameters.tbTrigger << std::endl;
+      //std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) read trigger = " << trigger->name << std::endl;
+      //std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) PARAMETERS read trigger = " << parameters.tbTrigger << std::endl;
       failed = 0;
     }
 
@@ -677,8 +677,8 @@ int DBDataTable::retWriteTrigger(field* trigger)
       
       trigger->type = new char[strlen("INT")+5];
       strcpy(trigger->type,"INT");
-      std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) write trigger = " << trigger->name << std::endl;
-      std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) PARAMETERS write trigger = " << parameters.tbWTrigger << std::endl;
+      //std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) write trigger = " << trigger->name << std::endl;
+      //std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) PARAMETERS write trigger = " << parameters.tbWTrigger << std::endl;
       failed = 0;
     }
 

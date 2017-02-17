@@ -40,12 +40,13 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 
       for(int i=0;i<parameters.numTables;i++)
 	{
+	  std::cout << "INFO: creating table nº" << i+1 << " - " << tablesParams[i].tbName <<" instance, and SQL structure..." << std::endl;
 	  tables[i] = new DBDataTable(tablesParams[i]);
 	  //std::cout << "DEBUG: (inside DBInterface::setup) checking tablesParams.tbTrigger = "<< tablesParams[i].tbTrigger << "  of table = " << i+1 << std::endl;
 	  //std::cout << "DEBUG: going to SQL creation!" << std::endl;
 	  tables[i]->create(&parameters,nQueries,&sqlQuery);
 	  tables[i]->setId(i);
-	  std::cout << "DEBUG: returned from creation! created:" << *nQueries <<"  SQL queries "<< std::endl;
+	  //std::cout << "DEBUG: returned from creation! created:" << *nQueries <<"  SQL queries "<< std::endl;
 	  //TODO: we should catch exceptions!
 	  if (*nQueries > 0)
 	    {
@@ -53,7 +54,7 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 		{
 		  if(sqlQuery != NULL && sqlQuery[i] != NULL && sqlQuery[i][0] )
 		    {
-		      std::cout << sqlQuery[i] << std::endl;
+		      //std::cout << sqlQuery[i] << std::endl;
 		      ret = query(NULL,sqlQuery[i]);
 		    }
 		
@@ -117,7 +118,7 @@ int DBInterface::createTriggersTable()
 	}
       if(tables[i]->isWriteTriggered())
 	{
-	  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) write trigger found!" << std::endl;
+	  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) write trigger found!" << std::endl;
 	  //triggers[j] = new field;
 	  tables[i]->retWriteTrigger(&triggers[j]);
 	  triggers[j].forWTable = tables[i]->retId();
@@ -125,28 +126,28 @@ int DBInterface::createTriggersTable()
 	}
     }
   numFields = j;
-  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating table parameters!" << std::endl;
+  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating table parameters!" << std::endl;
   triggersTableParams->tbName = new char[strlen("triggers")+5];
   sprintf(triggersTableParams->tbName,"triggers");
   triggersTableParams->numFields = numFields;
   triggersTableParams->stField = new field[numFields];
-   std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating fields!" << std::endl; 
+  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating fields!" << std::endl; 
   for (int i = 0; i < numFields ; i++)
     {
-      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy1" << std::endl; 
+      //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy1" << std::endl; 
       triggersTableParams->stField[i].name = new char[strlen(triggers[i].name)+5];
       sprintf(triggersTableParams->stField[i].name, triggers[i].name);
-      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy2" << std::endl;
+      //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy2" << std::endl;
       triggersTableParams->stField[i].tag = new char[strlen(triggers[i].tag)+5];
       sprintf(triggersTableParams->stField[i].tag, triggers[i].tag);
-      std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy3" << std::endl;
+      //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) memcpy3" << std::endl;
       triggersTableParams->stField[i].type = new char[strlen(triggers[i].type)+5];
       sprintf(triggersTableParams->stField[i].type, triggers[i].type);
       triggersTableParams->stField[i].forRTable = triggers[i].forRTable;
       triggersTableParams->stField[i].forWTable = triggers[i].forWTable;      
     }
 
-  std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating triggers class!" << std::endl; 
+  //std::cout << "DEBUG:(inside DBInterface::createTriggersTable) creating triggers class!" << std::endl; 
   triggersTable = new DBTriggersTable(*triggersTableParams);
 
   delete triggersTableParams;
@@ -621,7 +622,7 @@ int DBInterface::delTable(char ***& table, int *&x, int *&y)
 /*!function to show triggers list members*/
 int DBInterface::showTriggers()
 {
-  //std::cout << "DEBUG: (inside DBInterface::showTriggers)" << std::endl;
+  std::cout << "DEBUG: (inside DBInterface::showTriggers)" << std::endl;
   int failed = -1;
   for (std::vector<field*>::iterator it = triggersLst.begin(); it != triggersLst.end(); ++it)
     {
