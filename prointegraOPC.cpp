@@ -24,6 +24,7 @@
 ProintegraOPC::ProintegraOPC()
 {
   int i = 0;
+  std::vector <mbSlaves> slavesParams;
   //load xml config file
   confParser = new ConfigParser("config/database.xml","config/slaves.xml");
   //retrieve database info from config file
@@ -44,7 +45,9 @@ ProintegraOPC::ProintegraOPC()
     {
       hSlaves[i] = new CommInterface();
       hSlaves[i]->setup(confParser->retSlaveParams(i));
+      slavesParams.push_back(confParser->retSlaveParams(i));
     }
+  commDaemonManager = new CommDaemon(slavesParams);
   //link database tags with slaves
   linkTags();
   //FOR DEBUGGING PURPOSES
@@ -58,8 +61,12 @@ ProintegraOPC::~ProintegraOPC()
 {
   delete confParser;
   for(int i=nDBs-1;i== 0 ; i--)
-    delete hDatabase[nDBs];
+    delete hDatabase[i];
   delete hDatabase;
+  for(int i=nSlaves-1;i== 0 ; i--)
+    delete hSlaves[i];
+  delete hSlaves;
+  delete commDaemonManager;
   return;
 }
 /*! function for linking between slaves and databases tags*/ 
@@ -229,8 +236,6 @@ int ProintegraOPC::storeDB()
 */
 int ProintegraOPC::startCommunications()
 {
-  commDaemonManager = new CommDaemon(nSlaves);
-
   for(int i=0; i < nSlaves; i++)
     commDaemonManager->launchDaemon(i,confParser->retSlaveParams(i).commId,confParser->retSlaveParams(i).commType);
   return 0;   

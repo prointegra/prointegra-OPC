@@ -8,7 +8,7 @@ CONFIG  -= qt
 
 # Input
 # HEADERS   += 
-SOURCES     += modbus_client.cpp
+SOURCES     += modbus_clientv2.cpp
 
 !macx {
 unix:LIBS         += -lpthread

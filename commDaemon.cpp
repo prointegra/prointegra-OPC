@@ -34,13 +34,24 @@
 #include "commDaemon.h"
 
 /*! constructor, creates pipes for every slave*/
-CommDaemon::CommDaemon(int slaves)
+CommDaemon::CommDaemon(std::vector <mbSlaves> slavesParams)
 {
-  nSlaves = slaves;
-
-  nPipes = new int*[nSlaves];
-  for(int i=0;i<slaves;i++)
-    nPipes[i] = new int[2];
+  slavesP = slavesParams;
+  for(int i= 0; i < slavesP.size(); i++)
+    {
+      if (!strcmp(slavesP.at(i).protocol,"MODBUSTCP"))
+	{
+	  if (daemons.size() == 0)
+	    daemons.push_back(PROT_MODBUS_TCP);
+	  else
+	    {
+	      if (!isDefined(PROT_MODBUS_TCP))
+		daemons.push_back(PROT_MODBUS_TCP);
+	    }
+	}
+      else
+	std::cout << "ERROR: protocol: " << slavesP.at(i).protocol << " NOT DEFINED!!" << std::endl;
+    }
 
   return;
 }
@@ -55,12 +66,55 @@ CommDaemon::~CommDaemon()
   return;
 }
 
+int CommDaemon::isDefined(int protocol)
+{
+  int defined = 0;
+  
+  for(int i=0;1 < daemons.size();i++)
+    if(protocol == daemons.at(i))
+      defined = 1;
+
+  return defined;
+}
+/*!function for setting ini files for daemons, thanks to internal copy of slaves parameters*/
+int CommDaemon::iniDaemons()
+{
+  int failed = -1;
+  
+   for(int i=0;1 < daemons.size();i++)
+     {
+       if(daemon.at(i) == PROT_MODBUS_TCP)
+	 failed = iniMBTCP();
+     }
+   
+  return failed;
+}
+
+/*!function for setting ini files for a Modbus TCP/IP daemon, thanks to internal copy of slaves parameters*/
+int CommDaemon::iniMBTCP()
+{
+  int failed = -1; 
+  char * iniFile = NULL;
+  IniConfigurator iniConfig;
+   
+  iniFile = new char[strlen("./comm/modbus_client/MBTCP.ini")+5];
+  sprintf(iniFile,"./comm/modbus_client/MBTCP.ini"); 
+  std::cout << "INFO: setting MODBUS TCP/IP client ini file..."<< std::endl; 
+  failed = iniConfig.iniCreate(iniFile,slavesP);
+
+  delete iniFile;
+
+  return failed;
+}
+
 int CommDaemon::launchDaemon(int nSlave, int commId, char * protocol)
 {
-  std::cout << "DEBUG: (inside CommDaemon::launchDaemon)" << std::endl;
+  //std::cout << "DEBUG: (inside CommDaemon::launchDaemon)" << std::endl;
   int failed = -1;
   int     result = 0;
-
+  //TO IMPROVE
+  return failed;
+  //
   pthread_attr_t attr;
   pthread_t* slaveThread = declareThread(nSlave);
 
@@ -97,47 +151,7 @@ int CommDaemon::checkDaemon(int commId)
   return failed;
 }
 
-void* CommDaemon::launchMBUS(void * commId)
-{
-  char buffer[500];
-  std::string result;
-  char *tmpString = NULL;
-  FILE *fout; // out file
 
-  char timeBuffer[10];
-  time_t rawTime;
-  struct tm * timeInfo;
-  int lines = 0;
-  const int maxLines = 20000;
-  int id = (long)commId;
-
-  renameOldLog(id,&tmpString);
-  fout = fopen(tmpString,"w");
-  delete tmpString;
-  if (!setExecutable(id,"MODBUSTCP", &tmpString))
-    {
-      std::shared_ptr<FILE> pipe(popen(tmpString, "w"), pclose);
-      if (!pipe) throw std::runtime_error("popen() failed!");
-      while (!feof(pipe.get()))
-	{
-	  if (fgets(buffer, 500, pipe.get()) != NULL)
-	    {
-	      time(&rawTime);
-	      timeInfo = localtime(&rawTime);
-	      strftime (timeBuffer,10,"%T: ",timeInfo);	      
-	      fprintf(fout,"%s%s", timeBuffer,buffer);
-	      lines++;
-	      if(lines >= maxLines)
-		{
-		  rewind(fout);
-		  lines = 0;
-		}
-	    }
-	}
-    }
-  fclose(fout);
-  pthread_exit(NULL);
-}
 
 pthread_t* CommDaemon::declareThread(int nSlave)
 {
@@ -189,4 +203,49 @@ int setExecutable(int commId,char* protocol,char **executable)
     }
   *executable = file1;
   return failed;
+}
+
+void* launchMBUS(void * commId)
+{
+  char buffer[500];
+  std::string result;
+  char *tmpString = NULL;
+  FILE *fout; // out file
+
+  char timeBuffer[10];
+  time_t rawTime;
+  struct tm * timeInfo;
+  int lines = 0;
+  const int maxLines = 20000;
+  int id = (long)commId;
+
+  renameOldLog(id,&tmpString);
+  fout = fopen(tmpString,"w");
+  delete tmpString;
+
+  if (!setExecutable(id,"MODBUSTCP", &tmpString))
+    {
+      std::shared_ptr<FILE> pipe(popen(tmpString, "r"), pclose);
+      if (!pipe) throw std::runtime_error("popen() failed!");
+      while (!feof(pipe.get()))
+	{
+	  //if (fgets(buffer, 500, pipe.get()) != NULL)
+	  //  {
+	  //    time(&rawTime);
+	  //    timeInfo = localtime(&rawTime);
+	  //    strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	  //    fprintf(fout,"%s%s", timeBuffer,buffer);
+	  //    lines++;
+	  //    if(lines >= maxLines)
+	  //	{
+          //		  rewind(fout);
+	  //	  lines = 0;
+	  //	}
+	  //  }
+	}
+      delete tmpString;
+    }
+
+  pthread_exit(NULL);
+  fclose(fout);
 }

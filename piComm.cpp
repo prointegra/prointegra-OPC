@@ -28,10 +28,9 @@ int CommInterface::setup(mbSlaves slaveParams)
   parameters = slaveParams;
   if(parameters.isValid)
     {
-      std::cout << "DEBUG: configuring communications for slave with id = " << parameters.commId << std::endl;
+      //std::cout << "DEBUG: configuring communications for slave with id = " << parameters.commId << std::endl;
       //setting communication daemon
-      failed = setupCommDaemon();    
-    }
+      failed = setupCommDaemon();      
   return failed;
 }
 
@@ -53,29 +52,16 @@ int CommInterface::setupMBUSTCP()
   int failed = -1;
   char *mailbox = NULL;
   char *sharedMemory = NULL;
-  char * iniFile = NULL;
-  IniConfigurator iniConfig;
-  
-  //std::cout << "DEBUG: setting MODBUS TCP/IP rlDataAcquisition class..."<< std::endl;
-  
-  mailbox = new char[strlen("./comm/id.mbx")+sizeof(char)*10];
-  sharedMemory = new char[strlen("./comm/id.shm")+sizeof(char)*10];
-  iniFile = new char[strlen("./comm/modbus_client/id.ini")+sizeof(char)*10];
-  
-  sprintf(mailbox,"./comm/id%d.mbx",parameters.commId);
-  sprintf(sharedMemory,"./comm/id%d.shm",parameters.commId);
-  sprintf(iniFile,"./comm/modbus_client/id%d.ini",parameters.commId);
-  
+    
+  mailbox = new char[strlen("./comm/MBTCP.mbx")+sizeof(char)*10];
+  sharedMemory = new char[strlen("./comm/MBTCP.shm")+sizeof(char)*10];  
+  sprintf(mailbox,"./comm/MBTCP.mbx");
+  sprintf(sharedMemory,"./comm/MBTCP.shm"); 
   rlMODBUS = new rlDataAcquisition(mailbox,sharedMemory, 65536);
-  std::cout << "DEBUG: setting MODBUS TCP/IP client ini file..."<< std::endl;
- 
-  failed = iniConfig.iniCreate(iniFile,&parameters);
-  if (failed)
-    std::cout << "DEBUG:something has gone wrong configuring rlDataAcquistion structure!\n" << std::endl;
 
-  delete iniFile;
   delete mailbox;
   delete sharedMemory;
+  
   return failed;
 }
 

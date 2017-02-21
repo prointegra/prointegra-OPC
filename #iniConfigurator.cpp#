@@ -79,7 +79,9 @@ int IniConfigurator::usingSocket(mbSlaves* parameters)
 
   return ret;
 }
-   
+
+
+
 /*! function check if communications are made by socket
 */
 int IniConfigurator::writCycles(FILE* pFile, mbSlaves* parameters)

@@ -1,0 +1,25 @@
+#Config file created by Prointegra-OPC
+
+[GLOBAL]
+USE_SOCKET=1
+DEBUG=1
+CYCLETIME=1000
+N_POLL_SLAVE=10
+
+[SOCKET]
+IP=172.26.0.27
+PORT=502
+
+[RLLIB]
+MAX_NAME_LENGTH=30
+SHARED_MEMORY=./comm/id3.shm
+SHARED_MEMORY_SIZE=65536
+MAILBOX=./comm/id3.mbx
+
+[CYCLES]
+NUM_CYCLES=5
+CYCLE1=50,holdingRegisters(1,1)
+CYCLE2=50,holdingRegisters(1,1951)
+CYCLE3=50,holdingRegisters(1,2501)
+CYCLE4=50,holdingRegisters(1,2551)
+CYCLE5=50,holdingRegisters(1,2601)
