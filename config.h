@@ -33,6 +33,11 @@ enum RLLIB_ERRORS
     DAQ_ERROR = 8388608
   };
 
+enum SUPPORTED_PROTOCOLS
+  {
+    PROT_MODBUS_TCP = 1
+  };
+
 //members
 /*!register trnasmitted*/
 typedef struct 
@@ -158,6 +163,7 @@ class ConfigParser
   int retrieveIntAttr(pugi::xml_node* db, int* value, const char* attribute);
   int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
   int retrieveNumberofNodes(pugi::xml_node* master , const char* concept);
+  
   /*
   int IterateComms();
   int RetrieveConfig();

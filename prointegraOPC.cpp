@@ -47,7 +47,10 @@ ProintegraOPC::ProintegraOPC()
       hSlaves[i]->setup(confParser->retSlaveParams(i));
       slavesParams.push_back(confParser->retSlaveParams(i));
     }
+  std::cout << "DEBUG: (inside ProintegraOPC::ProintegraOPC) new commDaemonManager instance" << std::endl;
   commDaemonManager = new CommDaemon(slavesParams);
+  std::cout << "DEBUG: (inside ProintegraOPC::ProintegraOPC) ini comms Daemons" << std::endl;
+  commDaemonManager->iniDaemons();
   //link database tags with slaves
   linkTags();
   //FOR DEBUGGING PURPOSES
@@ -66,7 +69,7 @@ ProintegraOPC::~ProintegraOPC()
   for(int i=nSlaves-1;i== 0 ; i--)
     delete hSlaves[i];
   delete hSlaves;
-  delete commDaemonManager;
+  //delete commDaemonManager;
   return;
 }
 /*! function for linking between slaves and databases tags*/ 
@@ -114,11 +117,11 @@ TODO: it's in fact still not be used*/
 int ProintegraOPC::checkComm()
 {
   int failed = 0;
-   for(int i=0; i < nSlaves; i++)
-    {
+  //for(int i=0; i < nSlaves; i++)
+     //{
       //std::cout << "DEBUG: slave "<< i << " status: " << commDaemonManager->checkDaemon(i)<< std::endl;
-      failed = failed + commDaemonManager->checkDaemon(i);
-    }
+      //failed = failed + commDaemonManager->checkDaemon(i);
+      //}
   return failed;   
 }
 /*!checking communication processes if running or not
@@ -236,8 +239,7 @@ int ProintegraOPC::storeDB()
 */
 int ProintegraOPC::startCommunications()
 {
-  for(int i=0; i < nSlaves; i++)
-    commDaemonManager->launchDaemon(i,confParser->retSlaveParams(i).commId,confParser->retSlaveParams(i).commType);
+  commDaemonManager->launchDaemons();
   return 0;   
 }
 
@@ -253,7 +255,8 @@ int ProintegraOPC::loop()
   sigemptyset(&sigIntHandler.sa_mask);
   sigIntHandler.sa_flags = 0;
   sigaction(SIGINT, &sigIntHandler, NULL);
-  
+
+  //startCommunications();
   while(1)
     {
       if(!lExit)

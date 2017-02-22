@@ -38,10 +38,7 @@
 #include "config.h"
 #include "iniConfigurator.h"
 
-enum PROTOCOLS
-  {
-    PROT_MODBUS_TCP = 1
-  };
+
 
 //tools
 int renameOldLog(int commId,char** logPath);
@@ -59,9 +56,10 @@ class CommDaemon
   int iniMBTCP();
   
   int launchDaemon(int slave, int commId, char* protocol);
+  int launchDaemons();
   int checkDaemon(int slave);
   //class tools
-  int isDefined(int protocol)
+  int isDefined(int protocol);
   //threads
   pthread_t* declareThread(int nSlave);
   

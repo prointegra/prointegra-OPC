@@ -26,7 +26,6 @@
 #include <time.h>
 
 #include "config.h"
-#include "iniConfigurator.h"
 #include "lib/gStools/libgStools.h"
 
 
@@ -36,7 +35,7 @@ class CommInterface
 {
  public:
   CommInterface(){return;};
-  ~CommInterface();
+  ~CommInterface(){delete rlMODBUS; return;};
 
   int setup(mbSlaves slaveParameters);
   //rlib communications settings

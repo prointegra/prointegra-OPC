@@ -38,8 +38,8 @@ int main(int ac, char **av)
   int ret =0;
   std::cout << "INFO: Prointegra OPC version: " << sVERSION << std::endl;
   server = new ProintegraOPC();
-  server->startCommunications();
   std::cout << "INFO: start capturing..." << std::endl;
+  server->startCommunications();
   ret = server->loop();
   delete server;
   std::cout << "INFO: Thanks for using Prointegra OPC!" << std::endl; 

@@ -36,14 +36,14 @@ class IniConfigurator
   int iniMBTCPCreate(char * path, std::vector <mbSlaves> params);
   int usingSocket(mbSlaves* parameters);
   
+  int writMBTCPSocket(FILE* pFile, std::vector <mbSlaves> params);
+  int writMBTCPCycles(FILE* pFile, std::vector <mbSlaves> params);  
   int writCycles(FILE* pFile, mbSlaves* parameters);
   int rudeCycles(mbSlaves* parameters, int * first);
   int fineCycles(mbSlaves* parameters, int * first, int rudeCycles);
   int cycleIsValid(mbSlaves* parameters, int address);
   
   int tagTypeValid(const char* type);
- private:
-  std::vector <ips IPS> addr;
 
 };
 #endif

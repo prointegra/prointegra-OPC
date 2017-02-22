@@ -30,7 +30,8 @@ int CommInterface::setup(mbSlaves slaveParams)
     {
       //std::cout << "DEBUG: configuring communications for slave with id = " << parameters.commId << std::endl;
       //setting communication daemon
-      failed = setupCommDaemon();      
+      failed = setupCommDaemon();
+    }
   return failed;
 }
 
@@ -40,7 +41,7 @@ int CommInterface::setupCommDaemon()
   int failed = -1;
   if(!strcmp(parameters.commType,"MODBUSTCP"))
     {
-      std::cout << "INFO: MODBUS TCP/IP found, configuring..."<< std::endl;
+      std::cout << "INFO: MODBUS TCP/IP slave found, configuring..."<< std::endl;
       failed = setupMBUSTCP();
     }
   return failed;
@@ -114,7 +115,7 @@ int CommInterface::readINT(int index)
 
   rlCommand = new char[sizeof("holdingRegisters(,)") + sizeof(parameters.commId) + sizeof(parameters.stRegisters[index].iAddress) + 5];
   sprintf(rlCommand,"holdingRegisters(%d,%d)",parameters.commId,parameters.stRegisters[index].iAddress);
-  //std::cout <<"DEBUG: reading tag, command:"<< rlCommand <<" raw data:"<<rlMODBUS->intValue(rlCommand)<<" int data:"<< gstWord2Int(rlMODBUS->intValue(rlCommand)) << std::endl;
+  std::cout <<"DEBUG: reading tag, command:"<< rlCommand <<" raw data:"<<rlMODBUS->intValue(rlCommand)<<" int data:"<< gstWord2Int(rlMODBUS->intValue(rlCommand)) << std::endl;
   if (rlMODBUS->intValue(rlCommand) != DAQ_ERROR)
     {
       failed = 0;
@@ -171,7 +172,7 @@ int CommInterface::writeTag(int index, int slaveAmI, int value)
       failed = 0;
     }
   
-  return 0;
+  return failed;
 }
 
 /*!Function for returning a tag name

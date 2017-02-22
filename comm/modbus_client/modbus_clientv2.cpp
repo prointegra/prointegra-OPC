@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <vector>
+#include <time.h>
 #include "rlmodbus.h"
 #include "rlthread.h"
 #include "rlinifile.h"
@@ -29,7 +31,7 @@
 #include "rlmailbox.h"
 #include "rlsocket.h"
 #include "rlserial.h"
-#include <vector>
+
 
 // global values
 static char               var[80]                  = "";
@@ -72,6 +74,11 @@ rlSocket                  *mySocket                 = NULL;
 std::vector <rlSocket*>   mySockets;
 rlSerial                  *tty                      = NULL;
 
+//logging
+char timeBuffer[10];
+time_t rawTime;
+struct tm * timeInfo;
+FILE *fout;
 
 static int modbus_idletime = (4*1000)/96;
 
@@ -359,6 +366,10 @@ static int init(int ac, char **av)
     modbus->registerSerial(tty);
   }
 
+  //logging
+  fout = fopen("MBUSTCP.log","w");
+
+  
   return 0;
 }
 
@@ -391,13 +402,32 @@ static int modbusCycle(int slave, int function, int start_adr, int num_register,
 
       thread->lock();
       //select different socket
-      if(slave!=actualSlave)
+      if(slave!=actualSlave && use_socket == 1)
 	{
+	  time(&rawTime);
+	  timeInfo = localtime(&rawTime);
+	  strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	  fprintf(fout,"%s: SOCKET CHANGE ADDRESS TO %s\n", timeBuffer,ips.at(slave-1).ip);
+	  //printf("SOCKET DISCONNECT\n");
+	  //mySocket->disconnect();
+	  printf("SOCKET CHANGE ADDRESS\n");
 	  mySocket->setAdr(ips.at(slave-1).ip);
+	  time(&rawTime);
+	  timeInfo = localtime(&rawTime);
+	  strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	  fprintf(fout,"%s: DISCONNECTING SOCKET\n", timeBuffer);
+	  printf("SOCKET DISCONNECT\n");
 	  mySocket->disconnect();
+	  time(&rawTime);
+	  timeInfo = localtime(&rawTime);
+	  strftime (timeBuffer,10,"%T: ",timeInfo);	  
+	  fprintf(fout,"%s: RECONNECTING SOCKET\n", timeBuffer);
+	  printf("SOCKET RECONNECT\n");
 	  mySocket->connect();
 	  actualSlave = slave;
+	  fflush( fout );
 	}
+      printf("MODBUS REQUEST\n");
       ret = modbus->request(slave, function, start_adr, num_register);
       if(ret >=0)
 	ret = modbus->response( &slave, &function, localData);
@@ -409,8 +439,19 @@ static int modbusCycle(int slave, int function, int start_adr, int num_register,
 	  poll_slave_counter[slave] = n_poll_slave;
 	  if(use_socket)
 	    {
+	      time(&rawTime);
+	      timeInfo = localtime(&rawTime);
+	      strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	      fprintf(fout,"%s: DISCONNECTING SOCKET\n", timeBuffer);
+	      printf("SOCKET DISCONNECT\n");
 	      mySocket->disconnect();
+	      time(&rawTime);
+	      timeInfo = localtime(&rawTime);
+	      strftime (timeBuffer,10,"%T: ",timeInfo);	  
+	      fprintf(fout,"%s: RECONNECTING SOCKET\n", timeBuffer);
+	      printf("SOCKET RECONNECT\n");
 	      mySocket->connect();
+	      fflush( fout );
 	    }
 	}
       thread->unlock();
