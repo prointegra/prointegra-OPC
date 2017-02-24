@@ -11,12 +11,12 @@ ROADMAP
     - WORD
     - REAL
     - STRING
++ check if database table has changed before update it via SQL. (speed it up)
 ...
 #KNOWN BUGS
 + more safety checks, if no good xml files found no work!
 + only tested with modbus TCP/IP
-+ not working properly the modbus TCP/IP daemon, it has to be launch standalone:
-```
-./comm/modbus_client/modbus_client ./comm/modbus_client/MBTCP.ini
-```
++ log files for daemons no working
++ garbage recollecting after exiting
+
 

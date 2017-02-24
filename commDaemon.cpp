@@ -12,7 +12,8 @@
  *  This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
-/*!@file commDaemon.cpp
+/**
+@file commDaemon.cpp
 '''launching,checking,logging... communication daemon manager class'''
 */
 
@@ -101,7 +102,7 @@ int CommDaemon::launchDaemons()
 {
   //std::cout << "DEBUG: (inside CommDaemon::launchDaemons)" << std::endl;
   int failed = -1, result = 0;
-  int *protocol;
+  int protocol = 0;
 
   if(!daemons.empty())
     {
@@ -111,15 +112,15 @@ int CommDaemon::launchDaemons()
    
 	    if(daemons.at(i) == PROT_MODBUS_TCP)
 	      {
-		int *protocol = &daemons.at(i);
 		std::cout << "ERROR:(inside CommDaemon::launchDaemon) creating thread for:" << daemons.at(i) << std::endl;
-		result = pthread_create(slaveThread, NULL, launchMBUS , (void *) protocol);
+		result = pthread_create(slaveThread, NULL, launchMBUS , (void *) (intptr_t) daemons.at(i));
 		failed = 0;
 		if (result)
 		  {
 		    std::cout << "ERROR:(inside CommDaemon::launchDaemon) unable to create thread!:" << result << std::endl;
 		    failed = -1;
 		  }
+
 	      }
 	}
     }
@@ -192,14 +193,15 @@ int renameOldLog(int protocol,char** logPath)
 
 int setExecutable(int commId,char **executable)
 {
+  std::cout << "DEBUG:(inside CommDaemon::setExecutable)"<< std::endl;
   int failed = -1;
   static char *file1 = NULL;
-
+  std::cout << "DEBUG:(inside CommDaemon::setExecutable) commId:" << commId << std::endl;
   if(commId == PROT_MODBUS_TCP)
     {
 
       file1 = new char[sizeof("./comm/modbus_client/modbus_client ./comm/modbus_client/") + 40];
-      sprintf(file1,"./comm/modbus_client/modbus_client ./comm/modbus_client/MBUSTCP.ini &");
+      sprintf(file1,"./comm/modbus_client/modbus_client ./comm/modbus_client/MBTCP.ini");
       failed = 0;
     }
   *executable = file1;
@@ -208,7 +210,7 @@ int setExecutable(int commId,char **executable)
 
 void* launchMBUS(void * protocol)
 {
-  std::cout << "ERROR:(inside CommDaemon::launchMBUS)"<< std::endl;
+  std::cout << "DEBUG:(inside CommDaemon::launchMBUS)"<< std::endl;
   char buffer[500];
   std::string result;
   char *tmpString = NULL;
@@ -219,8 +221,8 @@ void* launchMBUS(void * protocol)
   struct tm * timeInfo;
   int lines = 0;
   const int maxLines = 20000;
-  int type = (long)protocol;
-
+  int type = (intptr_t) protocol;
+  
   renameOldLog(type,&tmpString);
   fout = fopen(tmpString,"w");
   delete tmpString;
@@ -229,25 +231,27 @@ void* launchMBUS(void * protocol)
     {
       std::shared_ptr<FILE> pipe(popen(tmpString, "r"), pclose);
       if (!pipe) throw std::runtime_error("popen() failed!");
+      std::cout << "DEBUG:(inside CommDaemon::launchMBUS) executable was launched: " << tmpString << std::endl;
       while (!feof(pipe.get()))
 	{
-	  //if (fgets(buffer, 500, pipe.get()) != NULL)
-	  //  {
-	  //    time(&rawTime);
-	  //    timeInfo = localtime(&rawTime);
-	  //    strftime (timeBuffer,10,"%T: ",timeInfo);	      
-	  //    fprintf(fout,"%s%s", timeBuffer,buffer);
-	  //    lines++;
-	  //    if(lines >= maxLines)
-	  //	{
-          //		  rewind(fout);
-	  //	  lines = 0;
-	  //	}
-	  //  }
+	  if (fgets(buffer, 500, pipe.get()) != NULL)
+	    {
+	      time(&rawTime);
+	      timeInfo = localtime(&rawTime);
+	      strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	      fprintf(fout,"%s%s", timeBuffer,buffer);
+	      lines++;
+	      if(lines >= maxLines)
+	  	{
+		  rewind(fout);
+	  	  lines = 0;
+	  	}
+	    }
 	}
       delete tmpString;
     }
-  std::cout << "ERROR:(inside CommDaemon::launchMBUS) exiting!"<< std::endl;
+  else
+    std::cout << "DEBUG:(inside CommDaemon::launchMBUS) executable was launched and has finished: " << tmpString << std::endl;
   pthread_exit(NULL);
   fclose(fout);
 }
