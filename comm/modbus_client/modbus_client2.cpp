@@ -1,5 +1,11 @@
 /***************************************************************************
- *   client for Modbus with pvbrowser                                      *
+ *   client for Modbus with pvbrowser (version 2)                          *
+ *                                                                         *
+ *   copyright (original code): (C) 2000 by R. Lehrig                      *
+ *   email                    : lehrig@t-online.de                         *
+ *                                                                         *
+ *   copyright (modified code): (C) 2017 by J. Cuéllar                     *
+ *   email                    : joa.cuellar@riseup.net                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -22,12 +28,13 @@
 #include <ctype.h>
 #include <vector>
 #include <time.h>
+#include <signal.h>
 #include "rlmodbus.h"
 #include "rlthread.h"
 #include "rlinifile.h"
 #include "rlspreadsheet.h"
 #include "rldataacquisitionprovider.h"
-#include "rlsharedmemory.h" //TEST
+#include "rlsharedmemory.h"
 #include "rlmailbox.h"
 #include "rlsocket.h"
 #include "rlserial.h"
@@ -71,7 +78,6 @@ rlThread                  *thread                   = NULL;
 rlMailbox                 *mbx                      = NULL;
 rlModbus                  *modbus                   = NULL;
 rlSocket                  *mySocket                 = NULL;
-std::vector <rlSocket*>   mySockets;
 rlSerial                  *tty                      = NULL;
 
 //logging
@@ -79,8 +85,83 @@ char timeBuffer[10];
 time_t rawTime;
 struct tm * timeInfo;
 FILE *fout;
+static int                use_logging               = 0;
 
 static int modbus_idletime = (4*1000)/96;
+
+static int mbexit = 0;
+
+/*! function for garbage collecting when program exits SIGTERM, and SIGINT*/
+static void exitHandler(int s)
+{
+  printf("\n** Bye, thanks for using modbus_client! **\n");
+  mbexit = 1;
+
+  return;
+}
+
+
+/*! function for init modbus communications*/
+static int initModbus()
+{
+  int ret = 0;
+  modbus = new rlModbus(1024,protocol);
+  if(use_socket)
+    {
+      mySocket =  new rlSocket(ips.at(0).ip,port,1);
+      modbus->registerSocket(mySocket);
+      mySocket->connect();
+      
+      if(mySocket->isConnected()) printf("success connecting to %s:%d\n", ips.at(0).ip, port);
+      else                        printf("WARNING: could not connect to %s:%d\n", ips.at(0).ip, port);	
+    }
+  else
+    {
+      tty = new rlSerial();
+      if(tty->openDevice(devicename,baudrate,1,rtscts,8,stopbits,parity) < 0)
+	{
+	  printf("ERROR: could not open device=%s\n", devicename);
+	  printf("check if you have the necessary rights to open %s\n", devicename);
+	  ret = -1;
+	}
+      modbus->registerSerial(tty);
+    }
+
+  return ret;
+}
+/*! function for init logging to file option*/
+static int initLogging(rlIniFile* ini)
+{
+
+  int ret = 0;
+  char * oldLogFile;
+
+  if(!strlen(ini->text("LOGGING","LOG")))
+    {
+      ret = -1;
+      use_logging = 0;
+    }
+  else
+    {
+      oldLogFile = new char[strlen(ini->text("LOGGING","LOG")) +10];
+      sprintf(oldLogFile,"%s.OLD",ini->text("LOGGING","LOG"));
+      rename(ini->text("LOGGING","LOG"),oldLogFile);
+      fout = fopen(ini->text("LOGGING","LOG"),"w");
+      if(fout == NULL)
+	{
+	  ret = -1;
+	  use_logging = 0;
+	}
+      else
+	{
+	  ret = 0;
+	  use_logging = 1;
+	}
+      delete [] oldLogFile;
+    }
+      
+  return ret;
+}
 
 static void *mailboxReadThread(void *arg)
 {
@@ -154,6 +235,7 @@ static void *mailboxReadThread(void *arg)
   return arg;
 }
 
+/*! initialization function, taking data from the .ini file*/
 static int init(int ac, char **av)
 {
   int i;
@@ -343,33 +425,12 @@ static int init(int ac, char **av)
     printf("mailbox_status ERROR\n");
     return -1;
   }
-
-  modbus = new rlModbus(1024,protocol);
-  if(use_socket)
-    {
-      mySocket =  new rlSocket(ips.at(0).ip,port,1);
-      modbus->registerSocket(mySocket);
-      mySocket->connect();
-      
-      if(mySocket->isConnected()) printf("success connecting to %s:%d\n", ips.at(0).ip, port);
-      else                        printf("WARNING: could not connect to %s:%d\n", ips.at(0).ip, port);	
-  }
-  else
-  {
-    tty = new rlSerial();
-    if(tty->openDevice(devicename,baudrate,1,rtscts,8,stopbits,parity) < 0)
-    {
-      printf("ERROR: could not open device=%s\n", devicename);
-      printf("check if you have the necessary rights to open %s\n", devicename);
-      return -1;
-    }
-    modbus->registerSerial(tty);
-  }
-
+  //modbus
+  if(initModbus())
+    return -1;
   //logging
-  fout = fopen("MBUSTCP.log","w");
-
-  
+  if(initLogging(&ini))
+    if (debug) printf("No logging any information\n");
   return 0;
 }
 
@@ -404,30 +465,37 @@ static int modbusCycle(int slave, int function, int start_adr, int num_register,
       //select different socket
       if(slave!=actualSlave && use_socket == 1)
 	{
-	  time(&rawTime);
-	  timeInfo = localtime(&rawTime);
-	  strftime (timeBuffer,10,"%T: ",timeInfo);	      
-	  fprintf(fout,"%s: SOCKET CHANGE ADDRESS TO %s\n", timeBuffer,ips.at(slave-1).ip);
-	  //printf("SOCKET DISCONNECT\n");
-	  //mySocket->disconnect();
-	  printf("SOCKET CHANGE ADDRESS\n");
+	  if(use_logging)
+	    {
+	      time(&rawTime);
+	      timeInfo = localtime(&rawTime);
+	      strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	      fprintf(fout,"%s SOCKET CHANGE ADDRESS TO %s\n", timeBuffer,ips.at(slave-1).ip);
+	    }
+	  if (debug) printf("SOCKET CHANGE ADDRESS TO %s\n",ips.at(slave-1).ip);
 	  mySocket->setAdr(ips.at(slave-1).ip);
-	  time(&rawTime);
-	  timeInfo = localtime(&rawTime);
-	  strftime (timeBuffer,10,"%T: ",timeInfo);	      
-	  fprintf(fout,"%s: DISCONNECTING SOCKET\n", timeBuffer);
-	  printf("SOCKET DISCONNECT\n");
+	  if(use_logging)
+	    {
+	      time(&rawTime);
+	      timeInfo = localtime(&rawTime);
+	      strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	      fprintf(fout,"%s DISCONNECTING SOCKET\n", timeBuffer);
+	    }
+	  if (debug) printf("DISCONNECTING SOCKET\n");
 	  mySocket->disconnect();
-	  time(&rawTime);
-	  timeInfo = localtime(&rawTime);
-	  strftime (timeBuffer,10,"%T: ",timeInfo);	  
-	  fprintf(fout,"%s: RECONNECTING SOCKET\n", timeBuffer);
-	  printf("SOCKET RECONNECT\n");
+	  if(use_logging)
+	    {	  
+	      time(&rawTime);
+	      timeInfo = localtime(&rawTime);
+	      strftime (timeBuffer,10,"%T: ",timeInfo);	  
+	      fprintf(fout,"%s RECONNECTING SOCKET\n", timeBuffer);
+	    }
+	  if (debug) printf("RECONNECTING SOCKET\n");
 	  mySocket->connect();
 	  actualSlave = slave;
 	  fflush( fout );
 	}
-      printf("MODBUS REQUEST\n");
+      if (debug) printf("MODBUS REQUEST\n");
       ret = modbus->request(slave, function, start_adr, num_register);
       if(ret >=0)
 	ret = modbus->response( &slave, &function, localData);
@@ -439,17 +507,23 @@ static int modbusCycle(int slave, int function, int start_adr, int num_register,
 	  poll_slave_counter[slave] = n_poll_slave;
 	  if(use_socket)
 	    {
-	      time(&rawTime);
-	      timeInfo = localtime(&rawTime);
-	      strftime (timeBuffer,10,"%T: ",timeInfo);	      
-	      fprintf(fout,"%s: DISCONNECTING SOCKET\n", timeBuffer);
-	      printf("SOCKET DISCONNECT\n");
+	      if(use_logging)
+		{	  
+		  time(&rawTime);
+		  timeInfo = localtime(&rawTime);
+		  strftime (timeBuffer,10,"%T: ",timeInfo);	      
+		  fprintf(fout,"%s DISCONNECTING SOCKET\n", timeBuffer);
+		}
+	      if (debug) printf("DISCONNECTING SOCKET\n");
 	      mySocket->disconnect();
-	      time(&rawTime);
-	      timeInfo = localtime(&rawTime);
-	      strftime (timeBuffer,10,"%T: ",timeInfo);	  
-	      fprintf(fout,"%s: RECONNECTING SOCKET\n", timeBuffer);
-	      printf("SOCKET RECONNECT\n");
+	      if(use_logging)
+		{
+		  time(&rawTime);
+		  timeInfo = localtime(&rawTime);
+		  strftime (timeBuffer,10,"%T: ",timeInfo);	  
+		  fprintf(fout,"%s RECONNECTING SOCKET\n", timeBuffer);
+		}
+	      if (debug) printf("RECONNECTING SOCKET\n");
 	      mySocket->connect();
 	      fflush( fout );
 	    }
@@ -534,30 +608,47 @@ int main(int argc,char *argv[])
 {
   rlSpreadsheetCell *cell;
   int i, lifeCounter;
+  struct sigaction sigIntHandler;
+  
+  //exit handling
+  sigIntHandler.sa_handler = exitHandler;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+  sigaction(SIGINT, &sigIntHandler, NULL);
+  sigaction(SIGTERM, &sigIntHandler, NULL);  
+  //
 
   if(init(argc, argv) != 0)
   {
     return -1;
-  }  
+  }
   thread->create(mailboxReadThread,NULL);
   lifeCounter = 0;
-  while(1)                 // forever run the daemon
+  while(!mbexit)                 // run daemon just exit signal, for garbage collecting
   {
     cell = namelist->getFirstCell();
     for(i=0; i<num_cycles; i++)
     {
       if(cell == NULL) break;
       strcpy(var,cell->text());
-      // thread->lock();   // done in modbusCycle
       readModbus(i);
-
-      // thread->unlock(); // done in modbusCycle
       cell = cell->getNextCell();
     }
     provider->setLifeCounter(lifeCounter++);
     if(lifeCounter >= 256*256) lifeCounter = 0;
     rlsleep(cycletime);
   }
+  
+  thread->cancel();
+  delete thread;
+  delete mbx;
+  delete provider;
+  delete modbus;
+  if (use_socket)
+      delete mySocket;
+  else
+      delete tty;  
+  delete namelist;
   return 0;
 }
 

@@ -47,7 +47,11 @@ int IniConfigurator::iniMBTCPCreate(char *iniFile, std::vector <mbSlaves> params
       fprintf(pFile,"CYCLETIME=500\n");
       fprintf(pFile,"N_POLL_SLAVE=0\n");      
       fprintf(pFile,"\n");
-
+      //logging capability //only available with modbus_client2 no 1
+      fprintf(pFile,"[LOGGING]\n");
+      fprintf(pFile,"LOG=\n");
+      fprintf(pFile,"\n");
+      
       writMBTCPSocket(pFile,params);
 
       fprintf(pFile,"[RLLIB]\n");

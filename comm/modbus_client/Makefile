@@ -48,8 +48,8 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = modbus_clientv2.cpp 
-OBJECTS       = modbus_clientv2.o
+SOURCES       = modbus_client2.cpp 
+OBJECTS       = modbus_client2.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -128,7 +128,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		modbus_client.pro  modbus_clientv2.cpp
+		modbus_client.pro  modbus_client2.cpp
 QMAKE_TARGET  = modbus_client
 DESTDIR       = #avoid trailing-slash linebreak
 TARGET        = modbus_client
@@ -358,7 +358,7 @@ compiler_clean:
 
 ####### Compile
 
-modbus_clientv2.o: modbus_clientv2.cpp /opt/pvb/rllib/lib/rlmodbus.h \
+modbus_client2.o: modbus_client2.cpp /opt/pvb/rllib/lib/rlmodbus.h \
 		/opt/pvb/rllib/lib/rldefine.h \
 		/opt/pvb/rllib/lib/rlsocket.h \
 		/opt/pvb/rllib/lib/rlstring.h \
@@ -370,7 +370,7 @@ modbus_clientv2.o: modbus_clientv2.cpp /opt/pvb/rllib/lib/rlmodbus.h \
 		/opt/pvb/rllib/lib/rldataacquisitionprovider.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlmailbox.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbus_clientv2.o modbus_clientv2.cpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbus_client2.o modbus_client2.cpp
 
 ####### Install
 
