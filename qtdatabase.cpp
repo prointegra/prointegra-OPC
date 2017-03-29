@@ -222,7 +222,70 @@ int qtDatabase::retData(PARAM *p, char **** table, int **columns, int **rows)
   *rows = pointY;
   return failed;
 }
+/*! C++ style ret data fucntion from sql query*/
+int qtDatabase::retData(PARAM *p, std::vector< std::vector < std::string>> & sqlResult)
+{
+  //std::cout << "DEBUG: (inside qtDatabase::retData)" << std::endl;
+  int x,y,xmax,ymax, failed = -1;
+  std::vector <std::string> rowResult;
+  std::string strResult;
 
+  if(db != NULL)
+  {
+    // set table dimension
+    xmax = result->record().count();
+    //
+    // Using SQLITE a user from our forum found an issue
+    // getting ymax.
+    // With SQLITE numRowsAffected() does not return the correct value.
+    // Other database systems do.
+    //
+    if(db->driverName() == "QSQLITE")
+      {
+	result->last();
+	ymax = result->at()+1;
+	result->first();
+	//printf("SQLITE ymax = %d \n",ymax);
+      }
+    else
+      {
+	ymax = result->numRowsAffected();
+	//printf("no SQLITE, ymax = %d \n",ymax);
+      }
+    //std::cout << "DEBUG: (inside qtDatabase::retData) return of columns:" << xmax <<"  and rows:" << ymax << std::endl;
+    // populate table
+    QSqlRecord record = result->record();
+    if(!record.isEmpty())
+      {
+	result->next();
+	for(y=0; y<ymax; y++)
+	  { // write fields
+	    QSqlRecord record = result->record();
+	    rowResult.clear();
+	    for(x=0; x<xmax; x++)
+	      {
+		QSqlField f = record.field(x);
+		if(f.isValid())
+		  {
+		    QVariant v = f.value();
+		    strResult.clear();
+		    //strResult = v.toChar();
+		    rowResult.push_back(v.toString().toUtf8().constData());
+		  }
+		else
+		  {
+		    rowResult.push_back("ERROR");
+		  }
+	      }
+	    sqlResult.push_back(rowResult);
+	    result->next();
+	  }
+	failed = 0;
+      }
+  }
+  //std::cout << "DEBUG: (inside qtDatabase::retData) returning" << std::endl; 
+  return failed;
+}
 const char *qtDatabase::recordFieldValue(PARAM *p, int x)
 {
   QSqlRecord record = result->record();

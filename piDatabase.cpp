@@ -331,6 +331,87 @@ int DBInterface::setFieldValue(int table, int field, int value)
   return ret;
 }
 
+/*!function to check if a tbale is modified to lock it for a period*/
+int DBInterface::lockTables()
+{
+  std::cout << "DEBUG:(inside DBInterface::lockTables)" << std::endl; 
+  int failed = -1;
+
+
+  for(int i = 0; i < parameters.numTables; i++)
+    {
+      failed = failed + lockTable(tables[i]->retId());
+    }
+  
+  return failed;
+}
+/*!function to check if a table is locked*/
+int DBInterface::lockTable(int id)
+{
+  std::cout << "DEBUG:(inside DBInterface::lockTable)" << std::endl;
+  int found = 0;
+  int failed = -1;
+  char * sql = NULL;
+  std::vector < std::vector < std::string>> sqlReturn;
+
+
+  for(int i = 0; i < parameters.numTables && !found; i++)
+    {
+ 
+      if(tables[i]->retId() == id)
+	{
+	  tables[i]->sqlSelectAll(parameters,sql);
+	  query(NULL,sql);
+	  if(retData(NULL,sqlReturn))
+	    std::cout <<"ERROR:(inside DBInterface::lockTable) retData return error!" << std::endl;
+	  tables[i]->lockOrUnlock(sqlReturn,1); //1 for skipping id field
+	  failed = 0;	 
+	  if(sql != NULL)
+	    delete [] sql;
+	  found = 1;
+	}
+    } 
+  return failed;
+}
+/*!function to check if a table is locked*/
+int DBInterface::unlockTable(int id)
+{
+  std::cout << "DEBUG:(inside DBInterface::isTableLocked)" << std::endl; 
+  int failed = -1;
+  int found = 0;
+
+  for(int i = 0; i < parameters.numTables && !found; i++)
+    {
+      if(tables[i]->retId() == id)
+	{
+	  tables[i]->unlock();
+	  failed = 0;
+	  found = 1;
+	}
+
+    }
+  
+  return failed;
+}
+/*!function to check if a table is locked*/
+int DBInterface::isTableLocked(int id)
+{
+  std::cout << "DEBUG:(inside DBInterface::isTableLocked)" << std::endl; 
+  int locked = 0;
+  int found = 0;
+
+
+  for(int i = 0; i < parameters.numTables && !found; i++)
+    {
+      if(tables[i]->retId() == id)
+	{
+	  locked = tables[i]->islocked();
+	  found = 1;
+	}
+    }
+  
+  return locked;
+}
 /*!function to take tables triggers*/
 int DBInterface::takeTriggers()
 {
@@ -599,7 +680,7 @@ int DBInterface::fieldLink(int table, int field, int slave, int tag)
 int DBInterface::delTable(char ***& table, int *&x, int *&y)
 {
   int rows = 0;
-  //std::cout << "DEBUG: (inside DBInterface::delTable)" << std::endl;
+  std::cout << "DEBUG: (inside DBInterface::delTable) *x= " << *x << "  *y= "<< *y << std::endl;
    if(y != NULL)
     {
       delete y;
@@ -613,7 +694,6 @@ int DBInterface::delTable(char ***& table, int *&x, int *&y)
     delete [] table[i];
   if (table != NULL)
     delete table;
-  
   return 0;
 }
 

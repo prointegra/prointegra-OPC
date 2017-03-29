@@ -13,7 +13,7 @@
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/**
+/*!
 @file capture.c
 */
 
@@ -173,7 +173,10 @@ int ProintegraOPC::dataToComm()
 	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) tableFail:"<< tableFail << std::endl;
 	  //resetting trigger
 	  if(!tableFail)
-	    hDatabase[i]->wTriggerDoneAt(j);
+	    {
+	      hDatabase[i]->unlockTable(tablesList.at(j));
+	      hDatabase[i]->wTriggerDoneAt(j);
+	    }
 	  failed = failed +tableFail;
 	  tableFail = 0;
 	    
@@ -201,22 +204,25 @@ int ProintegraOPC::dataToDB()
       
       for(int j=0; j < tablesList.size() ; j++)
 	{
-	  failed = failed & hDatabase[i]->retDataFrTable(tags, tablesList.at(j));
-	  for (int k = 0; k < tags.size(); k++)
+	  if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
 	    {
-	      for (int l = 0; l < tags[k].fromTags.size(); l++)
+	      failed = failed & hDatabase[i]->retDataFrTable(tags, tablesList.at(j));
+	      for (int k = 0; k < tags.size(); k++)
 		{
-		  for (int m = 0; m < tags[k].fromTags[l].size(); m++)
-		    {		 
-		      tableFail = tableFail + hSlaves[l]->readTag(tags[k].fromTags[l].at(m));
-		      tags[k].iValue = hSlaves[l]->retTagValue(tags[k].fromTags[l].at(m));
-		      tags[k].isValid = hSlaves[l]->retTagValid(tags[k].fromTags[l].at(m));
+		  for (int l = 0; l < tags[k].fromTags.size(); l++)
+		    {
+		      for (int m = 0; m < tags[k].fromTags[l].size(); m++)
+			{		 
+			  tableFail = tableFail + hSlaves[l]->readTag(tags[k].fromTags[l].at(m));
+			  tags[k].iValue = hSlaves[l]->retTagValue(tags[k].fromTags[l].at(m));
+			  tags[k].isValid = hSlaves[l]->retTagValid(tags[k].fromTags[l].at(m));
+			}
 		    }
 		}
+	      hDatabase[i]->rTriggerDoneAt(j);
+	      hDatabase[i]->storeData(tablesList.at(j),tags);
+	      failed = failed +tableFail;
 	    }
-	  hDatabase[i]->rTriggerDoneAt(j);
-	  hDatabase[i]->storeData(tablesList.at(j),tags);
-	  failed = failed +tableFail;
 	}
     }
   
@@ -272,6 +278,7 @@ int ProintegraOPC::loop()
 	    }
 	  if(!failed)
 	    {
+	      lockTables();
 	      getTriggers();
 	      showTriggers();
 	      dataToComm();
@@ -292,6 +299,20 @@ int ProintegraOPC::loop()
   return 0;   
 }
 
+/*!function for locking any modified table in database, waiting later to be written to Comm*/
+int ProintegraOPC::lockTables()
+{
+  std::cout << "DEBUG:(inside ProintegraOPC::lockTables)" << std::endl; 
+  int failed = -1;
+ 
+  failed = 0;
+  for(int i=0; i < nDBs; i++)
+    {
+      failed = failed +  hDatabase[i]->lockTables(); 
+    }
+  
+  return failed;
+}
 /*!function for getting a complete list of trigered triggers*/
 int ProintegraOPC::getTriggers()
 {

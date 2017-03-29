@@ -52,6 +52,10 @@ class DBTable
   virtual int sqlSelectAll(databaseParameters dbParameters,char* & sql);
   virtual int sqlSelectAllMysql(char* & sql);
   virtual int sqlSelectAllSqlite(char* & sql);
+
+  virtual int lockOrUnlock(std::vector< std::vector < std::string>> data, int skip);
+  virtual int islocked(){ return parameters.locked;};
+  virtual void unlock(){parameters.locked = 0;};
   
   //return private members
   int retNumFields(){return parameters.numFields;};

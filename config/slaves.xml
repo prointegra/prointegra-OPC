@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<slave name="test" protocol="MODBUSTCP" port="">
+	<MODBUSTCP addr="172.26.0.17" port="502">
+		<tag name="mbus_1" addr="100" type="WORD"/>
+		<tag name="mbus_2" addr="101" type="WORD"/>
+		<tag name="mbus_3" addr="102" type="WORD"/>
+		<tag name="rplc3_1" addr="1102" type="WORD"/>
+		<tag name="rplc3_2" addr="1103" type="WORD"/>
+		<tag name="sinoptico3_1" addr="1104" type="WORD"/>
+		<tag name="sinoptico3_2" addr="1105" type="WORD"/>
+		<tag name="sinoptico3_3" addr="1106" type="WORD"/>
+		<tag name="sinoptico3_4" addr="1107" type="WORD"/>
+		<tag name="sinoptico3_5" addr="1108" type="WORD"/>
+		<tag name="sinoptico3_6" addr="1109" type="WORD"/>
+		<tag name="sinoptico3_7" addr="1110" type="WORD"/>
+		<tag name="sinoptico3_8" addr="1111" type="WORD"/>
+		<tag name="INT_TSX_R[0]" addr="1112" type="WORD"/>
+		<tag name="INT_TSX_R[1]" addr="1117" type="WORD"/>
+		<tag name="INT_TSX_R[2]" addr="1118" type="WORD"/>
+		<tag name="INT_TSX_R[3]" addr="1119" type="WORD"/>
+		<tag name="INT_TSX_R[4]" addr="1120" type="WORD"/>
+		<tag name="INT_TSX_R[5]" addr="1121" type="WORD"/>
+		<tag name="INT_TSX_R[6]" addr="1122" type="WORD"/>
+		<tag name="INT_TSX_R[7]" addr="1123" type="WORD"/>
+	</MODBUSTCP>
+</slave>
+

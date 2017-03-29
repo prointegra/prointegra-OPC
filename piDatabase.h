@@ -54,6 +54,10 @@ class DBInterface : public qtDatabase
   int setFieldValid(int table,int field, int valid);
   int setFieldValue(int table,int field, int value);
   //triggers functions
+  int lockTables();
+  int lockTable(int id);  
+  int unlockTable(int id);
+  int isTableLocked(int id);
   int takeTriggers();
   int takeTimeTriggers();
   int takeSQLTriggers();

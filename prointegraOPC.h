@@ -58,6 +58,7 @@ class ProintegraOPC
   int checkComm();  
   //capturing functions
   int loop();
+  int lockTables();
   int dataCapture();
   int dataToComm();
   int dataToDB();

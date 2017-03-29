@@ -608,6 +608,7 @@ int DBTable::updateMysql(char **sql)
   *sql = sqlQuery;
   return 0;
 }
+
 /*sql functions TODO: to fill with standard sql functions*/
 /*!select all from table*/
 int DBTable::sqlSelectAll(databaseParameters dbParameters,char* & sql)
@@ -642,6 +643,34 @@ int DBTable::sqlSelectAllSqlite(char* & sql)
   failed = 0;
   return failed;
 }
+
+/*!function for locking a table when is being written*/
+int DBTable::lockOrUnlock(std::vector < std::vector < std::string>> data , int skip)
+{
+  std::cout << "DEBUG: (inside DBTable::lockOrUnlock)" << std::endl;
+  int locked = 0;
+  //sanity checks
+  if(data.size() == 1 && data.at(0).size() > skip)
+    {
+      if(data.at(0).size()-skip == parameters.numFields)
+	{
+	  for(int i = skip; i < data.at(0).size(); i++)
+	    {	      
+	      if(strcmp(data[0][i].c_str(),"NULL"))
+		if(parameters.stField[i-skip].iValue != atoi(data[0][i].c_str()))
+		   locked = 1;
+	    }
+	}
+    }
+
+  if(locked)
+    parameters.locked++;
+  if(parameters.locked > CONF_TABLE_LOCK_LIMIT)
+    parameters.locked = 0;
+  std::cout << "DEBUG: (inside DBTable::lockOrUnlock) finished" << std::endl;
+  return locked;
+}
+
 
 /*!function to return a field tag
 TODO: it should, for convention, only return once*/

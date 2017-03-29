@@ -16,7 +16,12 @@
 #include <QSqlError>
 #include <QVariant>
 #include <qstring.h>
+
+#include <vector>
+#include <string.h>
+
 #include "processviewserver.h"
+
 
 /**
 The currently available driver types are:
@@ -42,6 +47,7 @@ class qtDatabase
     int query(PARAM *p, const char *sqlcommand);
     int populateTable(PARAM *p, int id);
     int retData(PARAM *p, char ****table, int **px, int **py);
+    int retData(PARAM *p,std::vector < std::vector < std::string>> & sqlResult);
     const char *recordFieldValue(PARAM *p, int x);
     int nextRecord();
 

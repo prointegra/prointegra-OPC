@@ -112,7 +112,7 @@ int CommDaemon::launchDaemons()
    
 	    if(daemons.at(i) == PROT_MODBUS_TCP)
 	      {
-		std::cout << "ERROR:(inside CommDaemon::launchDaemon) creating thread for:" << daemons.at(i) << std::endl;
+		std::cout << "DEBUG:(inside CommDaemon::launchDaemon) creating thread for:" << daemons.at(i) << std::endl;
 		result = pthread_create(slaveThread, NULL, launchMBUS , (void *) (intptr_t) daemons.at(i));
 		failed = 0;
 		if (result)
@@ -232,6 +232,7 @@ void* launchMBUS(void * protocol)
       std::shared_ptr<FILE> pipe(popen(tmpString, "r"), pclose);
       if (!pipe) throw std::runtime_error("popen() failed!");
       std::cout << "DEBUG:(inside CommDaemon::launchMBUS) executable was launched: " << tmpString << std::endl;
+      delete tmpString;
       while (!feof(pipe.get()))
 	{
 	  if (fgets(buffer, 500, pipe.get()) != NULL)
@@ -243,12 +244,12 @@ void* launchMBUS(void * protocol)
 	      lines++;
 	      if(lines >= maxLines)
 	  	{
-		  rewind(fout);
+	  	  rewind(fout);
 	  	  lines = 0;
 	  	}
 	    }
+
 	}
-      delete tmpString;
     }
   else
     std::cout << "DEBUG:(inside CommDaemon::launchMBUS) executable was launched and has finished: " << tmpString << std::endl;
