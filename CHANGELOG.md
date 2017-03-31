@@ -6,6 +6,7 @@ CHANGELOG
 + new features
     - time triggered read tables implemented
     - new modbus_client2 integrated
+    - locking tables when being edited, number of lock cycles in config.h
 + polished
     - some info messages improved
     - some debug code removed at piDatabase.cpp
@@ -15,6 +16,7 @@ CHANGELOG
     - some memory leaks fixed at piDatabase.cpp
     - some memory leaks fixed at piComm.cpp
     - at config.cpp (int checkSlaveName function) returned always failed with more than 1 slave
+    - delTable error in piDatabase, solved programming more C++ like style.
 
 **v0.0.3: (2017/02/07)**
 + BETHA, app can now store INT tags values from MODBUS TCP/IP slave, and write to them.

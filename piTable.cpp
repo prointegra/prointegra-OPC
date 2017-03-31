@@ -773,18 +773,18 @@ int DBTable::setFieldValue(int field, int value)
 
 }
 /*!function to set a all values from table*/
-int DBTable::setAllValues(char ***table,int columns, int rows, int skip)
+int DBTable::setAllValues(std::vector<std::vector<std::string>> table, int skip)
 {
   int failed = -1;
   //sanity checks
-  if(rows > 0 && columns > skip)
+  if(table.size() > 0 && table.back().size() > skip)
     {
-      if(columns-skip == parameters.numFields)
+      if(table.back().size()-skip == parameters.numFields)
 	{
-	  for(int i = skip; i < columns; i++)
+	  for(int i = skip; i < table.back().size(); i++)
 	    {
-	      if(strcmp(table[rows-1][i],"NULL"))
-		 parameters.stField[i-skip].iValue=atoi(table[rows-1][i]);
+	      if(strcmp(table.back().at(i).c_str(),"NULL"))
+		parameters.stField[i-skip].iValue=atoi(table.back().at(i).c_str());
 	    }
 	  failed = 0;
 	}

@@ -214,9 +214,8 @@ int DBInterface::retrieveData(int id)
 {
   int failed = -1;
   char *sqlQuery;
-  char ***table;
-  int *x;
-  int *y;
+  std::vector<std::vector<std::string>> table;
+
 
   for(int i = 0; i <parameters.numTables;i++)
     {
@@ -224,12 +223,11 @@ int DBInterface::retrieveData(int id)
 	{
 	  tables[i]->sqlSelectAll(parameters,sqlQuery);
 	  query(NULL,sqlQuery);
-	  if(retData(NULL,&table,&x,&y))
+	  if(retData(NULL,table))
 	    std::cout <<"ERROR:(inside DBInterface::retDataFrTable) retData return error!" << std::endl;
-	  tables[i]->setAllValues(table,*x,*y,1); //1 for skipping id field
+	  tables[i]->setAllValues(table,1); //1 for skipping id field
 	  failed = 0;
 
-	  delTable(table,x,y);
 	  if(sqlQuery != NULL)
 	    delete sqlQuery;
 	}
@@ -448,9 +446,7 @@ int DBInterface::takeSQLTriggers()
   //std::cout << "DEBUG:(inside DBInterface::takeSQLTriggers)" << std::endl; 
   int failed = -1;
   char *sqlQuery;
-  char ***table;
-  int *x;
-  int *y;
+  std::vector<std::vector<std::string>> table;
   std::vector <char *> triggersOn;
   //SQL triggers
   triggersTable->sqlTrgsTgd(sqlQuery);
@@ -458,17 +454,15 @@ int DBInterface::takeSQLTriggers()
   query(NULL,sqlQuery);
   if (sqlQuery != NULL)
     delete sqlQuery;
-  if(retData(NULL,&table,&x,&y))
+  if(retData(NULL,table))
     std::cout <<"ERROR:(inside DBInterface::takeTriggers) retData return error!" << std::endl;
-  if(*y > 0)
+     if(table.size() > 0)
     {
-      for(int i =0;i<*y;i++)
+      for(int i =0;i<table.size();i++)
 	{
-	  triggersOn.push_back(new char[strlen(table[i][0]) + 1]);
-	  strcpy(triggersOn.at(i),table[i][0]); 
+	  triggersOn.push_back(new char[strlen(table[i][0].c_str()) + 1]);
+	  strcpy(triggersOn.at(i),table[i][0].c_str()); 
 	}     
-      //cleaning
-      delTable(table,x,y);
       failed = 0;
     }
   triggersTable->updtTrgsOn(triggersOn);
@@ -674,28 +668,6 @@ int DBInterface::fieldLink(int table, int field, int slave, int tag)
   return ret;
 }
 
-//
-//deleting elements functions
-/*! function for deleting a table returned from a database query function*/
-int DBInterface::delTable(char ***& table, int *&x, int *&y)
-{
-  int rows = 0;
-  std::cout << "DEBUG: (inside DBInterface::delTable) *x= " << *x << "  *y= "<< *y << std::endl;
-   if(y != NULL)
-    {
-      delete y;
-    }
-  if(x != NULL)
-    {
-      rows = *x;
-      delete x;
-    }
-  for (int i = (rows-1); i >= 0; i--)
-    delete [] table[i];
-  if (table != NULL)
-    delete table;
-  return 0;
-}
 
 //
 //DEBUG FUNCTIONS

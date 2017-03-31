@@ -72,8 +72,6 @@ class DBInterface : public qtDatabase
   std::vector<std::vector <int>> retFieldLink(int table, int field);
   int setFieldLink(int table, int field, int slave, int tag);
   int fieldLink(int table, int field, int slave, int tag);
-  //deleting memory functions
-  int delTable(char ***& table, int *&x, int *&y);
   //debug functions
   int showTriggers();
   

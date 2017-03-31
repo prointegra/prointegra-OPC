@@ -25,6 +25,9 @@
 #include <sstream>
 #include <time.h>
 
+#include <vector>
+#include <string.h>
+
 #include "config.h"
 
 
@@ -69,7 +72,7 @@ class DBTable
   //set attributes
   int setFieldValid(int field, int valid);
   int setFieldValue(int field, int value);
-  int setAllValues(char ***table, int columns, int rows, int skip);
+  int setAllValues(std::vector<std::vector<std::string>> table, int skip);
   int setId(int id);
   
 protected:  
