@@ -47,9 +47,9 @@ ProintegraOPC::ProintegraOPC()
       hSlaves[i]->setup(confParser->retSlaveParams(i));
       slavesParams.push_back(confParser->retSlaveParams(i));
     }
-  std::cout << "DEBUG: (inside ProintegraOPC::ProintegraOPC) new commDaemonManager instance" << std::endl;
+  std::cout << "INFO: (inside ProintegraOPC::ProintegraOPC) new commDaemonManager instance" << std::endl;
   commDaemonManager = new CommDaemon(slavesParams);
-  std::cout << "DEBUG: (inside ProintegraOPC::ProintegraOPC) ini comms Daemons" << std::endl;
+  //std::cout << "DEBUG: (inside ProintegraOPC::ProintegraOPC) ini comms Daemons" << std::endl;
   commDaemonManager->iniDaemons();
   //link database tags with slaves
   linkTags();
@@ -175,7 +175,7 @@ int ProintegraOPC::dataToComm()
 	  if(!tableFail)
 	    {
 	      hDatabase[i]->unlockTable(tablesList.at(j));
-	      hDatabase[i]->wTriggerDoneAt(j);
+	      hDatabase[i]->wTriggerDoneAt(tablesList.at(j));
 	    }
 	  failed = failed +tableFail;
 	  tableFail = 0;
@@ -280,7 +280,7 @@ int ProintegraOPC::loop()
 	    {
 	      lockTables();
 	      getTriggers();
-	      showTriggers();
+	      //showTriggers();
 	      dataToComm();
 	      dataToDB();
 	      delTriggers();
@@ -302,7 +302,7 @@ int ProintegraOPC::loop()
 /*!function for locking any modified table in database, waiting later to be written to Comm*/
 int ProintegraOPC::lockTables()
 {
-  std::cout << "DEBUG:(inside ProintegraOPC::lockTables)" << std::endl; 
+  //std::cout << "DEBUG:(inside ProintegraOPC::lockTables)" << std::endl; 
   int failed = -1;
  
   failed = 0;
@@ -316,7 +316,7 @@ int ProintegraOPC::lockTables()
 /*!function for getting a complete list of trigered triggers*/
 int ProintegraOPC::getTriggers()
 {
-  std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
+  //std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
   int failed = -1;
  
   failed = 0;
@@ -331,7 +331,7 @@ int ProintegraOPC::getTriggers()
 /*!function for deleting the complete list of trigered triggers*/
 int ProintegraOPC::delTriggers()
 {
-  std::cout << "DEBUG:(inside ProintegraOPC::delTriggers)" << std::endl; 
+  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers)" << std::endl; 
   int failed = -1;
   
   for(int i=0; i < nDBs; i++)

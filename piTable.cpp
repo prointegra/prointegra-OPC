@@ -647,7 +647,7 @@ int DBTable::sqlSelectAllSqlite(char* & sql)
 /*!function for locking a table when is being written*/
 int DBTable::lockOrUnlock(std::vector < std::vector < std::string>> data , int skip)
 {
-  std::cout << "DEBUG: (inside DBTable::lockOrUnlock)" << std::endl;
+  //std::cout << "DEBUG: (inside DBTable::lockOrUnlock)" << std::endl;
   int locked = 0;
   //sanity checks
   if(data.size() == 1 && data.at(0).size() > skip)
@@ -667,7 +667,7 @@ int DBTable::lockOrUnlock(std::vector < std::vector < std::string>> data , int s
     parameters.locked++;
   if(parameters.locked > CONF_TABLE_LOCK_LIMIT)
     parameters.locked = 0;
-  std::cout << "DEBUG: (inside DBTable::lockOrUnlock) finished" << std::endl;
+  //std::cout << "DEBUG: (inside DBTable::lockOrUnlock) finished" << std::endl;
   return locked;
 }
 

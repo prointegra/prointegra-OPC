@@ -188,7 +188,7 @@ int DBInterface::storeData()
 /*function for storing data to a  Database's table (by table Id)*/
 int DBInterface::storeData(int tableId, std::vector<field> data)
 {
-  std::cout << "DEBUG: (inside DBInterface::storeData)" << std::endl;
+  //std::cout << "DEBUG: (inside DBInterface::storeData)" << std::endl;
   int failed = -1;
   char *sqlQuery = NULL;
   
@@ -200,7 +200,7 @@ int DBInterface::storeData(int tableId, std::vector<field> data)
 	  tables[i]->updateData(data);
 	  failed = tables[i]->store(&parameters,&sqlQuery);
 	  //TODO: we should catch exceptions!
-	  std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << std::endl;
+	  //	  std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << std::endl;
 	  failed = failed + query(NULL,sqlQuery);
 	  if(sqlQuery != NULL)
 	    delete sqlQuery;
@@ -332,7 +332,7 @@ int DBInterface::setFieldValue(int table, int field, int value)
 /*!function to check if a tbale is modified to lock it for a period*/
 int DBInterface::lockTables()
 {
-  std::cout << "DEBUG:(inside DBInterface::lockTables)" << std::endl; 
+  //std::cout << "DEBUG:(inside DBInterface::lockTables)" << std::endl; 
   int failed = -1;
 
 
@@ -346,7 +346,7 @@ int DBInterface::lockTables()
 /*!function to check if a table is locked*/
 int DBInterface::lockTable(int id)
 {
-  std::cout << "DEBUG:(inside DBInterface::lockTable)" << std::endl;
+  //std::cout << "DEBUG:(inside DBInterface::lockTable)" << std::endl;
   int found = 0;
   int failed = -1;
   char * sql = NULL;
@@ -374,7 +374,7 @@ int DBInterface::lockTable(int id)
 /*!function to check if a table is locked*/
 int DBInterface::unlockTable(int id)
 {
-  std::cout << "DEBUG:(inside DBInterface::isTableLocked)" << std::endl; 
+  //std::cout << "DEBUG:(inside DBInterface::isTableLocked)" << std::endl; 
   int failed = -1;
   int found = 0;
 
@@ -394,7 +394,7 @@ int DBInterface::unlockTable(int id)
 /*!function to check if a table is locked*/
 int DBInterface::isTableLocked(int id)
 {
-  std::cout << "DEBUG:(inside DBInterface::isTableLocked)" << std::endl; 
+  //std::cout << "DEBUG:(inside DBInterface::isTableLocked)" << std::endl; 
   int locked = 0;
   int found = 0;
 
