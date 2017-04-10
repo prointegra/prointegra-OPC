@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+#include <execinfo.h>
 #include <signal.h>
 
 #include <time.h>
@@ -73,6 +74,7 @@ class ProintegraOPC
   int showTriggers();
   //EXIT HANDLER
   static void exitHandler(int s){lExit = 1;};
+  static void sigsevHandler(int s);
   int stopComm();
 
   

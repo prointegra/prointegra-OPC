@@ -456,12 +456,12 @@ main.o: main.cpp pvapp.h \
 		piTable.h \
 		piDataTable.h \
 		piComm.h \
-		iniConfigurator.h \
 		lib/gStools/libgStools.h \
 		lib/gStools/gStDate.h \
 		lib/gStools/gStMisc.h \
 		lib/gStools/gStConv.h \
-		commDaemon.h
+		commDaemon.h \
+		iniConfigurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 prointegraOPC.o: prointegraOPC.cpp prointegraOPC.h \
@@ -483,12 +483,12 @@ prointegraOPC.o: prointegraOPC.cpp prointegraOPC.h \
 		piTable.h \
 		piDataTable.h \
 		piComm.h \
-		iniConfigurator.h \
 		lib/gStools/libgStools.h \
 		lib/gStools/gStDate.h \
 		lib/gStools/gStMisc.h \
 		lib/gStools/gStConv.h \
-		commDaemon.h
+		commDaemon.h \
+		iniConfigurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o prointegraOPC.o prointegraOPC.cpp
 
 qtdatabase.o: qtdatabase.cpp qtdatabase.h \
@@ -498,7 +498,16 @@ qtdatabase.o: qtdatabase.cpp qtdatabase.h \
 		/opt/pvb/pvserver/wthread.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qtdatabase.o qtdatabase.cpp
 
-commDaemon.o: commDaemon.cpp commDaemon.h
+commDaemon.o: commDaemon.cpp commDaemon.h \
+		config.h \
+		lib/pugixml-1.7/src/pugixml.hpp \
+		lib/pugixml-1.7/src/pugiconfig.hpp \
+		/opt/pvb/rllib/lib/rldataacquisition.h \
+		/opt/pvb/rllib/lib/rldefine.h \
+		/opt/pvb/rllib/lib/rlmailbox.h \
+		/opt/pvb/rllib/lib/rlsharedmemory.h \
+		/opt/pvb/rllib/lib/rlwthread.h \
+		iniConfigurator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o commDaemon.o commDaemon.cpp
 
 piDatabase.o: piDatabase.cpp piDatabase.h \
@@ -564,7 +573,6 @@ piComm.o: piComm.cpp piComm.h \
 		/opt/pvb/rllib/lib/rlmailbox.h \
 		/opt/pvb/rllib/lib/rlsharedmemory.h \
 		/opt/pvb/rllib/lib/rlwthread.h \
-		iniConfigurator.h \
 		lib/gStools/libgStools.h \
 		lib/gStools/gStDate.h \
 		lib/gStools/gStMisc.h \

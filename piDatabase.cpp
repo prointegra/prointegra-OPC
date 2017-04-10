@@ -177,7 +177,7 @@ int DBInterface::storeData()
     {
       tables[i]->store(&parameters,&sqlQuery);
       //TODO: we should catch exceptions!
-      //std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
+      std::cout <<"DEBUG: SQL query: " <<  sqlQuery << std::endl;
       ret = ret + query(NULL,sqlQuery);
       if(sqlQuery != NULL)
 	delete sqlQuery;
@@ -191,6 +191,7 @@ int DBInterface::storeData(int tableId, std::vector<field> data)
   //std::cout << "DEBUG: (inside DBInterface::storeData)" << std::endl;
   int failed = -1;
   char *sqlQuery = NULL;
+
   
   for(int i=0;i < parameters.numTables;i++)
     {
@@ -200,12 +201,14 @@ int DBInterface::storeData(int tableId, std::vector<field> data)
 	  tables[i]->updateData(data);
 	  failed = tables[i]->store(&parameters,&sqlQuery);
 	  //TODO: we should catch exceptions!
-	  //	  std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << std::endl;
+	  //std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << " failed =" << failed << std::endl;
 	  failed = failed + query(NULL,sqlQuery);
+	  //std::cout << "DEBUG: (inside DBInterface::storeData)  query returned, failed =" << failed << std::endl;
 	  if(sqlQuery != NULL)
 	    delete sqlQuery;
 	}
     }
+  //std::cout << "DEBUG: (inside DBInterface::storeData) returning failed:" << failed << std::endl;
   return failed;
 }
 
@@ -221,10 +224,11 @@ int DBInterface::retrieveData(int id)
     {
       if (tables[i]->retId() == id)
 	{
+	  std::cout <<"INFO:(inside DBInterface::retDataFrTable) retrieving data from table:"<< i+1 << std::endl;
 	  tables[i]->sqlSelectAll(parameters,sqlQuery);
 	  query(NULL,sqlQuery);
 	  if(retData(NULL,table))
-	    std::cout <<"ERROR:(inside DBInterface::retDataFrTable) retData return error!" << std::endl;
+	    std::cout <<"INFO:(inside DBInterface::retDataFrTable) retData for table:"<< i+1 <<" returns nothing!" << std::endl;
 	  tables[i]->setAllValues(table,1); //1 for skipping id field
 	  failed = 0;
 
@@ -335,12 +339,13 @@ int DBInterface::lockTables()
   //std::cout << "DEBUG:(inside DBInterface::lockTables)" << std::endl; 
   int failed = -1;
 
-
+  //std::cout <<"INFO: Checking if some table need to be locked for writting ";
   for(int i = 0; i < parameters.numTables; i++)
     {
       failed = failed + lockTable(tables[i]->retId());
+      std::cout <<".";
     }
-  
+  std::cout << std::endl;
   return failed;
 }
 /*!function to check if a table is locked*/
@@ -359,9 +364,10 @@ int DBInterface::lockTable(int id)
       if(tables[i]->retId() == id)
 	{
 	  tables[i]->sqlSelectAll(parameters,sql);
+	  //std::cout <<"INFO:(inside DBInterface::lockTable) table:" << i+1 << " query:" << sql << std::endl;
 	  query(NULL,sql);
 	  if(retData(NULL,sqlReturn))
-	    std::cout <<"ERROR:(inside DBInterface::lockTable) retData return error!" << std::endl;
+	    std::cout <<"ERROR:(inside DBInterface::lockTable) table:" << i+1 << "returns no data or error! Check DATABASE!" << std::endl;
 	  tables[i]->lockOrUnlock(sqlReturn,1); //1 for skipping id field
 	  failed = 0;	 
 	  if(sql != NULL)
@@ -515,7 +521,7 @@ int DBInterface::resetSQLTriggers()
 {
   //std::cout << "DEBUG:(inside DBInterface::resetSQLTriggers)" << std::endl; 
   int failed = -1;
-  char *sqlQuery;
+  char *sqlQuery = NULL;
 
   failed = triggersTable->updtTrgsDone(triggersLst);
   /* ONLY FOR DEBUG PURPOSES
@@ -524,12 +530,12 @@ int DBInterface::resetSQLTriggers()
   failed = triggersTable->sqlTrgsDone(sqlQuery);
   if (!failed)
     {
-      //std::cout << "DEBUG: (inside DBInterface::resetTriggers) sql = " << sql << std::endl;
+      //std::cout << "DEBUG: (inside DBInterface::resetTriggers) sql = " << sqlQuery << std::endl;
       failed = query(NULL,sqlQuery);
     }
   if (sqlQuery != NULL)
     delete sqlQuery;
-
+  //std::cout << "DEBUG:(inside DBInterface::resetSQLTriggers) returning" << std::endl; 
   return failed;
 }
 /*!function to mark the writting trigger to a table as done*/

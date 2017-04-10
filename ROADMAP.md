@@ -13,7 +13,6 @@ ROADMAP
     - STRING
 + check if database table has changed before update it via SQL. (speed it up)
 + better tables in database creation, we could check not only if it already exists, also it's schema for looking for differences
-+ safe table writting model, system doesn't overwrite a modified table by a cycle parameter set in config.h
 + set a debug flag to hide show debug messages, add a debug function system
 + better for loops, improved to finish when aim is reached
 ...

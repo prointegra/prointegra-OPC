@@ -237,18 +237,17 @@ void* launchMBUS(void * protocol)
 	{
 	  if (fgets(buffer, 500, pipe.get()) != NULL)
 	    {
-	      time(&rawTime);
-	      timeInfo = localtime(&rawTime);
-	      strftime (timeBuffer,10,"%T: ",timeInfo);	      
-	      fprintf(fout,"%s%s", timeBuffer,buffer);
-	      lines++;
-	      if(lines >= maxLines)
-	  	{
-	  	  rewind(fout);
-	  	  lines = 0;
-	  	}
+	      //time(&rawTime);
+	      //timeInfo = localtime(&rawTime);
+	      //strftime (timeBuffer,10,"%T: ",timeInfo);	      
+	      //fprintf(fout,"%s%s", timeBuffer,buffer);
+	      //lines++;
+	      //if(lines >= maxLines)
+	      //{
+	      //  rewind(fout);
+	      //  lines = 0;
+	      //}
 	    }
-
 	}
     }
   else

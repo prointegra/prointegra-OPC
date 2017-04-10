@@ -261,6 +261,7 @@ int ProintegraOPC::loop()
   sigemptyset(&sigIntHandler.sa_mask);
   sigIntHandler.sa_flags = 0;
   sigaction(SIGINT, &sigIntHandler, NULL);
+  signal(SIGSEGV, sigsevHandler);
 
   //startCommunications();
   while(1)
@@ -278,13 +279,18 @@ int ProintegraOPC::loop()
 	    }
 	  if(!failed)
 	    {
+	      std::cout << "INFO: are there some tables locked ..."; 
 	      lockTables();
+	      std::cout << "INFO: are there some triggers triggered? ..." << std::endl;	      
 	      getTriggers();
 	      //showTriggers();
+	      std::cout << "INFO: dataBase to Slaves ..." << std::endl;		      
 	      dataToComm();
+	      std::cout << "INFO: slaves to DataBase ..." << std::endl;		      
 	      dataToDB();
+	      std::cout << "INFO: reset Triggers ..." << std::endl;	      
 	      delTriggers();
-	      Sleep(500);
+	      //Sleep(500);
 	    }
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  
@@ -338,7 +344,7 @@ int ProintegraOPC::delTriggers()
     {
       failed = failed +  hDatabase[i]->resetTriggers(); 
     }
-  
+  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) returning" << std::endl; 
   return failed;
 }
 
@@ -416,4 +422,17 @@ int ProintegraOPC::showTriggers()
       //tables
       hDatabase[i]->showTriggers();
     }
+}
+void ProintegraOPC::sigsevHandler(int s)
+{
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", s);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
 }

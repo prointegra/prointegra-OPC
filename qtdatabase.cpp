@@ -65,18 +65,32 @@ int qtDatabase::close()
 
 int qtDatabase::query(PARAM *p, const char *sqlcommand)
 {
-  if(db == NULL) return -1;
-  QString qsqlcommand = QString::fromUtf8(sqlcommand);
-  *result = db->exec(qsqlcommand);
-  *error = db->lastError();
-  if(error->isValid())
-  {
-    QString e = error->databaseText();
-    printf("qtDatabase::query ERROR: %s\n", (const char *) e.toUtf8());
-    //pvStatusMessage(p,255,0,0,"ERROR: qtDatabase::query(%s) %s", sqlcommand, (const char *) e.toUtf8());
-    return -1;
+  int failed = -1;
+  //std::cout << "DEBUG: inside qtDatabase::query " << sqlcommand << std::endl;
+  if(db != NULL) failed = 0;
+  if(!failed)
+    {
+      //std::cout << "DEBUG: inside qtDatabase::query converting to QSTRING"<< std::endl;
+      QString qsqlcommand = QString::fromUtf8(sqlcommand,strlen(sqlcommand));
+      //std::cout << "DEBUG: inside qtDatabase::query QSTRING sql:"<< qsqlcommand.toUtf8().constData()<< std::endl;
+      //std::cout << "DEBUG: inside qtDatabase::query creating"<< std::endl;
+      //std::cout << "DEBUG: inside qtDatabase::query exec: "<< qsqlcommand.toUtf8().constData() << std::endl;       
+      *result = db->exec(qsqlcommand);
+      //std::cout << "DEBUG: inside qtDatabase::query capturing error"<< std::endl;
+      *error = db->lastError();
+      //std::cout << "DEBUG: inside qtDatabase::query error?"<< std::endl;
+      if(error->isValid())
+	{
+	  QString e = error->databaseText();
+	  std::cout << "ERROR: qtDatabase::query " << e.toUtf8().constData() << std::endl;
+	  std::cout << "ERROR: qtDatabase::query query:" << qsqlcommand.toUtf8().constData() << std::endl;
+	  //printf("qtDatabase::query ERROR: %s\n", (const char *) e.toUtf8());
+	  //pvStatusMessage(p,255,0,0,"ERROR: qtDatabase::query(%s) %s", sqlcommand, (const char *) e.toUtf8());
+	  failed = -1;
+	}
   }
-  return 0;
+  //std::cout << "DEBUG: inside qtDatabase::query, exiting ok! " << std::endl;
+  return failed;
 }
 
 int qtDatabase::populateTable(PARAM *p, int id)
