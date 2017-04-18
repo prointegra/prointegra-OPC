@@ -269,6 +269,7 @@ int ProintegraOPC::loop()
       if(!lExit)
 	{
 	  failed = 0;
+	  std::cout << "*----------------------------------------------*" << std::endl;
 	  std::cout << "INFO: checking communications ..." << std::endl;     
 	  checkComm();
 	  std::cout << "INFO: taking data from communications ..." << std::endl;  

@@ -23,8 +23,9 @@ qtDatabase::~qtDatabase()
 {
   if(db != NULL)
   {
-    close();
+    db->close();
   }
+  delete db;
   delete result;
   delete error;
 }

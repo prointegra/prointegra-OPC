@@ -1,4 +1,4 @@
-CHANGELOG
+make cleanCHANGELOG
 ===
 
 **NEXT: (XXXX/XX/XX)**
@@ -19,6 +19,8 @@ CHANGELOG
     - delTable error in piDatabase, solved programming more C++ like style.
     - reset of write trigers was not properly working!
     - temporal fix, removing info writted by modbus_client2 in it's thread, it could cause segment fault fprintf in some circunstances
+    - storemysql returned nothing in updatemysql fucntion inside pidatatable class!
+    - modbus_client2 fixed for several slaves writting
 
 **v0.0.3: (2017/02/07)**
 + BETHA, app can now store INT tags values from MODBUS TCP/IP slave, and write to them.

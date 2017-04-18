@@ -36,8 +36,8 @@
 class DBDataTable : public DBTable
 {
  public:
-  DBDataTable(tableParameters tableParams) : DBTable(tableParams) {}
-  ~DBDataTable();
+ DBDataTable(tableParameters tableParams) : DBTable(tableParams) {}
+  ~DBDataTable(){};
   //creation
   int create(databaseParameters* parameters,int * nQueries,char ***query);
   int creationSqlite(char **sql);

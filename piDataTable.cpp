@@ -368,6 +368,7 @@ int DBDataTable::insertSqlite(char **sql)
 */
 int DBDataTable::updateSqlite(char **sql)
 {
+  int failed = -1;
   char *sqlQuery = NULL;
   char * temp = NULL;
   char * field = NULL;
@@ -410,6 +411,7 @@ int DBDataTable::updateSqlite(char **sql)
 	  strcat(sqlQuery,parameters.stField[i].name);
 	  strcat(sqlQuery,"=");
 	  strcat(sqlQuery,field);
+	  failed = 0;
 
 	  delete field;
 	}
@@ -422,7 +424,7 @@ int DBDataTable::updateSqlite(char **sql)
   delete temp;
 
   *sql = sqlQuery;
-  return 0;
+  return failed;
 }
 /*!function for store data to a MySQL table
 */
@@ -438,6 +440,7 @@ int DBDataTable::storeMysql(char **sql)
     ret = insertMysql(&sqlQuery);
   
   *sql = sqlQuery;
+  return ret;
 }
 /*!function for insert data to a MySQL LOG type table
 */
@@ -531,6 +534,8 @@ int DBDataTable::insertMysql(char **sql)
 */
 int DBDataTable::updateMysql(char **sql)
 {
+  int failed = -1;
+  
   char *sqlQuery = NULL;
   char * temp = NULL;
   char * field = NULL;
@@ -576,6 +581,7 @@ int DBDataTable::updateMysql(char **sql)
 	  strcat(sqlQuery,parameters.stField[i].name);
 	  strcat(sqlQuery,"`=");
 	  strcat(sqlQuery,field);
+	  failed = 0;
 
 	  delete field;
 	}
@@ -588,7 +594,7 @@ int DBDataTable::updateMysql(char **sql)
   delete temp;
 
   *sql = sqlQuery;
-  return 0;
+  return failed;
 }
 
 //RETURNING DATA FUNCTIONS

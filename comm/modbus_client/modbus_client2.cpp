@@ -217,11 +217,31 @@ static void *mailboxReadThread(void *arg)
     {
       thread->lock();
       if(use_socket != 1) rlsleep(modbus_idletime); // on tty we have to sleep
+      else //Do we change socket?
+      {
+        if(slave!=actualSlave)
+	   {
+	     
+	      if (debug) printf("SOCKET CHANGE ADDRESS TO %s (for writting)\n",ips.at(slave-1).ip);
+	      mySocket->setAdr(ips.at(slave-1).ip);
+	      mySocket->disconnect();
+	      mySocket->connect();
+	    }       
+      }
       if(debug) printf("modbus_write: slave=%d function=%d data[0]=%d\n",
                                       slave,   function,   data[0]);
       ret = modbus->write( slave, function, (const unsigned char *) data, buflen);
       ret = modbus->response( &slave, &function, (unsigned char *) buf);
       if(use_socket != 1) rlsleep(modbus_idletime); // on tty we have to sleep
+      else //return socket to normal
+      {
+        if(slave!=actualSlave)
+	    {	     
+	      mySocket->setAdr(ips.at(actualSlave-1).ip);
+	      mySocket->disconnect();
+	      mySocket->connect();
+	    } 
+      }
       thread->unlock();
       if(ret < 0)
       {

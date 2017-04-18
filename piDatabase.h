@@ -34,8 +34,9 @@
 class DBInterface : public qtDatabase
 {
  public:
- DBInterface() : qtDatabase(){
-  };
+  DBInterface() : qtDatabase(){};
+  ~DBInterface();
+  
   int setup(databaseParameters dbParams,tableParameters* tablesParams);
   int createTriggersTable();
   int start();

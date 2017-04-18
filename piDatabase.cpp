@@ -20,6 +20,19 @@ checks config and create dinamically databases connections and schemas'''
 
 #include "piDatabase.h"
 
+/*! garbage recollection*/
+DBInterface::~DBInterface()
+{
+  for (int i= parameters.numTables-1; i>= 0; i--)
+    delete tables[i];
+  delete [] tables;
+
+  delete triggersTable;
+
+  for(int i =0; i < triggersLst.size();i++)
+    delete triggersLst[i];
+}
+
 /*! function to take database connection and table parameters for our database interface */
 int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParams)
 {
@@ -202,7 +215,8 @@ int DBInterface::storeData(int tableId, std::vector<field> data)
 	  failed = tables[i]->store(&parameters,&sqlQuery);
 	  //TODO: we should catch exceptions!
 	  //std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << " failed =" << failed << std::endl;
-	  failed = failed + query(NULL,sqlQuery);
+	  if(!failed)
+	    failed = query(NULL,sqlQuery);
 	  //std::cout << "DEBUG: (inside DBInterface::storeData)  query returned, failed =" << failed << std::endl;
 	  if(sqlQuery != NULL)
 	    delete sqlQuery;
