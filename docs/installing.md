@@ -41,7 +41,6 @@ gStools is already compiled, but if you encounter problems recompile it! See it'
 
 then we have made a launching script for our app ´´´./launch-script.sh´´´, to find libGstools.so, modify it with your preferences.
 
-
 ###Under MS Windows XP
 work in progress...
 

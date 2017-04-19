@@ -1,24 +1,25 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016,2017 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
- *  License version 3.0 as published by the Free Software Foundation
+ *  License version 3.0 (or any later version of GPL) as published by the Free Software Foundation
  *  and appearing in the file COPYING included in the packaging of
  *  this file.
  *
  *  This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+/*!
 /**
 @file config.c
 */
 
 #include "config.h"
 //constants
-const char* sVERSION = "v0.0.3B";
+const char* sVERSION = "v0.0.4";
 
 /*! Constructor
 TODO:should we have to catch exceptions??¿*/
@@ -189,17 +190,20 @@ int ConfigParser::retrieveTablesParams(pugi::xml_node* db, int dbNumber, int num
       
       tablesParams[dbNumber][i].stField = new field[tablesParams[dbNumber][i].numFields];
       int k =0;
+      std::cout << "INFO: processing tags ";
       for (pugi::xml_node tag = table.child("tag"); tag; tag = tag.next_sibling("tag"))
 	{
 	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].name,"name");
        	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].tag,"tagName");
 	  retrieveCharAttr(&tag,tablesParams[dbNumber][i].stField[k].type,"type");
 	  
-	  std::cout << "INFO: tag = " << k+1 << " from table " << i+1 <<" processed" << std::endl;
+	  std::cout << ".";
 	  
 	  k++;
 	}
-      
+      std::cout << std::endl;
+      std::cout << k+1 << " tags from table " << i+1 << "!!" << std::endl;
+	  
       if(!checkTableParams(dbNumber,i))
 	tablesParams[dbNumber][i].isValid = 1;
       else
@@ -223,19 +227,13 @@ int ConfigParser::retrieveCommParams()
   //capturing data from databasesslaves;
   for (pugi::xml_node slave = commDoc.child("slave"); slave; slave = slave.next_sibling("slave"))
     {
-      //retrieve slave name
       retrieveCharAttr(&slave,slaveParams[i].slaveName,"name");
-      //retrieve communications type
       retrieveCharAttr(&slave,slaveParams[i].commType,"protocol");
-      //retrieve PC port
       retrieveCharAttr(&slave,slaveParams[i].port,"port");
       if (pugi::xml_node protocol = slave.child(slaveParams[i].commType))
 	{
-	  //retrieve id if any
 	  retrieveIntAttr(&protocol,&slaveParams[i].commId,"id");  
-	  //retrieve address if any
 	  retrieveCharAttr(&protocol,slaveParams[i].commAddr,"addr");
-	  //retrieve port if any
 	  retrieveIntAttr(&protocol,&slaveParams[i].commPort,"port");
 	}
 	
@@ -300,14 +298,18 @@ TODO: to improve the check!
 int ConfigParser::checkSlaveParams(int i)
 {
   int failed = -1;
+  checkSlaveId(i);
   if (!checkSlaveName(slaveParams[i].slaveName,i))
     {
       if(!checkSlaveProtocol(slaveParams[i].commType))
 	{
-	  checkSlaveId(i);
 	  failed = 0;		    
 	}
+      else
+	std::cout << "DEBUG: (inside ConfigParser::checkSlaveParams) Wrong protocol!! " << std::endl;
     }
+  else
+    std::cout << "DEBUG: (inside ConfigParser::checkSlaveParams) Wrong slave name!! " << std::endl;
   return failed;
 }
 
@@ -316,14 +318,15 @@ TODO: to improve the check!
 */
 int ConfigParser::checkSlaveName(const char * name,int index)
 {
-  int failed = -1;
+  int failed = 0;
   if (index > 0)
     {
       for (int j = index-1  ; j >= 0 ; j--)
-	failed = failed && strcmp(name,slaveParams[j].slaveName);
+	{
+	  if(!strcmp(name,slaveParams[j].slaveName))
+	    failed = -1;
+	}
     }
-  else
-    failed = 0;
 
   return failed;
 }

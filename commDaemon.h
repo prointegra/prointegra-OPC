@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016, 2017 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -31,23 +31,35 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <time.h>
+#include <vector>
 
 #include <unistd.h>
+
+#include "config.h"
+#include "iniConfigurator.h"
+
+
 
 //tools
 int renameOldLog(int commId,char** logPath);
 int setExecutable(int commId,char* protocol, char ** executable);
+void* launchMBUS(void* commId);
 
 /*launching,checking,logging... communication daemon manager class*/
 class CommDaemon
 {
  public:
-  CommDaemon(int slaves);
+  CommDaemon(std::vector <mbSlaves> slavesParams);
   ~CommDaemon();
-
+  
+  int iniDaemons();
+  int iniMBTCP();
+  
   int launchDaemon(int slave, int commId, char* protocol);
-  static void* launchMBUS(void* commId);
+  int launchDaemons();
   int checkDaemon(int slave);
+  //class tools
+  int isDefined(int protocol);
   //threads
   pthread_t* declareThread(int nSlave);
   
@@ -55,6 +67,7 @@ class CommDaemon
   int **nPipes;
   int nSlaves;
   std::vector<pthread_t*> threads;
-  
+  std::vector <mbSlaves> slavesP;
+  std::vector <int> daemons;
 };
 #endif

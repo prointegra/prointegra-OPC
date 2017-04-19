@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+#include <execinfo.h>
 #include <signal.h>
 
 #include <time.h>
@@ -58,6 +59,7 @@ class ProintegraOPC
   int checkComm();  
   //capturing functions
   int loop();
+  int lockTables();
   int dataCapture();
   int dataToComm();
   int dataToDB();
@@ -72,6 +74,7 @@ class ProintegraOPC
   int showTriggers();
   //EXIT HANDLER
   static void exitHandler(int s){lExit = 1;};
+  static void sigsevHandler(int s);
   int stopComm();
 
   

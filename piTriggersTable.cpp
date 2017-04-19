@@ -1,11 +1,11 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016,2017 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
- *  License version 3.0 as published by the Free Software Foundation
+ *  License version 3.0 (or any later version of GPL) as published by the Free Software Foundation
  *  and appearing in the file COPYING included in the packaging of
  *  this file.
  *
@@ -31,7 +31,7 @@ TODO: only implemented sqlite,MySQL tables!
 */
 int DBTriggersTable::create(databaseParameters* dbParameters, char **query, char ***initQuery, int **nTrigs)
 {
-  std::cout << "DEBUG: (inside DBTriggersTable::create)" << std::endl;
+  //std::cout << "DEBUG: (inside DBTriggersTable::create)" << std::endl;
   int ret=-1;
   int *nTs = NULL;
   char * sql = NULL;
@@ -63,7 +63,7 @@ int DBTriggersTable::create(databaseParameters* dbParameters, char **query, char
 /*!function for creating the database schema, for SQLite databases*/
 int DBTriggersTable::creationSqlite(char **sqlQuery)
 {
-  std::cout << "DEBUG: (inside DBTriggersTable::creationSqlite)" << std::endl; 
+  //std::cout << "DEBUG: (inside DBTriggersTable::creationSqlite)" << std::endl; 
   static char * sql = NULL;
   
   sql = *sqlQuery;
@@ -78,7 +78,7 @@ int DBTriggersTable::creationSqlite(char **sqlQuery)
 /*!function for creating the database schema, for MySQL databases*/
 int DBTriggersTable::creationMysql(char **sqlQuery)
 {
-  std::cout << "DEBUG: (inside DBTriggersTable::creationMysql)" << std::endl; 
+  //std::cout << "DEBUG: (inside DBTriggersTable::creationMysql)" << std::endl; 
   static char * sql = NULL;
     
   sql = *sqlQuery;
@@ -95,7 +95,7 @@ int DBTriggersTable::creationMysql(char **sqlQuery)
 */
 int DBTriggersTable::initValuesSqlite(char ***sqlQuery, int **nTrs)
 {
-  std::cout << "DEBUG: (inside DBTriggersTable::initValuesSqlite)" << std::endl;
+  //std::cout << "DEBUG: (inside DBTriggersTable::initValuesSqlite)" << std::endl;
   int ret = -1, i = 0;
   static char ** sql;
   char **noRepeatedFields;
@@ -121,7 +121,7 @@ int DBTriggersTable::initValuesSqlite(char ***sqlQuery, int **nTrs)
 */
 int DBTriggersTable::initValuesMysql(char ***sqlQuery, int **nTrs)
 {
-  std::cout << "DEBUG: (inside DBTable::initValuesMysql)" << std::endl;
+  //std::cout << "DEBUG: (inside DBTable::initValuesMysql)" << std::endl;
   int ret = -1, i = 0;
   static char ** sql;
   char **noRepeatedFields;

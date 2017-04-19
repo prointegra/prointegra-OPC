@@ -23,9 +23,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+#include <vector>
 
 #include "config.h"
-
 
 class IniConfigurator
 {
@@ -33,9 +33,11 @@ class IniConfigurator
   IniConfigurator(){return;};
   ~IniConfigurator(){return;};
 
-  int iniCreate(char * path, mbSlaves* slaveParams);
+  int iniMBTCPCreate(char * path, std::vector <mbSlaves> params);
   int usingSocket(mbSlaves* parameters);
   
+  int writMBTCPSocket(FILE* pFile, std::vector <mbSlaves> params);
+  int writMBTCPCycles(FILE* pFile, std::vector <mbSlaves> params);  
   int writCycles(FILE* pFile, mbSlaves* parameters);
   int rudeCycles(mbSlaves* parameters, int * first);
   int fineCycles(mbSlaves* parameters, int * first, int rudeCycles);

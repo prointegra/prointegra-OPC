@@ -1,11 +1,11 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016,2017 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
- *  License version 3.0 as published by the Free Software Foundation
+ *  License version 3.0 (or any later version of GPL) as published by the Free Software Foundation
  *  and appearing in the file COPYING included in the packaging of
  *  this file.
  *
@@ -608,6 +608,7 @@ int DBTable::updateMysql(char **sql)
   *sql = sqlQuery;
   return 0;
 }
+
 /*sql functions TODO: to fill with standard sql functions*/
 /*!select all from table*/
 int DBTable::sqlSelectAll(databaseParameters dbParameters,char* & sql)
@@ -642,6 +643,34 @@ int DBTable::sqlSelectAllSqlite(char* & sql)
   failed = 0;
   return failed;
 }
+
+/*!function for locking a table when is being written*/
+int DBTable::lockOrUnlock(std::vector < std::vector < std::string>> data , int skip)
+{
+  //std::cout << "DEBUG: (inside DBTable::lockOrUnlock)" << std::endl;
+  int locked = 0;
+  //sanity checks
+  if(data.size() == 1 && data.at(0).size() > skip)
+    {
+      if(data.at(0).size()-skip == parameters.numFields)
+	{
+	  for(int i = skip; i < data.at(0).size(); i++)
+	    {	      
+	      if(strcmp(data[0][i].c_str(),"NULL"))
+		if(parameters.stField[i-skip].iValue != atoi(data[0][i].c_str()))
+		   locked = 1;
+	    }
+	}
+    }
+
+  if(locked)
+    parameters.locked++;
+  if(parameters.locked > CONF_TABLE_LOCK_LIMIT)
+    parameters.locked = 0;
+  //std::cout << "DEBUG: (inside DBTable::lockOrUnlock) finished" << std::endl;
+  return locked;
+}
+
 
 /*!function to return a field tag
 TODO: it should, for convention, only return once*/
@@ -744,18 +773,18 @@ int DBTable::setFieldValue(int field, int value)
 
 }
 /*!function to set a all values from table*/
-int DBTable::setAllValues(char ***table,int columns, int rows, int skip)
+int DBTable::setAllValues(std::vector<std::vector<std::string>> table, int skip)
 {
   int failed = -1;
   //sanity checks
-  if(rows > 0 && columns > skip)
+  if(table.size() > 0 && table.back().size() > skip)
     {
-      if(columns-skip == parameters.numFields)
+      if(table.back().size()-skip == parameters.numFields)
 	{
-	  for(int i = skip; i < columns; i++)
+	  for(int i = skip; i < table.back().size(); i++)
 	    {
-	      if(strcmp(table[rows-1][i],"NULL"))
-		 parameters.stField[i-skip].iValue=atoi(table[rows-1][i]);
+	      if(strcmp(table.back().at(i).c_str(),"NULL"))
+		parameters.stField[i-skip].iValue=atoi(table.back().at(i).c_str());
 	    }
 	  failed = 0;
 	}

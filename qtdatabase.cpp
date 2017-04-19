@@ -3,6 +3,7 @@
                              -------------------
     begin                : Fri May 28 2010
     http://pvbrowser.org
+	improved 			: January 2017
  ***************************************************************************/
 
 #include "qtdatabase.h"
@@ -22,8 +23,9 @@ qtDatabase::~qtDatabase()
 {
   if(db != NULL)
   {
-    close();
+    db->close();
   }
+  delete db;
   delete result;
   delete error;
 }
@@ -64,18 +66,32 @@ int qtDatabase::close()
 
 int qtDatabase::query(PARAM *p, const char *sqlcommand)
 {
-  if(db == NULL) return -1;
-  QString qsqlcommand = QString::fromUtf8(sqlcommand);
-  *result = db->exec(qsqlcommand);
-  *error = db->lastError();
-  if(error->isValid())
-  {
-    QString e = error->databaseText();
-    printf("qtDatabase::query ERROR: %s\n", (const char *) e.toUtf8());
-    //pvStatusMessage(p,255,0,0,"ERROR: qtDatabase::query(%s) %s", sqlcommand, (const char *) e.toUtf8());
-    return -1;
+  int failed = -1;
+  //std::cout << "DEBUG: inside qtDatabase::query " << sqlcommand << std::endl;
+  if(db != NULL) failed = 0;
+  if(!failed)
+    {
+      //std::cout << "DEBUG: inside qtDatabase::query converting to QSTRING"<< std::endl;
+      QString qsqlcommand = QString::fromUtf8(sqlcommand,strlen(sqlcommand));
+      //std::cout << "DEBUG: inside qtDatabase::query QSTRING sql:"<< qsqlcommand.toUtf8().constData()<< std::endl;
+      //std::cout << "DEBUG: inside qtDatabase::query creating"<< std::endl;
+      //std::cout << "DEBUG: inside qtDatabase::query exec: "<< qsqlcommand.toUtf8().constData() << std::endl;       
+      *result = db->exec(qsqlcommand);
+      //std::cout << "DEBUG: inside qtDatabase::query capturing error"<< std::endl;
+      *error = db->lastError();
+      //std::cout << "DEBUG: inside qtDatabase::query error?"<< std::endl;
+      if(error->isValid())
+	{
+	  QString e = error->databaseText();
+	  std::cout << "ERROR: qtDatabase::query " << e.toUtf8().constData() << std::endl;
+	  std::cout << "ERROR: qtDatabase::query query:" << qsqlcommand.toUtf8().constData() << std::endl;
+	  //printf("qtDatabase::query ERROR: %s\n", (const char *) e.toUtf8());
+	  //pvStatusMessage(p,255,0,0,"ERROR: qtDatabase::query(%s) %s", sqlcommand, (const char *) e.toUtf8());
+	  failed = -1;
+	}
   }
-  return 0;
+  //std::cout << "DEBUG: inside qtDatabase::query, exiting ok! " << std::endl;
+  return failed;
 }
 
 int qtDatabase::populateTable(PARAM *p, int id)
@@ -221,7 +237,70 @@ int qtDatabase::retData(PARAM *p, char **** table, int **columns, int **rows)
   *rows = pointY;
   return failed;
 }
+/*! C++ style ret data fucntion from sql query*/
+int qtDatabase::retData(PARAM *p, std::vector< std::vector < std::string>> & sqlResult)
+{
+  //std::cout << "DEBUG: (inside qtDatabase::retData)" << std::endl;
+  int x,y,xmax,ymax, failed = -1;
+  std::vector <std::string> rowResult;
+  std::string strResult;
 
+  if(db != NULL)
+  {
+    // set table dimension
+    xmax = result->record().count();
+    //
+    // Using SQLITE a user from our forum found an issue
+    // getting ymax.
+    // With SQLITE numRowsAffected() does not return the correct value.
+    // Other database systems do.
+    //
+    if(db->driverName() == "QSQLITE")
+      {
+	result->last();
+	ymax = result->at()+1;
+	result->first();
+	//printf("SQLITE ymax = %d \n",ymax);
+      }
+    else
+      {
+	ymax = result->numRowsAffected();
+	//printf("no SQLITE, ymax = %d \n",ymax);
+      }
+    //std::cout << "DEBUG: (inside qtDatabase::retData) return of columns:" << xmax <<"  and rows:" << ymax << std::endl;
+    // populate table
+    QSqlRecord record = result->record();
+    if(!record.isEmpty())
+      {
+	result->next();
+	for(y=0; y<ymax; y++)
+	  { // write fields
+	    QSqlRecord record = result->record();
+	    rowResult.clear();
+	    for(x=0; x<xmax; x++)
+	      {
+		QSqlField f = record.field(x);
+		if(f.isValid())
+		  {
+		    QVariant v = f.value();
+		    strResult.clear();
+		    //strResult = v.toChar();
+		    rowResult.push_back(v.toString().toUtf8().constData());
+		  }
+		else
+		  {
+		    rowResult.push_back("ERROR");
+		  }
+	      }
+	    sqlResult.push_back(rowResult);
+	    result->next();
+	  }
+	failed = 0;
+      }
+  }
+  //std::cout << "DEBUG: (inside qtDatabase::retData) returning" << std::endl; 
+  return failed;
+}
 const char *qtDatabase::recordFieldValue(PARAM *p, int x)
 {
   QSqlRecord record = result->record();

@@ -1,11 +1,11 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016,2017 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
- *  License version 3.0 as published by the Free Software Foundation
+ *  License version 3.0 (or any later version of GPL) as published by the Free Software Foundation
  *  and appearing in the file COPYING included in the packaging of
  *  this file.
  *
@@ -13,7 +13,7 @@
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/**
+/*!
 @file capture.c
 */
 
@@ -24,6 +24,7 @@
 ProintegraOPC::ProintegraOPC()
 {
   int i = 0;
+  std::vector <mbSlaves> slavesParams;
   //load xml config file
   confParser = new ConfigParser("config/database.xml","config/slaves.xml");
   //retrieve database info from config file
@@ -44,7 +45,12 @@ ProintegraOPC::ProintegraOPC()
     {
       hSlaves[i] = new CommInterface();
       hSlaves[i]->setup(confParser->retSlaveParams(i));
+      slavesParams.push_back(confParser->retSlaveParams(i));
     }
+  std::cout << "INFO: (inside ProintegraOPC::ProintegraOPC) new commDaemonManager instance" << std::endl;
+  commDaemonManager = new CommDaemon(slavesParams);
+  //std::cout << "DEBUG: (inside ProintegraOPC::ProintegraOPC) ini comms Daemons" << std::endl;
+  commDaemonManager->iniDaemons();
   //link database tags with slaves
   linkTags();
   //FOR DEBUGGING PURPOSES
@@ -58,8 +64,12 @@ ProintegraOPC::~ProintegraOPC()
 {
   delete confParser;
   for(int i=nDBs-1;i== 0 ; i--)
-    delete hDatabase[nDBs];
+    delete hDatabase[i];
   delete hDatabase;
+  for(int i=nSlaves-1;i== 0 ; i--)
+    delete hSlaves[i];
+  delete hSlaves;
+  //delete commDaemonManager;
   return;
 }
 /*! function for linking between slaves and databases tags*/ 
@@ -107,11 +117,11 @@ TODO: it's in fact still not be used*/
 int ProintegraOPC::checkComm()
 {
   int failed = 0;
-   for(int i=0; i < nSlaves; i++)
-    {
+  //for(int i=0; i < nSlaves; i++)
+     //{
       //std::cout << "DEBUG: slave "<< i << " status: " << commDaemonManager->checkDaemon(i)<< std::endl;
-      failed = failed + commDaemonManager->checkDaemon(i);
-    }
+      //failed = failed + commDaemonManager->checkDaemon(i);
+      //}
   return failed;   
 }
 /*!checking communication processes if running or not
@@ -163,7 +173,10 @@ int ProintegraOPC::dataToComm()
 	  std::cout << "DEBUG: (inside ProintegraOPC::dataToComm) tableFail:"<< tableFail << std::endl;
 	  //resetting trigger
 	  if(!tableFail)
-	    hDatabase[i]->wTriggerDoneAt(j);
+	    {
+	      hDatabase[i]->unlockTable(tablesList.at(j));
+	      hDatabase[i]->wTriggerDoneAt(tablesList.at(j));
+	    }
 	  failed = failed +tableFail;
 	  tableFail = 0;
 	    
@@ -191,22 +204,25 @@ int ProintegraOPC::dataToDB()
       
       for(int j=0; j < tablesList.size() ; j++)
 	{
-	  failed = failed & hDatabase[i]->retDataFrTable(tags, tablesList.at(j));
-	  for (int k = 0; k < tags.size(); k++)
+	  if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
 	    {
-	      for (int l = 0; l < tags[k].fromTags.size(); l++)
+	      failed = failed & hDatabase[i]->retDataFrTable(tags, tablesList.at(j));
+	      for (int k = 0; k < tags.size(); k++)
 		{
-		  for (int m = 0; m < tags[k].fromTags[l].size(); m++)
-		    {		 
-		      tableFail = tableFail + hSlaves[l]->readTag(tags[k].fromTags[l].at(m));
-		      tags[k].iValue = hSlaves[l]->retTagValue(tags[k].fromTags[l].at(m));
-		      tags[k].isValid = hSlaves[l]->retTagValid(tags[k].fromTags[l].at(m));
+		  for (int l = 0; l < tags[k].fromTags.size(); l++)
+		    {
+		      for (int m = 0; m < tags[k].fromTags[l].size(); m++)
+			{		 
+			  tableFail = tableFail + hSlaves[l]->readTag(tags[k].fromTags[l].at(m));
+			  tags[k].iValue = hSlaves[l]->retTagValue(tags[k].fromTags[l].at(m));
+			  tags[k].isValid = hSlaves[l]->retTagValid(tags[k].fromTags[l].at(m));
+			}
 		    }
 		}
+	      hDatabase[i]->rTriggerDoneAt(j);
+	      hDatabase[i]->storeData(tablesList.at(j),tags);
+	      failed = failed +tableFail;
 	    }
-	  hDatabase[i]->rTriggerDoneAt(j);
-	  hDatabase[i]->storeData(tablesList.at(j),tags);
-	  failed = failed +tableFail;
 	}
     }
   
@@ -229,10 +245,7 @@ int ProintegraOPC::storeDB()
 */
 int ProintegraOPC::startCommunications()
 {
-  commDaemonManager = new CommDaemon(nSlaves);
-
-  for(int i=0; i < nSlaves; i++)
-    commDaemonManager->launchDaemon(i,confParser->retSlaveParams(i).commId,confParser->retSlaveParams(i).commType);
+  commDaemonManager->launchDaemons();
   return 0;   
 }
 
@@ -243,19 +256,20 @@ int ProintegraOPC::loop()
   //exit handling
   struct sigaction sigIntHandler;
   int failed = -1;
-  field *** stTriggers = NULL;
-  int **numFields = NULL;
   
   sigIntHandler.sa_handler = ProintegraOPC::exitHandler;
   sigemptyset(&sigIntHandler.sa_mask);
   sigIntHandler.sa_flags = 0;
   sigaction(SIGINT, &sigIntHandler, NULL);
-  
+  signal(SIGSEGV, sigsevHandler);
+
+  //startCommunications();
   while(1)
     {
       if(!lExit)
 	{
 	  failed = 0;
+	  std::cout << "*----------------------------------------------*" << std::endl;
 	  std::cout << "INFO: checking communications ..." << std::endl;     
 	  checkComm();
 	  std::cout << "INFO: taking data from communications ..." << std::endl;  
@@ -266,22 +280,18 @@ int ProintegraOPC::loop()
 	    }
 	  if(!failed)
 	    {
+	      std::cout << "INFO: are there some tables locked ..."; 
+	      lockTables();
+	      std::cout << "INFO: are there some triggers triggered? ..." << std::endl;	      
 	      getTriggers();
-	      showTriggers();
+	      //showTriggers();
+	      std::cout << "INFO: dataBase to Slaves ..." << std::endl;		      
 	      dataToComm();
+	      std::cout << "INFO: slaves to DataBase ..." << std::endl;		      
 	      dataToDB();
-		  //storeDB();
-		  //cleaning
-	      //  if(*numFields >0)
-	      //    {
-	      //      for(int i = *numFields-1; i >=0;i--)
-	      //	delete stTriggers[i];
-	      //      delete stTriggers;
-	      //    }
-		  //
-	      //}
+	      std::cout << "INFO: reset Triggers ..." << std::endl;	      
 	      delTriggers();
-	      Sleep(5000);
+	      //Sleep(500);
 	    }
 	  //std::cout << "DEBUG: showing what we have stored ..." << std::endl;
 	  //showDBData();	  
@@ -296,10 +306,24 @@ int ProintegraOPC::loop()
   return 0;   
 }
 
+/*!function for locking any modified table in database, waiting later to be written to Comm*/
+int ProintegraOPC::lockTables()
+{
+  //std::cout << "DEBUG:(inside ProintegraOPC::lockTables)" << std::endl; 
+  int failed = -1;
+ 
+  failed = 0;
+  for(int i=0; i < nDBs; i++)
+    {
+      failed = failed +  hDatabase[i]->lockTables(); 
+    }
+  
+  return failed;
+}
 /*!function for getting a complete list of trigered triggers*/
 int ProintegraOPC::getTriggers()
 {
-  std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
+  //std::cout << "DEBUG:(inside ProintegraOPC::getTriggers)" << std::endl; 
   int failed = -1;
  
   failed = 0;
@@ -314,14 +338,14 @@ int ProintegraOPC::getTriggers()
 /*!function for deleting the complete list of trigered triggers*/
 int ProintegraOPC::delTriggers()
 {
-  std::cout << "DEBUG:(inside ProintegraOPC::delTriggers)" << std::endl; 
+  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers)" << std::endl; 
   int failed = -1;
   
   for(int i=0; i < nDBs; i++)
     {
       failed = failed +  hDatabase[i]->resetTriggers(); 
     }
-  
+  //std::cout << "DEBUG:(inside ProintegraOPC::delTriggers) returning" << std::endl; 
   return failed;
 }
 
@@ -399,4 +423,17 @@ int ProintegraOPC::showTriggers()
       //tables
       hDatabase[i]->showTriggers();
     }
+}
+void ProintegraOPC::sigsevHandler(int s)
+{
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", s);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
 }

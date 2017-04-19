@@ -1,11 +1,11 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016,2017 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
- *  License version 3.0 as published by the Free Software Foundation
+ *  License version 3.0 (or any later version of GPL) as published by the Free Software Foundation
  *  and appearing in the file COPYING included in the packaging of
  *  this file.
  *
@@ -65,7 +65,7 @@ int DBDataTable::create(databaseParameters* dbParameters,int* nQueries, char ***
     }
   //std::cout << "DEBUG: (inside DBTable::create) copying back pointers, ret:" << ret << std::endl;
   *query =  sqlQuery;
-  std::cout << "DEBUG: (inside DBTable::create) returning ret:" << ret << std::endl;
+  //std::cout << "DEBUG: (inside DBTable::create) returning ret:" << ret << std::endl;
   return ret;
 }
 /*!function for creating the database schema, for SQLite databases*/
@@ -187,10 +187,10 @@ int DBDataTable::initValuesSqlite(int num,char ***sql)
 	  if(sqlQuery[i] != NULL)
 	    delete(sqlQuery[i]);	
 	}
-      std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:1" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:1" << std::endl;
       sqlQuery[1] = new char[strlen("DELETE FROM  ") + strlen(parameters.tbName) + 7];
       sprintf(sqlQuery[1],"DELETE FROM `%s`",parameters.tbName );
-      std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:2" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::initValuesSqlite) creating SQL num:2" << std::endl;
       sqlQuery[2] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+7];
       sprintf(sqlQuery[2],"INSERT INTO `%s` () VALUES ()",parameters.tbName );
       ret = 0;
@@ -215,10 +215,10 @@ int DBDataTable::initValuesMysql(int num,char ***sql)
 	    delete(sqlQuery[i]);
 	
 	}
-      std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:1" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:1" << std::endl;
       sqlQuery[1] = new char[strlen("DELETE FROM  ") + strlen(parameters.tbName) + 7];
       sprintf(sqlQuery[1],"DELETE FROM `%s`",parameters.tbName );
-      std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:2" << std::endl;
+      //std::cout << "DEBUG: (inside DBTable::initValuesMysql) creating SQL num:2" << std::endl;
       sqlQuery[2] = new char[strlen("INSERT INTO ") + strlen(parameters.tbName) + strlen(" () VALUES ()")+7];
       sprintf(sqlQuery[2],"INSERT INTO `%s` () VALUES ()",parameters.tbName );
       ret = 0;
@@ -368,6 +368,7 @@ int DBDataTable::insertSqlite(char **sql)
 */
 int DBDataTable::updateSqlite(char **sql)
 {
+  int failed = -1;
   char *sqlQuery = NULL;
   char * temp = NULL;
   char * field = NULL;
@@ -410,6 +411,7 @@ int DBDataTable::updateSqlite(char **sql)
 	  strcat(sqlQuery,parameters.stField[i].name);
 	  strcat(sqlQuery,"=");
 	  strcat(sqlQuery,field);
+	  failed = 0;
 
 	  delete field;
 	}
@@ -422,7 +424,7 @@ int DBDataTable::updateSqlite(char **sql)
   delete temp;
 
   *sql = sqlQuery;
-  return 0;
+  return failed;
 }
 /*!function for store data to a MySQL table
 */
@@ -438,6 +440,7 @@ int DBDataTable::storeMysql(char **sql)
     ret = insertMysql(&sqlQuery);
   
   *sql = sqlQuery;
+  return ret;
 }
 /*!function for insert data to a MySQL LOG type table
 */
@@ -531,6 +534,8 @@ int DBDataTable::insertMysql(char **sql)
 */
 int DBDataTable::updateMysql(char **sql)
 {
+  int failed = -1;
+  
   char *sqlQuery = NULL;
   char * temp = NULL;
   char * field = NULL;
@@ -576,6 +581,7 @@ int DBDataTable::updateMysql(char **sql)
 	  strcat(sqlQuery,parameters.stField[i].name);
 	  strcat(sqlQuery,"`=");
 	  strcat(sqlQuery,field);
+	  failed = 0;
 
 	  delete field;
 	}
@@ -588,10 +594,40 @@ int DBDataTable::updateMysql(char **sql)
   delete temp;
 
   *sql = sqlQuery;
-  return 0;
+  return failed;
 }
 
 //RETURNING DATA FUNCTIONS
+/*!function to return a if table reading is trigger drived*/
+int DBDataTable::isTimeTriggered()
+{
+  int ret = 0;
+  if(parameters.tbTriggerTime > 0)
+    {
+      if(difftime(time(0), read) >= parameters.tbTriggerTime)
+	{
+	  ret = 1;
+	}
+    }
+  
+  return ret;
+}
+/*!function to return if time trigger is initialized*/
+int DBDataTable::isTimeInitialized()
+{
+  //std::cout << "DEBUG: (inside DBDataTable::isTimeInitialized)" << std::endl;
+  int ret = 1;
+  if (parameters.tbTrigger > 0)
+    {
+      if(read == NULL)
+	{
+	  ret = 0;
+	}
+    }
+  
+  return ret;
+}
+
 /*!function to return a if table reading is trigger drived*/
 int DBDataTable::isReadTriggered()
 {
@@ -625,8 +661,8 @@ int DBDataTable::retReadTrigger(field* trigger)
       
       trigger->type = new char[strlen("INT")+5];
       strcpy(trigger->type,"INT");
-      std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) read trigger = " << trigger->name << std::endl;
-      std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) PARAMETERS read trigger = " << parameters.tbTrigger << std::endl;
+      //std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) read trigger = " << trigger->name << std::endl;
+      //std::cout << "DEBUG: (inside DBDataTable::retReadTrigger) PARAMETERS read trigger = " << parameters.tbTrigger << std::endl;
       failed = 0;
     }
 
@@ -647,8 +683,8 @@ int DBDataTable::retWriteTrigger(field* trigger)
       
       trigger->type = new char[strlen("INT")+5];
       strcpy(trigger->type,"INT");
-      std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) write trigger = " << trigger->name << std::endl;
-      std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) PARAMETERS write trigger = " << parameters.tbWTrigger << std::endl;
+      //std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) write trigger = " << trigger->name << std::endl;
+      //std::cout << "DEBUG: (inside DBDataTable::retWriteTrigger) PARAMETERS write trigger = " << parameters.tbWTrigger << std::endl;
       failed = 0;
     }
 
@@ -656,16 +692,6 @@ int DBDataTable::retWriteTrigger(field* trigger)
 }
 
 
-/*!function to return a field tag
-TODO: it should, for convention, only return once*/
-char * DBDataTable::retFieldTag(int field)
-{
-  if(field >= 0 && field < parameters.numFields)
-    return parameters.stField[field].tag;
-  else
-    return NULL;
-
-}
 
 /*!function to return linking info from tag
 */
@@ -681,61 +707,9 @@ std::vector<std::vector <int>> DBDataTable::retLink(int field)
  return temp;
 
 }
-/*!function to return a field valid variable*/
-int DBDataTable::retFieldValid(int field)
-{
-  int ret = -1;
-  if(field >= 0 && field < parameters.numFields)
-    {
-      ret = parameters.stField[field].isValid;
-    }
-  return ret;
-}
 
-/*!function to return a field number value variable*/
-int DBDataTable::retFieldValue(int field)
-{
-  int ret = -1;  
-  if(field >= 0 && field < parameters.numFields)
-    {
-      ret = parameters.stField[field].iValue;      
-    }
-  return ret;
-}
-
-//
-/*!function to set a field valid variable*/
-int DBDataTable::setFieldValid(int field, int valid)
-{
-  int ret = -1;
-  if(field >= 0 && field < parameters.numFields)
-    {
-      // std::cout <<"DEBUG: (inside DBTable::setFieldValid function) field:"<<field<<" isValid:" << valid << std::endl;
-      parameters.stField[field].isValid = valid;
-      ret = 0;
-    }
-  
-  return ret;
-
-}
-/*!function to set a field number value variable*/
-int DBDataTable::setFieldValue(int field, int value)
-{
-  int ret = -1;  
-  if(field >= 0 && field < parameters.numFields)
-    {
-      if(!strcmp(parameters.stField[field].type,"INT"))
-	parameters.stField[field].iValue = value;
-      else
-	parameters.stField[field].iValue = value;
-      ret = 0;
-    }
-  
-  return ret;
-
-
-}
-
+/////
+//Setting data functions
 /*!function to set a linking info to tag
 */
 int DBDataTable::setLink(int field, int slave, int tag)

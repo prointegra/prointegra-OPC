@@ -36,8 +36,8 @@
 class DBDataTable : public DBTable
 {
  public:
-  DBDataTable(tableParameters tableParams) : DBTable(tableParams) {}
-  ~DBDataTable();
+ DBDataTable(tableParameters tableParams) : DBTable(tableParams) {}
+  ~DBDataTable(){};
   //creation
   int create(databaseParameters* parameters,int * nQueries,char ***query);
   int creationSqlite(char **sql);
@@ -51,26 +51,25 @@ class DBDataTable : public DBTable
   int updateSqlite(char **sql);
   int storeMysql(char **sql);
   int insertMysql(char **sql);
-  int updateMysql(char **sql); 
-  //return private members
+  int updateMysql(char **sql);
+  
+  //triggering
+  int isTimeTriggered();
+  int isTimeInitialized();
   int isReadTriggered();
   int isWriteTriggered();
   int retReadTrigger(field*);
   int retWriteTrigger(field*);
-  int retNumFields(){return parameters.numFields;};
-  char * retFieldTag(int field);
-  int retFieldValid(int field);
-  int retFieldValue(int field);
+  int startTiming(){read = time(0); return 0;};
+  //private members
   std::vector<std::vector <int>> retLink(int field);
-  int retTableId(){ return parameters.id;};
+  
   //set attributes
-  int setFieldValid(int field, int valid);
-  int setFieldValue(int field, int value);
   int setLink(int field, int slave, int tag);
   int updateData(std::vector<field> data);
   
 private:  
-
+  time_t read = NULL;
   
 };
 

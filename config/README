@@ -1,0 +1,7 @@
+rename example files to:
+
+database.xml
+slaves.xml
+
+All information about databases, tables, communication slaves and tags are there.
+I think they are easy enough to understand
