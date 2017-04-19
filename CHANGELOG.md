@@ -3,6 +3,7 @@ make cleanCHANGELOG
 
 **NEXT: (XXXX/XX/XX)**
 
+**v0.0.4: (2017/04/19)**
 + new features
     - time triggered read tables implemented
     - new modbus_client2 integrated
