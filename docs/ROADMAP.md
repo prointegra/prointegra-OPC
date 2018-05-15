@@ -17,6 +17,8 @@ ROADMAP
 + better for loops, improved to finish when aim is reached
 ...
 #KNOWN BUGS
++ **non blocking missing slaves, when communication with several failing slaves it is FUC$&$= slow!**
++ **sometimes server is very slow in step writting to slaves, perhaps it is due we have no communication with the slave**
 + more safety checks, if no good xml files found no work!
 + only tested with modbus TCP/IP
 + log files for daemons no working
