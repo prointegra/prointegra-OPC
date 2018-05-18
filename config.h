@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <vector>
-#include "rldataacquisition.h"
+#include "rlmodbusclient.h"
 
 using namespace std;
 

@@ -29,7 +29,7 @@
 #include <time.h>
 
 #include "piDatabase.h"
-#include "piComm.h"
+#include "piSlave.h"
 #include "libgStools.h"
 #include "config.h"
 
@@ -89,8 +89,8 @@ class ProintegraOPC
   ////communications
   //number of slaves handlers
   int nSlaves;
-  CommInterface** hSlaves = NULL;
-  CommDaemon* commDaemonManager = NULL;
+  slaveInterface** hSlaves = NULL;
+  CommDaemon** commDaemon = NULL;
 
 };
 
