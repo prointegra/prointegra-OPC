@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016,2017 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -14,12 +14,12 @@
  */
 /*!
 /**
-@file config.c
+@file config.cpp
 */
 
 #include "config.h"
 //constants
-const char* sVERSION = "v0.0.4";
+const char* sVERSION = "v0.0.5";
 
 /*! Constructor
 TODO:should we have to catch exceptions??¿*/
@@ -224,7 +224,7 @@ int ConfigParser::retrieveCommParams()
   slaveParams = new mbSlaves[nSlaves];
   
   i = 0;
-  //capturing data from databasesslaves;
+  //capturing data from slaves;
   for (pugi::xml_node slave = commDoc.child("slave"); slave; slave = slave.next_sibling("slave"))
     {
       retrieveCharAttr(&slave,slaveParams[i].slaveName,"name");

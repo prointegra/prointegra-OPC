@@ -166,9 +166,9 @@ int CommInterface::writeTag(int index, int slaveAmI, int value)
 	iValue = gstInt2Word(value);
       sprintf(rlCommand,"register(%d,%d)",slaveAmI, parameters.stRegisters[index].iAddress);
       //write!
-      //std::cout << "DEBUG: (inside CommInterface::writeTag) writting sequence: " << rlCommand << "  value = " << iValue << std::endl;
+      std::cout << "DEBUG: (inside CommInterface::writeTag) writting sequence: " << rlCommand << "  value = " << iValue << std::endl;
       failed = rlMODBUS->writeIntValue(rlCommand,iValue);
-      //std::cout << "DEBUG: (inside CommInterface::writeTag) writting sequencemodbus ret: " << failed << std::endl;
+      std::cout << "DEBUG: (inside CommInterface::writeTag) writting sequencemodbus ret: " << failed << std::endl;
       failed = 0;
     }
   

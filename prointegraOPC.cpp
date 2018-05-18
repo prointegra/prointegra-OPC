@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016,2017 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -14,7 +14,7 @@
  */
 
 /*!
-@file capture.c
+@file prointegraOPC.cpp
 */
 
 #include "prointegraOPC.h"
@@ -166,6 +166,8 @@ int ProintegraOPC::dataToComm()
 		{
 		  for (int m = 0; m < tags[k].fromTags[l].size(); m++)
 		    {
+		      if(k >50 || l > 50 || m > 50)
+			std::cout << "tags:" << k << " .fromTags:"<< l << " .at:" << m << std::endl;
 		      tableFail = tableFail + hSlaves[l]->writeTag(tags[k].fromTags[l].at(m),l+1,tags[k].iValue);
 		    }
 		}
