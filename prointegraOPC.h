@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -89,8 +89,8 @@ class ProintegraOPC
   ////communications
   //number of slaves handlers
   int nSlaves;
-  slaveInterface** hSlaves = NULL;
-  CommDaemon** commDaemon = NULL;
+  SlaveInterface** hSlaves = NULL;
+  CommDaemon** comms = NULL;
 
 };
 

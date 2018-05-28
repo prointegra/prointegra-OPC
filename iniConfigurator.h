@@ -33,11 +33,11 @@ class IniConfigurator
   IniConfigurator(){return;};
   ~IniConfigurator(){return;};
 
-  int iniMBTCPCreate(char * path, std::vector <mbSlaves> params);
-  int usingSocket(mbSlaves* parameters);
+  int iniMBTCPCreate(char * path, mbSlaves & params);
+  int usingSocket(mbSlaves& parameters);
   
-  int writMBTCPSocket(FILE* pFile, std::vector <mbSlaves> params);
-  int writMBTCPCycles(FILE* pFile, std::vector <mbSlaves> params);  
+  int writMBTCPSocket(FILE* pFile, mbSlaves  params);
+  int writMBTCPCycles(FILE* pFile, mbSlaves & params);  
   int writCycles(FILE* pFile, mbSlaves* parameters);
   int rudeCycles(mbSlaves* parameters, int * first);
   int fineCycles(mbSlaves* parameters, int * first, int rudeCycles);

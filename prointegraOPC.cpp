@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  Prointegra OPC
  *
  *  Copyright 2016-2018 by it's authors. 
@@ -40,18 +40,17 @@ ProintegraOPC::ProintegraOPC()
   //retrieve slaves info from config file
   confParser->retrieveCommParams();
   nSlaves = confParser->retnSlaves();
-  hSlaves = new slaveInterface*[nSlaves];
+  hSlaves = new SlaveInterface*[nSlaves];
+  comms = new CommDaemon*[nSlaves];
   for(i=0;i<nSlaves;i++)
     {
-      hSlaves[i] = new slaveInterface();
-      hSlaves[i]->setup(confParser->retSlaveParams(i));
-      slavesParams.push_back(confParser->retSlaveParams(i));
+      comms[i] = new CommDaemon(confParser->retSlaveParams(i));
+      hSlaves[i] = new SlaveInterface();
+      hSlaves[i]->setup(comms[i]->retParams());
+      slavesParams.push_back(comms[i]->retParams());
+      std::cout << "INFO: (inside ProintegraOPC::ProintegraOPC) new commDaemon instance" << std::endl;
+      //comms[i]->launchDaemon();
     }
-  std::cout << "INFO: (inside ProintegraOPC::ProintegraOPC) new commDaemonManager instance" << std::endl;
-  /***TODO one commDaemon for every slave!
-  //commDaemon = new CommDaemon(slavesParams); //TODO aqui modificamos el ejecutable de las comunicaciones, no se va a construir dinámicamente, pero sí vamos a sacar los ciclos de programa y su dirección en shared memory
-  //std::cout << "DEBUG: (inside ProintegraOPC::ProintegraOPC) ini comms Daemons" << std::endl;
-  //commDaemon->iniDaemons();
   /*******/
   //link database tags with slaves
   linkTags();
@@ -130,7 +129,7 @@ int ProintegraOPC::checkComm()
 TODO: it's in fact still not be used*/
 int ProintegraOPC::stopComm()
 {
-  delete commDaemon;
+  //delete comms;
   return 0;   
 }
 /*data capturing process

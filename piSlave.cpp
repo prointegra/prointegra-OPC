@@ -1,7 +1,7 @@
-/*
+﻿/*
  *  Prointegra OPC
  *
- *  Copyright 2016,2017 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -21,7 +21,7 @@
 
 
 /*! function to take slave connection parameters and build interface dinamically */
-int slaveInterface::setup(mbSlaves slaveParams)
+int SlaveInterface::setup(mbSlaves slaveParams)
 {
   int failed = -1;
   //taking db parameters
@@ -36,7 +36,7 @@ int slaveInterface::setup(mbSlaves slaveParams)
 }
 
 /*! function to setup ini file, mailbox,shared memory and instance of rlib communications */
-int slaveInterface::setupCommDaemon()
+int SlaveInterface::setupCommDaemon()
 {
   int failed = -1;
   if(!strcmp(parameters.commType,"MODBUSTCP"))
@@ -48,7 +48,7 @@ int slaveInterface::setupCommDaemon()
 }
 
 /*! function to setup ini file, mailbox,shared memory and instance of MODBUS TCP/IP rlib communications */
-int slaveInterface::setupMBUSTCP()
+int SlaveInterface::setupMBUSTCP()
 {
   int failed = -1;
   char *mailbox = NULL;
@@ -58,8 +58,8 @@ int slaveInterface::setupMBUSTCP()
   sharedMemory = new char[strlen("./comm/.shm")+sizeof(char)*10+sizeof(char)*strlen(parameters.slaveName)];  
   sprintf(mailbox,"./comm/%s.mbx",parameters.slaveName);
   sprintf(sharedMemory,"./comm/%s.shm",parameters.slaveName); 
-  rlMODBUS = new rlModbusClient(mailbox,sharedMemory, 65536); //TODO shared memory size should be adapted to number of tags
-
+  //rlMODBUS = new rlModbusClient(mailbox,sharedMemory, 65536); //TODO shared memory size should be adapted to number of tags
+rlMODBUS = new rlModbusClient(mailbox,sharedMemory, 16384);
   delete mailbox;
   delete sharedMemory;
   
@@ -68,7 +68,7 @@ int slaveInterface::setupMBUSTCP()
 
 /*!function to read all data 
 TODO: error returning?*/
-int slaveInterface::readData()
+int SlaveInterface::readData()
 {
   int failed = -1;
 
@@ -82,7 +82,7 @@ int slaveInterface::readData()
 }
 
 /*function to read a slave's tag*/
-int slaveInterface::readTag(int index)
+int SlaveInterface::readTag(int index)
 {
   int ret = -1;
   if(!strcmp(parameters.stRegisters[index].dataType,"INT"))
@@ -108,80 +108,63 @@ int slaveInterface::readTag(int index)
 
 /*function to read a slave's int tag
 TODO: for now only from holdingRegisters!*/
-int slaveInterface::readINT(int index)
+int SlaveInterface::readINT(int index)
 {
   //char *rlCommand = NULL;
   int failed = DAQ_ERROR;
   /**TODO we have to read taking caution of shared memory position of tag**/
-  /*
-  rlCommand = new char[sizeof("holdingRegisters(,)") + sizeof(parameters.commId) + sizeof(parameters.stRegisters[index].iAddress) + 5];
-  sprintf(rlCommand,"holdingRegisters(%d,%d)",parameters.commId,parameters.stRegisters[index].iAddress);
-  std::cout <<"DEBUG: reading tag, command:"<< rlCommand <<" raw data:"<<rlMODBUS->intValue(rlCommand)<<" int data:"<< gstWord2Int(rlMODBUS->intValue(rlCommand)) << std::endl;
-  if (rlMODBUS->intValue(rlCommand) != DAQ_ERROR)
+  if (rlMODBUS->readShort(parameters.stRegisters[index].cycleBase,parameters.stRegisters[index].cyclePosition ) != DAQ_ERROR)
     {
       failed = 0;
-      parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->intValue(rlCommand));
+      parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->readShort(parameters.stRegisters[index].cycleBase,parameters.stRegisters[index].cyclePosition ));
     }
-  
-  if(rlCommand != NULL)
-    delete rlCommand;
-  */
+  //std::cout << "DEBUG: (inside CommInterface::readINT) PLC="<<parameters.slaveName <<" reading register %MW"<<parameters.stRegisters[index].iAddress <<" (base memory address="<<parameters.stRegisters[index].cycleBase <<  " offset=" <<parameters.stRegisters[index].cyclePosition<< ") value=" << parameters.stRegisters[index].iValue << ") ret=" << failed << std::endl;
   
   return failed;
 }
 
 /*function to read a slave's word tag
 TODO: for now only from holdingRegisters!*/
-int slaveInterface::readWORD(int index)
+int SlaveInterface::readWORD(int index)
 {
   //char *rlCommand;
   int failed = DAQ_ERROR;
   /**TODO we have to read taking caution of shared memory position of tag**/
-  /*
-  rlCommand = new char[sizeof("holdingRegisters(,)") + sizeof(parameters.commId) + sizeof(parameters.stRegisters[index].iAddress) + 5];
-  sprintf(rlCommand,"holdingRegisters(%d,%d)",parameters.commId,parameters.stRegisters[index].iAddress);
-  //std::cout <<"DEBUG: reading tag, command:"<< rlCommand <<" raw data:"<<rlMODBUS->intValue(rlCommand)<<" word data:"<< rlMODBUS->intValue(rlCommand) << std::endl;
-  if (rlMODBUS->intValue(rlCommand) != DAQ_ERROR)
+  if (rlMODBUS->readShort(parameters.stRegisters[index].cycleBase,parameters.stRegisters[index].cyclePosition ) != DAQ_ERROR)
     {
       failed = 0;
-      parameters.stRegisters[index].iValue = rlMODBUS->intValue(rlCommand);
+      parameters.stRegisters[index].iValue = gstWord2Int(rlMODBUS->readShort(parameters.stRegisters[index].cycleBase,parameters.stRegisters[index].cyclePosition ));
     }
-
-   if(rlCommand != NULL)
-    delete rlCommand;
-  */
+  //std::cout << "DEBUG: (inside CommInterface::readWORD) PLC="<<parameters.slaveName <<"  reading register %MW"<<parameters.stRegisters[index].iAddress << " (base memory address="<<parameters.stRegisters[index].cycleBase <<  " offset=" <<parameters.stRegisters[index].cyclePosition<< ") value=" << parameters.stRegisters[index].iValue << ") ret=" << failed << std::endl;
   return failed;
 }
 
 //
 //WRITTING FUNCTIONS
 /*! function overloaded for writting int/word tag value*/
-int slaveInterface::writeTag(int index, int slaveAmI, int value)
+int SlaveInterface::writeTag(int index, int slaveAmI, int value)
 {
   //std::cout << "DEBUG: (inside CommInterface::writeTag)" << std::endl;
   int failed = -1;
   int iValue = value;
   char rlCommand[100];
 
-  /** TODO WRITTING IS DIFFERENTE NOW WITH RLMODBUSCLIENT, 
   if(index < parameters.nRegs)
     {
       if(!strcmp(parameters.stRegisters[index].dataType,"INT"))
 	iValue = gstInt2Word(value);
-      sprintf(rlCommand,"register(%d,%d)",slaveAmI, parameters.stRegisters[index].iAddress);
-      //write!
-      std::cout << "DEBUG: (inside CommInterface::writeTag) writting sequence: " << rlCommand << "  value = " << iValue << std::endl;
-      failed = rlMODBUS->writeIntValue(rlCommand,iValue);
-      std::cout << "DEBUG: (inside CommInterface::writeTag) writting sequencemodbus ret: " << failed << std::endl;
+      
+      failed = rlMODBUS->writePresetSingleRegister(slaveAmI,parameters.stRegisters[index].iAddress,iValue);
+      std::cout << "DEBUG: (inside CommInterface::writeTag) writting (holding register(slave ="<< slaveAmI <<" addr=" << parameters.stRegisters[index].iAddress<< " value=" << iValue << ") ret=" << failed << std::endl;
       failed = 0;
     }
-  */
+
   return failed;
 }
 
 /*!Function for returning a tag name
 TODO: it shoulds return only once*/
-char* slaveInterface::retTagName(int tag)
+char* SlaveInterface::retTagName(int tag)
 {
   
   if(tag >=0 && tag < parameters.nRegs)
@@ -193,7 +176,7 @@ char* slaveInterface::retTagName(int tag)
 
 /*!Function for returning a tag int value
 TODO: MORE TYPES, strings, float, bool, etc.*/
-int slaveInterface::retTagValue(int tag)
+int SlaveInterface::retTagValue(int tag)
 {
   int ret = 0;
   if(tag >=0 && tag < parameters.nRegs)
@@ -202,7 +185,7 @@ int slaveInterface::retTagValue(int tag)
 }
 
 /*!Function for returning if a tag value is valid*/
-int slaveInterface::retTagValid(int tag)
+int SlaveInterface::retTagValid(int tag)
 {
   int ret = 0;
   if(tag >=0 && tag < parameters.nRegs)

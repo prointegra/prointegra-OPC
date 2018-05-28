@@ -31,11 +31,11 @@
 
 
 /*! slave interface class*/
-class slaveInterface
+class SlaveInterface
 {
  public:
-  slaveInterface(){return;};
-  ~slaveInterface(){delete rlMODBUS; return;};
+  SlaveInterface(){return;};
+  ~SlaveInterface(){delete rlMODBUS; return;};
 
   int setup(mbSlaves slaveParameters);
   //rlib communications settings
