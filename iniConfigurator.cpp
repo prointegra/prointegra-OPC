@@ -39,6 +39,7 @@ int IniConfigurator::iniMBTCPCreate(char *iniFile, mbSlaves & params)
     {
       ret = 0;
       fprintf(pFile,"#Config file created by Prointegra-OPC\n");
+      fprintf(pFile,"target=%s\n",params.slaveName);
       fprintf(pFile,"shared_memory=./comm/%s.shm\n",params.slaveName);
       fprintf(pFile,"mailbox=./comm/%s.mbx\n",params.slaveName);
       fprintf(pFile,"#communication=serial\n");

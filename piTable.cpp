@@ -731,13 +731,26 @@ int DBTable::retFields(field *** fields, int ** numberOf)
 int DBTable::retvFields(std::vector < field> & fields)
 {
   //std::cout << "DEBUG: (inside DBTable::retFields)" << std::endl;
-  int failed = -1;
-
   fields.clear();
   for(int i=0; i < parameters.numFields; i++)
     fields.push_back(parameters.stField[i]);
 
   return 0;
+}
+
+/*!function to return a field  in a C++ vector type format*/
+int DBTable::retvField(int index,field & myField)
+{
+  //std::cout << "DEBUG: (inside DBTable::retvField)" << std::endl;
+  int failed = -1;
+
+  if(index < parameters.numFields)
+    {
+      myField = parameters.stField[index];
+      failed = 0;
+    }
+
+  return failed;
 }
 
 //

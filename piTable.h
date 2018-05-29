@@ -67,6 +67,7 @@ class DBTable
   int retFieldValue(int field);
   int retFields(field ***,int**);
   int retvFields(std::vector < field> & fields);
+  int retvField(int index,field & myField);
   int retId(){return parameters.id;};
   
   //set attributes

@@ -37,6 +37,8 @@ ProintegraOPC::ProintegraOPC()
       hDatabase[i] = new DBInterface();
       hDatabase[i]->setup(confParser->retDBParams(i),confParser->retDBTables(i));
     }
+  //configure triggers table
+  
   //retrieve slaves info from config file
   confParser->retrieveCommParams();
   nSlaves = confParser->retnSlaves();
@@ -197,7 +199,8 @@ int ProintegraOPC::dataToDB()
   //std::cout << "DEBUG: (inside ProintegraOPC::dataToDB)" << std::endl;
   int failed = -1;
   std::vector<int> tablesList;
-  std::vector<field> tags;
+  field currentTag;
+  int indexTag;
   int tableFail = 0;
   
   for(int i=0; i< nDBs ; i++)
@@ -209,21 +212,23 @@ int ProintegraOPC::dataToDB()
 	{
 	  if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
 	    {
-	      failed = failed & hDatabase[i]->retDataFrTable(tags, tablesList.at(j));
-	      for (int k = 0; k < tags.size(); k++)
+	      indexTag=0;
+	      while(!hDatabase[i]->retFieldFrTable(indexTag,currentTag,tablesList.at(j)))
 		{
-		  for (int l = 0; l < tags[k].fromTags.size(); l++)
+		  for (int l = 0; l < currentTag.fromTags.size(); l++)
 		    {
-		      for (int m = 0; m < tags[k].fromTags[l].size(); m++)
+		      for (int m = 0; m < currentTag.fromTags[l].size(); m++)
 			{		 
-			  tableFail = tableFail + hSlaves[l]->readTag(tags[k].fromTags[l].at(m));
-			  tags[k].iValue = hSlaves[l]->retTagValue(tags[k].fromTags[l].at(m));
-			  tags[k].isValid = hSlaves[l]->retTagValid(tags[k].fromTags[l].at(m));
+			  tableFail = tableFail + hSlaves[l]->readTag(currentTag.fromTags[l].at(m));
+			  hDatabase[i]->setFieldValue(tablesList.at(j),indexTag,hSlaves[l]->retTagValue(currentTag.fromTags[l].at(m)));
+			  hDatabase[i]-> setFieldValid(tablesList.at(j),indexTag,hSlaves[l]->retTagValid(currentTag.fromTags[l].at(m)));
+
 			}
 		    }
+		  indexTag++;
 		}
 	      hDatabase[i]->rTriggerDoneAt(j);
-	      hDatabase[i]->storeData(tablesList.at(j),tags);
+	      hDatabase[i]->storeData(tablesList.at(j));
 	      failed = failed +tableFail;
 	    }
 	}
