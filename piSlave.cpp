@@ -59,7 +59,9 @@ int SlaveInterface::setupMBUSTCP()
   sprintf(mailbox,"./comm/%s.mbx",parameters.slaveName);
   sprintf(sharedMemory,"./comm/%s.shm",parameters.slaveName); 
   //rlMODBUS = new rlModbusClient(mailbox,sharedMemory, 65536); //TODO shared memory size should be adapted to number of tags
-rlMODBUS = new rlModbusClient(mailbox,sharedMemory, 16384);
+  int memorySize = calcMemorySize();
+  printf("INFO: creating comm driver: rlModbusClient(\" %s \",\"%s\", %d)\n",mailbox,sharedMemory,memorySize);
+  rlMODBUS = new rlModbusClient(mailbox,sharedMemory, memorySize);
   delete mailbox;
   delete sharedMemory;
   
@@ -192,4 +194,17 @@ int SlaveInterface::retTagValid(int tag)
     ret = parameters.stRegisters[tag].valueValid;
   return ret;
 
+}
+/*!Function for returning shared memory size*/
+int SlaveInterface::calcMemorySize()
+{
+  int counter = 0;
+  for (int i=0; i<  parameters.nRegs; i++)
+    {
+      if( !strcmp(parameters.stRegisters[i].dataType,"INT") || !strcmp(parameters.stRegisters[i].dataType,"WORD"))
+	counter = counter +2;
+    }
+  //systems registers +6
+  counter = counter +6;
+  return counter;
 }

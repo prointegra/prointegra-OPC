@@ -48,7 +48,8 @@ typedef struct
   char* tagName = NULL;
   char * dataType = NULL;
   int iAddress = 0;
-  int memoryAddress = 0;
+  int cycleBase = 0;
+  int cyclePosition = 0;
   int isValid = 0;
 
   int iValue = 0;

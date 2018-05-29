@@ -221,7 +221,7 @@ int ProintegraOPC::dataToDB()
 			{		 
 			  tableFail = tableFail + hSlaves[l]->readTag(currentTag.fromTags[l].at(m));
 			  hDatabase[i]->setFieldValue(tablesList.at(j),indexTag,hSlaves[l]->retTagValue(currentTag.fromTags[l].at(m)));
-			  hDatabase[i]-> setFieldValid(tablesList.at(j),indexTag,hSlaves[l]->retTagValid(currentTag.fromTags[l].at(m)));
+			  hDatabase[i]->setFieldValid(tablesList.at(j),indexTag,hSlaves[l]->retTagValid(currentTag.fromTags[l].at(m)));
 
 			}
 		    }

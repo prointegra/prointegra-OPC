@@ -53,6 +53,8 @@ class SlaveInterface
   char * retTagName(int tag);
   int retTagValue(int tag);
   int retTagValid(int tag);
+ protected:
+  int calcMemorySize();
  private:
   mbSlaves parameters;
   //daemons
