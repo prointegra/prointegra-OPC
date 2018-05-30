@@ -318,11 +318,14 @@ int DBDataTable::insertSqlite(char **sql)
       
       if(parameters.stField[i].isValid)
 	{
+	  //TODO TO IMPROVE, WHAT IF DIGITAL?¿? OR OTHERS
 	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
 	    {
-	      field = new char[parameters.stField[i].iValue +5];
+	      /*BUGFIX STD::BAD_ALLOC TODO-> TO IMPROVE*/
+	      //field = new char[parameters.stField[i].iValue +5];
+	      field = new char[16];
 	      sprintf(field,"%d",parameters.stField[i].iValue);
-	    }
+	    }	  	    
 	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5];
 	  values = new char[strlen(tmpValues)+strlen(field)+5];
 	  strcpy(sqlQuery,temp);
@@ -400,10 +403,12 @@ int DBDataTable::updateSqlite(char **sql)
 	  if(!first)
 	      strcat(temp,",");
 	  first = 0;
-	  
+	  //TODO TO IMPROVE, WHAT IF DIGITAL?¿? OR OTHERS
 	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
 	    {
-	      field = new char[parameters.stField[i].iValue +5];
+	      /*BUGFIX STD::BAD_ALLOC TODO-> TO IMPROVE*/
+	      //field = new char[parameters.stField[i].iValue +5];
+	      field = new char[16];
 	      sprintf(field,"%d",parameters.stField[i].iValue);
 	    }
 	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5 + strlen(field)];
@@ -485,9 +490,12 @@ int DBDataTable::insertMysql(char **sql)
       
       if(parameters.stField[i].isValid)
 	{
+	  //TODO TO IMPROVE, WHAT IF DIGITAL?¿? OR OTHERS
 	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
 	    {
-	      field = new char[parameters.stField[i].iValue +5];
+	      /*BUGFIX STD::BAD_ALLOC TODO-> TO IMPROVE*/
+	      //field = new char[parameters.stField[i].iValue +5];
+	      field = new char[16];
 	      sprintf(field,"%d",parameters.stField[i].iValue);
 	    }
 	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+7];
@@ -569,10 +577,12 @@ int DBDataTable::updateMysql(char **sql)
 	  if(!first)
 	      strcat(temp,",");
 	  first = 0;
-	  
+	  //TODO TO IMPROVE, WHAT IF DIGITAL?¿? OR OTHERS
 	  if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
 	    {
-	      field = new char[parameters.stField[i].iValue +5];
+	      /*BUGFIX STD::BAD_ALLOC TODO-> TO IMPROVE*/
+	      //field = new char[parameters.stField[i].iValue +5];
+	      field = new char[16];
 	      sprintf(field,"%d",parameters.stField[i].iValue);
 	    }
 	  sqlQuery = new char[strlen(temp)+strlen(parameters.stField[i].name)+5 + strlen(field)];
