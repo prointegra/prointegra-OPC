@@ -32,6 +32,7 @@
 #include "piSlave.h"
 #include "libgStools.h"
 #include "config.h"
+#include "readThread.h"
 
 #include "commDaemon.h"
 

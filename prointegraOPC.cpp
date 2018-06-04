@@ -18,6 +18,7 @@
 */
 
 #include "prointegraOPC.h"
+#include <chrono>
 
 
 /*! Constructor*/
@@ -202,37 +203,48 @@ int ProintegraOPC::dataToDB()
   field currentTag;
   int indexTag;
   int tableFail = 0;
+  readThread ** threadsForReading;
+
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
   
   for(int i=0; i< nDBs ; i++)
     {
       //taking tables wo be written
       failed = hDatabase[i]->retRTabsList(tablesList);
-      
-      for(int j=0; j < tablesList.size() ; j++)
+      if(tablesList.size())
 	{
-	  if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
+	  threadsForReading = new readThread*[tablesList.size()];
+	  for(int j=0; j < tablesList.size() ; j++)
 	    {
-	      indexTag=0;
-	      while(!hDatabase[i]->retFieldFrTable(indexTag,currentTag,tablesList.at(j)))
+	      //std::cout << "CREATING THREAD: " << j << std::endl;
+	      threadsForReading[j] = new readThread();
+	      if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
 		{
-		  for (int l = 0; l < currentTag.fromTags.size(); l++)
-		    {
-		      for (int m = 0; m < currentTag.fromTags[l].size(); m++)
-			{		 
-			  tableFail = tableFail + hSlaves[l]->readTag(currentTag.fromTags[l].at(m));
-			  hDatabase[i]->setFieldValue(tablesList.at(j),indexTag,hSlaves[l]->retTagValue(currentTag.fromTags[l].at(m)));
-			  hDatabase[i]->setFieldValid(tablesList.at(j),indexTag,hSlaves[l]->retTagValid(currentTag.fromTags[l].at(m)));
-
-			}
-		    }
-		  indexTag++;
+		  //std::cout << "LAUNCHING THREAD: " << j << std::endl;
+		  threadsForReading[j]->launch(hDatabase[i],tablesList.at(j), hSlaves);
 		}
-	      hDatabase[i]->rTriggerDoneAt(j);
-	      hDatabase[i]->storeData(tablesList.at(j));
-	      failed = failed +tableFail;
+	      
 	    }
+	  for(int j=0; j < tablesList.size() ; j++)
+	    {
+	      if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
+		{
+		  //std::cout << "WAITING THREAD: " << j << std::endl;
+		  threadsForReading[j]->wait();
+		}
+	    }
+	   for(int j=tablesList.size()-1; j >= 0; j--)
+	     {
+	       //std::cout << "DELETING THREAD: " << j << std::endl;	       
+	       delete threadsForReading[j];
+	     }
+	   //std::cout << "DELETING THREADS AND FINISHED" << std::endl;
+	   delete threadsForReading;
 	}
     }
+  std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
+
+  std::cout << "READING TOOK = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " uS" << std::endl;
   
   return failed;
 }

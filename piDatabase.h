@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <sstream>
 #include <time.h>
+#include <QMutex>
 
 #include "qtdatabase.h"
 #include "config.h"
@@ -44,6 +45,7 @@ class DBInterface : public qtDatabase
   int storeData();
   int storeData(int id , std::vector<field> tags);
   int storeData(int tableId);
+  int threaded_storeData(int tableId);
   int retrieveData(int id);
   //returning private members data and/or attributes functions
   int retNumTables(){return parameters.numTables;};
@@ -68,7 +70,8 @@ class DBInterface : public qtDatabase
   int resetTimeTriggers();
   int resetSQLTriggers();
   int wTriggerDoneAt(int index);
-  int rTriggerDoneAt(int index);  
+  int rTriggerDoneAt(int index);
+  int threaded_rTriggerDoneAt(int index);
   int retWTabsList(std::vector <int> & tablesList);
   int retRTabsList(std::vector <int> & tablesList);
   //linking fields with communications
