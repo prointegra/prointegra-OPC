@@ -152,12 +152,12 @@ int SlaveInterface::writeTag(int index, int slaveAmI, int value)
   char rlCommand[100];
 
   if(index < parameters.nRegs)
-    {
+    {;
       if(!strcmp(parameters.stRegisters[index].dataType,"INT"))
 	iValue = gstInt2Word(value);
-      
+      //std::cout << "DATA TYPE:" << parameters.stRegisters[index].dataType << " VALUE:" << value << " VALUE_CONV:" << iValue << std::endl;
       failed = rlMODBUS->writePresetSingleRegister(slaveAmI,parameters.stRegisters[index].iAddress,iValue);
-      std::cout << "DEBUG: (inside CommInterface::writeTag) writting (holding register(slave ="<< slaveAmI <<" addr=" << parameters.stRegisters[index].iAddress<< " value=" << iValue << ") ret=" << failed << std::endl;
+      //std::cout << "DEBUG: (inside CommInterface::writeTag) writting (holding register(slave ="<< slaveAmI <<" addr=" << parameters.stRegisters[index].iAddress<< " value=" << iValue << ") ret=" << failed << std::endl;
       failed = 0;
     }
 
