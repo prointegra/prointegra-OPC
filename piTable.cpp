@@ -30,162 +30,7 @@ DBTable::~DBTable()
 {
   return;
 }
-/*!function for creating database tables dinamycally
-TODO: only implemented sqlite,MySQL tables!
-*/
-int DBTable::create(databaseParameters* dbParameters,int** nQueries, char ***query)
-{
-  char **sqlQuery = NULL;
-  int ret=-1;
-  int* num;
 
-  sqlQuery = *query;
-  num = *nQueries;
-  std::cout << "DEBUG: (inside DBTable::create) asigning 0 to *num "<< std::endl;
-  *num = 0;
-  std::cout << "DEBUG: (inside DBTable::create) creating an array of:asigning values to *num =" << *num << std::endl;
-  if(!strcmp(parameters.tbType,"LASTVALUE") || !strcmp(parameters.tbType,"TRIGGERS"))
-    {
-      *num = 3;
-    }
-  else
-    *num=1;
-  std::cout << "DEBUG: (inside DBTable::create) creating an array of:" << *num << " SQL queries" << std::endl;
-  sqlQuery = new char*[*num];
-  std::cout << "DEBUG: (inside DBTable::create) created an array of:"<< *num << " SQL queries" << std::endl;
-  for(int i=0;i<*num;i++)
-    sqlQuery[i]=NULL;
-  
-  if(!strcmp(dbParameters->type,"QSQLITE"))
-    {
-      std::cout << "DEBUG: (inside DBTable::create) creating SQLITE queries" << std::endl;
-      creationSqlite(&sqlQuery[0]);
-      if(*num>1)
-	initValuesSqlite(*num,&sqlQuery);
-      ret = 0;
-    }
-   else if(!strcmp(dbParameters->type,"QMYSQL"))
-    {
-      std::cout << "DEBUG: (inside DBTable::create) creating MySQL queries" << std::endl;
-      creationMysql(&sqlQuery[0]);
-      if(*num>1)
-	initValuesMysql(*num,&sqlQuery);
-      ret = 0;
-    }
-  if(ret)
-    {
-      delete sqlQuery;
-      *num = 0;
-    }
-  std::cout << "DEBUG: (inside DBTable::create) copying back pointers, ret:" << ret << std::endl;
-  *nQueries = num;
-  *query =  sqlQuery;
-  std::cout << "DEBUG: (inside DBTable::create) returning ret:" << ret << std::endl;
-  return ret;
-}
-/*!function for creating the database schema, for SQLite databases*/
-int DBTable::creationSqlite(char **sql)
-{
-  static char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
-  strcat(temp,parameters.tbName);
-  strcat(temp," (ID INTEGER PRIMARY KEY AUTOINCREMENT,");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      temp = new char[strlen(sqlQuery)+5];
-      strcpy(temp,sqlQuery);
-      delete sqlQuery;
-	
-      field = new char[strlen(parameters.stField[i].type) + strlen(parameters.stField[i].name) + 5];
-      strcpy(field,parameters.stField[i].name);
-      //different types
-      if(!strcmp(parameters.stField[i].type,"DATE"))
-	strcat(field," DATE");
-      if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	strcat(field," INT");
-      if(!strcmp(parameters.stField[i].type,"TIME"))
-	strcat(field," TIME");
-      if(!strcmp(parameters.stField[i].type,"STRING"))
-	strcat(field," TEXT");      
-      if(i < (parameters.numFields-1))
-	strcat(field,",");
-      /////
-      sqlQuery = new char[strlen(temp)+strlen(field)+5];
-      strcpy(sqlQuery,temp);
-      strcat(sqlQuery,field);
-      delete field;
-    }
-  strcat(sqlQuery,")");
-  delete temp;
-  *sql = sqlQuery;
-  return 0; 
-}
-/*!function for creating the database schema, for MySQL databases*/
-int DBTable::creationMysql(char **sql)
-{
-  static char *sqlQuery = NULL;
-  char * temp = NULL;
-  char * field = NULL;
-  
-  sqlQuery = *sql;
-  
-  if(sqlQuery != NULL)
-    delete(sqlQuery);
-  
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + 2 + strlen(" (ID INTEGER PRIMARY KEY AUTO_INCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS `");
-  strcat(temp,parameters.tbName);
-  strcat(temp,"`");
-  strcat(temp," (ID INTEGER PRIMARY KEY AUTO_INCREMENT,");
-
-  sqlQuery = new char[strlen(temp)+5];
-  strcpy(sqlQuery,temp);
-  for (int i = 0; i < parameters.numFields;i++)
-    {
-      delete temp;
-      temp = new char[strlen(sqlQuery)+5];
-      strcpy(temp,sqlQuery);
-      delete sqlQuery;
-	
-      field = new char[strlen(parameters.stField[i].type) + strlen(parameters.stField[i].name) + 7];
-      strcpy(field,"`");
-      strcat(field,parameters.stField[i].name);
-      strcat(field,"`");
-      //different types
-      if(!strcmp(parameters.stField[i].type,"DATE"))
-	strcat(field," DATE");
-      if(!strcmp(parameters.stField[i].type,"INT")||!strcmp(parameters.stField[i].type,"FLOAT"))
-	strcat(field," INT");
-      if(!strcmp(parameters.stField[i].type,"TIME"))
-	strcat(field," TIME");
-      if(!strcmp(parameters.stField[i].type,"STRING"))
-	strcat(field," TEXT");      
-      if(i < (parameters.numFields-1))
-	strcat(field,",");
-      /////
-      sqlQuery = new char[strlen(temp)+strlen(field)+5];
-      strcpy(sqlQuery,temp);
-      strcat(sqlQuery,field);
-      delete field;
-    }
-  strcat(sqlQuery,")");
-  delete temp;
-  *sql = sqlQuery;
-  return 0;
-}
 /*!function for insert initialization NULL data to a SQLITE NOT LOG type table
 */
 int DBTable::initValuesSqlite(int num,char ***sql)
@@ -789,15 +634,19 @@ int DBTable::setFieldValue(int field, int value)
 int DBTable::setAllValues(std::vector<std::vector<std::string>> table, int skip)
 {
   int failed = -1;
+  std::cout << "DBTable::setAllValues sanity checks, table size:"<< table.size() << " , my table back size:"<< table.back().size() << " tags size in new table:" << table.back().size()-skip << " parameters.numFields:"<< parameters.numFields << std::endl;
   //sanity checks
   if(table.size() > 0 && table.back().size() > skip)
     {
       if(table.back().size()-skip == parameters.numFields)
 	{
+	  std::cout << "hemos pasado los sanity checks " << std::endl;
 	  for(int i = skip; i < table.back().size(); i++)
 	    {
+	      std::cout << "RAW value:" << table.back().at(i).c_str() << std::endl;
 	      if(strcmp(table.back().at(i).c_str(),"NULL"))
 		parameters.stField[i-skip].iValue=atoi(table.back().at(i).c_str());
+	      std::cout << "final value:"<< parameters.stField[i-skip].iValue << std::endl; 
 	    }
 	  failed = 0;
 	}

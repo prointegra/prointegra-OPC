@@ -68,6 +68,7 @@ int DBDataTable::create(databaseParameters* dbParameters,int* nQueries, char ***
   //std::cout << "DEBUG: (inside DBTable::create) returning ret:" << ret << std::endl;
   return ret;
 }
+
 /*!function for creating the database schema, for SQLite databases*/
 int DBDataTable::creationSqlite(char **sql)
 {
@@ -80,8 +81,10 @@ int DBDataTable::creationSqlite(char **sql)
   if(sqlQuery != NULL)
     delete(sqlQuery);
   
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS ");
+  temp = new char[strlen("DROP TABLE IF EXISTS `") + strlen(parameters.tbName) + strlen("` ; CREATE TABLE ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT,")+5];
+  strcpy(temp,"DROP TABLE IF EXISTS ");
+  strcat(temp,parameters.tbName);
+  strcat(temp," ; CREATE TABLE ");
   strcat(temp,parameters.tbName);
   strcat(temp," (ID INTEGER PRIMARY KEY AUTOINCREMENT,");
 
@@ -130,8 +133,10 @@ int DBDataTable::creationMysql(char **sql)
   if(sqlQuery != NULL)
     delete(sqlQuery);
   
-  temp = new char[strlen("CREATE TABLE IF NOT EXISTS ") + strlen(parameters.tbName) + 2 + strlen(" (ID INTEGER PRIMARY KEY AUTO_INCREMENT,")+5];
-  strcpy(temp,"CREATE TABLE IF NOT EXISTS `");
+  temp = new char[strlen("DROP TABLE IF EXISTS `") + strlen(parameters.tbName) + strlen("` ; CREATE TABLE ") + strlen(parameters.tbName) + 2 + strlen(" (ID INTEGER PRIMARY KEY AUTO_INCREMENT,")+5];
+  strcpy(temp,"DROP TABLE IF EXISTS `");
+  strcat(temp,parameters.tbName);
+  strcat(temp,"`; CREATE TABLE `");
   strcat(temp,parameters.tbName);
   strcat(temp,"`");
   strcat(temp," (ID INTEGER PRIMARY KEY AUTO_INCREMENT,");
