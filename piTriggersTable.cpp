@@ -40,7 +40,7 @@ int DBTriggersTable::create(databaseParameters* dbParameters, char **query, char
   sql = *query;
   sqlInit = *initQuery;
   nTs = *nTrigs;
- 
+
   if(!strcmp(dbParameters->type,"QSQLITE"))
     {
       creationSqlite(&sql);
@@ -63,13 +63,15 @@ int DBTriggersTable::create(databaseParameters* dbParameters, char **query, char
 /*!function for creating the database schema, for SQLite databases*/
 int DBTriggersTable::creationSqlite(char **sqlQuery)
 {
-  //std::cout << "DEBUG: (inside DBTriggersTable::creationSqlite)" << std::endl; 
+  // std::cout << "DEBUG: (inside DBTriggersTable::creationSqlite)" << std::endl; 
   static char * sql = NULL;
   
   sql = *sqlQuery;
   
-  sql = new char[strlen("DROP TABLE IF EXISTS `") + strlen(parameters.tbName) + strlen("` ; CREATE TABLE ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT, TRIGGER TEXT, VALUE INT) ")+5];
-  sprintf(sql,"DROP TABLE IF EXISTS %s ; CREATE TABLE IF NOT EXISTS %s (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT, VALUE INT)", parameters.tbName, parameters.tbName);
+  sql = new char[strlen("DROP TABLE IF EXISTS `") + strlen(parameters.tbName) + strlen("` ; CREATE TABLE ") + strlen(parameters.tbName) + strlen(" (ID INTEGER PRIMARY KEY AUTOINCREMENT, TRIGGER TEXT, VALUE INT) ")+10];
+
+  sprintf(sql,"DROP TABLE IF EXISTS %s ; CREATE TABLE %s (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT, VALUE INT)", parameters.tbName, parameters.tbName);
+
 
   *sqlQuery = sql;
 
@@ -83,8 +85,11 @@ int DBTriggersTable::creationMysql(char **sqlQuery)
     
   sql = *sqlQuery;
   
-  sql = new char[strlen("DROP TABLE IF EXISTS `") + strlen(parameters.tbName) + strlen("` ; CREATE TABLE `") + strlen(parameters.tbName) + strlen("` (ID INTEGER PRIMARY KEY AUTOINCREMENT, TRIGGER TEXT, VALUE INT) ")+5];
-  sprintf(sql,"DROP TABLE IF EXISTS `%s`; CREATE TABLE IF NOT EXISTS `%s` (ID INTEGER PRIMARY KEY AUTO_INCREMENT, `NAME` TEXT, `VALUE` INT)", parameters.tbName);
+  sql = new char[strlen("DROP TABLE IF EXISTS `") + strlen(parameters.tbName) + strlen("` ; CREATE TABLE `") + strlen(parameters.tbName) + strlen("` (ID INTEGER PRIMARY KEY AUTOINCREMENT, TRIGGER TEXT, VALUE INT) ")+10];
+
+  sprintf(sql,"DROP TABLE IF EXISTS `%s`; CREATE TABLE `%s` (ID INTEGER PRIMARY KEY AUTO_INCREMENT, `NAME` TEXT, `VALUE` INT)", parameters.tbName, parameters.tbName);
+
+  std::cout << sql << std::endl;
 
   *sqlQuery = sql;
 
