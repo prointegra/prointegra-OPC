@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016, 2017 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -41,33 +41,32 @@
 
 
 //tools
-int renameOldLog(int commId,char** logPath);
-int setExecutable(int commId,char* protocol, char ** executable);
-void* launchMBUS(void* commId);
+int renameOldLog(char** logPath,const char* name);
+int setExecutable(char* protocol, char ** executable, const char * name);
+void* launchMBUS(void * parameters);
 
 /*launching,checking,logging... communication daemon manager class*/
 class CommDaemon
 {
  public:
-  CommDaemon(std::vector <mbSlaves> slavesParams);
+  CommDaemon(mbSlaves slaveParams);
   ~CommDaemon();
   
-  int iniDaemons();
+  int iniDaemon();
   int iniMBTCP();
   
   int launchDaemon(int slave, int commId, char* protocol);
-  int launchDaemons();
+  int launchDaemon();
   int checkDaemon(int slave);
-  //class tools
-  int isDefined(int protocol);
+
+  mbSlaves retParams(){ return slaveP;};
   //threads
   pthread_t* declareThread(int nSlave);
   
  private:
-  int **nPipes;
-  int nSlaves;
+  int *nPipe;
   std::vector<pthread_t*> threads;
-  std::vector <mbSlaves> slavesP;
-  std::vector <int> daemons;
+  mbSlaves slaveP;
+  int dType;
 };
 #endif

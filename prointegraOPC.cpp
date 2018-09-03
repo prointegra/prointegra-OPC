@@ -1,7 +1,7 @@
-/*
+﻿/*
  *  Prointegra OPC
  *
- *  Copyright 2016,2017 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -14,10 +14,11 @@
  */
 
 /*!
-@file capture.c
+@file prointegraOPC.cpp
 */
 
 #include "prointegraOPC.h"
+#include <chrono>
 
 
 /*! Constructor*/
@@ -37,20 +38,23 @@ ProintegraOPC::ProintegraOPC()
       hDatabase[i] = new DBInterface();
       hDatabase[i]->setup(confParser->retDBParams(i),confParser->retDBTables(i));
     }
+  //configure triggers table
+  
   //retrieve slaves info from config file
   confParser->retrieveCommParams();
   nSlaves = confParser->retnSlaves();
-  hSlaves = new CommInterface*[nSlaves];
+  hSlaves = new SlaveInterface*[nSlaves];
+  comms = new CommDaemon*[nSlaves];
   for(i=0;i<nSlaves;i++)
     {
-      hSlaves[i] = new CommInterface();
-      hSlaves[i]->setup(confParser->retSlaveParams(i));
-      slavesParams.push_back(confParser->retSlaveParams(i));
+      comms[i] = new CommDaemon(confParser->retSlaveParams(i));
+      hSlaves[i] = new SlaveInterface();
+      hSlaves[i]->setup(comms[i]->retParams());
+      slavesParams.push_back(comms[i]->retParams());
+      std::cout << "INFO: (inside ProintegraOPC::ProintegraOPC) new commDaemon instance" << std::endl;
+      //comms[i]->launchDaemon();
     }
-  std::cout << "INFO: (inside ProintegraOPC::ProintegraOPC) new commDaemonManager instance" << std::endl;
-  commDaemonManager = new CommDaemon(slavesParams);
-  //std::cout << "DEBUG: (inside ProintegraOPC::ProintegraOPC) ini comms Daemons" << std::endl;
-  commDaemonManager->iniDaemons();
+  /*******/
   //link database tags with slaves
   linkTags();
   //FOR DEBUGGING PURPOSES
@@ -128,7 +132,7 @@ int ProintegraOPC::checkComm()
 TODO: it's in fact still not be used*/
 int ProintegraOPC::stopComm()
 {
-  delete commDaemonManager;
+  //delete comms;
   return 0;   
 }
 /*data capturing process
@@ -166,6 +170,8 @@ int ProintegraOPC::dataToComm()
 		{
 		  for (int m = 0; m < tags[k].fromTags[l].size(); m++)
 		    {
+		      if(k >50 || l > 50 || m > 50)
+			std::cout << "tags:" << k << " .fromTags:"<< l << " .at:" << m << std::endl;
 		      tableFail = tableFail + hSlaves[l]->writeTag(tags[k].fromTags[l].at(m),l+1,tags[k].iValue);
 		    }
 		}
@@ -194,37 +200,51 @@ int ProintegraOPC::dataToDB()
   //std::cout << "DEBUG: (inside ProintegraOPC::dataToDB)" << std::endl;
   int failed = -1;
   std::vector<int> tablesList;
-  std::vector<field> tags;
+  field currentTag;
+  int indexTag;
   int tableFail = 0;
+  readThread ** threadsForReading;
+
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
   
   for(int i=0; i< nDBs ; i++)
     {
       //taking tables wo be written
       failed = hDatabase[i]->retRTabsList(tablesList);
-      
-      for(int j=0; j < tablesList.size() ; j++)
+      if(tablesList.size())
 	{
-	  if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
+	  threadsForReading = new readThread*[tablesList.size()];
+	  for(int j=0; j < tablesList.size() ; j++)
 	    {
-	      failed = failed & hDatabase[i]->retDataFrTable(tags, tablesList.at(j));
-	      for (int k = 0; k < tags.size(); k++)
+	      //std::cout << "CREATING THREAD: " << j << std::endl;
+	      threadsForReading[j] = new readThread();
+	      if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
 		{
-		  for (int l = 0; l < tags[k].fromTags.size(); l++)
-		    {
-		      for (int m = 0; m < tags[k].fromTags[l].size(); m++)
-			{		 
-			  tableFail = tableFail + hSlaves[l]->readTag(tags[k].fromTags[l].at(m));
-			  tags[k].iValue = hSlaves[l]->retTagValue(tags[k].fromTags[l].at(m));
-			  tags[k].isValid = hSlaves[l]->retTagValid(tags[k].fromTags[l].at(m));
-			}
-		    }
+		  //std::cout << "LAUNCHING THREAD: " << j << std::endl;
+		  threadsForReading[j]->launch(hDatabase[i],tablesList.at(j), hSlaves);
 		}
-	      hDatabase[i]->rTriggerDoneAt(j);
-	      hDatabase[i]->storeData(tablesList.at(j),tags);
-	      failed = failed +tableFail;
+	      
 	    }
+	  for(int j=0; j < tablesList.size() ; j++)
+	    {
+	      if(!hDatabase[i]->isTableLocked(tablesList.at(j)))
+		{
+		  //std::cout << "WAITING THREAD: " << j << std::endl;
+		  threadsForReading[j]->wait();
+		}
+	    }
+	   for(int j=tablesList.size()-1; j >= 0; j--)
+	     {
+	       //std::cout << "DELETING THREAD: " << j << std::endl;	       
+	       delete threadsForReading[j];
+	     }
+	   //std::cout << "DELETING THREADS AND FINISHED" << std::endl;
+	   delete threadsForReading;
 	}
     }
+  std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
+
+  std::cout << "READING TOOK = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " uS" << std::endl;
   
   return failed;
 }
@@ -245,7 +265,7 @@ int ProintegraOPC::storeDB()
 */
 int ProintegraOPC::startCommunications()
 {
-  commDaemonManager->launchDaemons();
+  //commDaemon->launchDaemons(); TODO launch one daemon for every slave, not one for all
   return 0;   
 }
 

@@ -52,6 +52,29 @@ int qtDatabase::open(const char *dbtype, const char *hostname, const char *dbnam
   }
 }
 
+int qtDatabase::open(const char *dbtype, const char *hostname, const char *dbname, const char *user, const char *pass, const char * connectionName)
+{ 
+  if(db != NULL) return -1;
+  db = new QSqlDatabase;
+
+  *db = QSqlDatabase::addDatabase(dbtype,connectionName);
+  db->setHostName(hostname);
+  db->setDatabaseName(dbname);
+  db->setUserName(user);
+  db->setPassword(pass);
+  
+  if(db->open())
+  {
+    return 0;
+  }
+  else
+  {
+    delete db;
+    db = NULL;
+    return -1;
+  }
+}
+
 int qtDatabase::close()
 {
   if(db == NULL) 
@@ -61,6 +84,21 @@ int qtDatabase::close()
   db->close();
   delete db;
   db = NULL;
+  return 0;
+}
+
+int qtDatabase::close(const char* connName)
+{
+  if(db == NULL) 
+  {
+    return -1;
+  }  
+  db->close();
+  delete db;
+  db = NULL;
+  
+  QSqlDatabase::removeDatabase(connName);
+  
   return 0;
 }
 

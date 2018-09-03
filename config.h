@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016,2017 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <vector>
-#include "rldataacquisition.h"
+#include "rlmodbusclient.h"
 
 using namespace std;
 
@@ -48,6 +48,8 @@ typedef struct
   char* tagName = NULL;
   char * dataType = NULL;
   int iAddress = 0;
+  int cycleBase = 0;
+  int cyclePosition = 0;
   int isValid = 0;
 
   int iValue = 0;
@@ -168,21 +170,6 @@ class ConfigParser
   int retrieveNumberofNodes(pugi::xml_document* master , const char* concept);
   int retrieveNumberofNodes(pugi::xml_node* master , const char* concept);
   
-  /*
-  int IterateComms();
-  int RetrieveConfig();
-  int getnumSlaves(){return nSlaves;}
-  int getSlaveId(int id);
-  int getSlaveMailbox(int id,rlDataAcquisition **);
-  int getSlavemTime(int id);
-  int getSlavenRegs(int id); 
-  int getSlaveReadData(int id,mbReadData **);
-  //Communications
-  int setModbusRTU(int i){MODBUSRTU = i; return 0;}
-  int setModbusTCP(int i){MODBUSTCP = i; return 0;}
-  int getModbusRTU(){return MODBUSRTU;}
-  int getModbusTCP(){return MODBUSTCP;}
-  */
  private:
   pugi::xml_document doc;
   pugi::xml_document commDoc;  

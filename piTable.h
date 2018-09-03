@@ -38,9 +38,9 @@ class DBTable
   DBTable(tableParameters tableParams);
   ~DBTable();
   //creation
-  virtual int create(databaseParameters* parameters,int ** nQueries,char ***query);
-  virtual int creationSqlite(char **sql);
-  virtual int creationMysql(char **sql);
+  virtual int create(databaseParameters* parameters,int* nQueries,char ***query){return -1;};
+  virtual int creationSqlite(char **sql){return -1;};
+  virtual int creationMysql(char **sql){return -1;};
   virtual int initValuesSqlite(int num,char ***sql);
   virtual int initValuesMysql(int num,char ***sql);
   //storing
@@ -67,6 +67,7 @@ class DBTable
   int retFieldValue(int field);
   int retFields(field ***,int**);
   int retvFields(std::vector < field> & fields);
+  int retvField(int index,field & myField);
   int retId(){return parameters.id;};
   
   //set attributes

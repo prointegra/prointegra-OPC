@@ -78,6 +78,7 @@ int DBInterface::setup(databaseParameters dbParams, tableParameters* tablesParam
 	}
 
       createTriggersTable();
+      std::cout << "INFO: creating triggers table instance, and SQL structure..." << std::endl;
       triggersTable->create(&parameters,&triggersQuery,&sqlQuery,&nQueries);
       //TODO: we should catch exceptions!
       //std::cout << "DEBUG: (inside DBInterface::setup) triggers table sql creation: " << triggersQuery << std::endl;
@@ -226,6 +227,68 @@ int DBInterface::storeData(int tableId, std::vector<field> data)
   return failed;
 }
 
+/*function for storing data to a  Database's table (by table Id) and no new data*/
+int DBInterface::storeData(int tableId)
+{
+  //std::cout << "DEBUG: (inside DBInterface::storeData)" << std::endl;
+  int failed = -1;
+  char *sqlQuery = NULL;
+
+  
+  for(int i=0;i < parameters.numTables;i++)
+    {
+      failed = 0;
+      if(tables[i]->retId() == tableId)
+	{
+	  failed = tables[i]->store(&parameters,&sqlQuery);
+	  //TODO: we should catch exceptions!
+	  //std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << " failed =" << failed << std::endl;
+	  if(!failed)
+	    failed = query(NULL,sqlQuery);
+	  //std::cout << "DEBUG: (inside DBInterface::storeData)  query returned, failed =" << failed << std::endl;
+	  if(sqlQuery != NULL)
+	    delete sqlQuery;
+	}
+    }
+  //std::cout << "DEBUG: (inside DBInterface::storeData) returning failed:" << failed << std::endl;
+  return failed;
+}
+
+/*function for storing data to a  Database's table (by table Id) and no new data, thread safe*/
+int DBInterface::threaded_storeData(int tableId)
+{
+  //std::cout << "DEBUG: (inside DBInterface::storeData)" << std::endl;
+  int failed = -1;
+  char *sqlQuery = NULL;
+  char *connectionName = new char[32];
+  qtDatabase myDatabase;
+  
+  for(int i=0;i < parameters.numTables;i++)
+    {
+      failed = 0;
+      if(tables[i]->retId() == tableId)
+	{
+	  sprintf(connectionName,"tabla_%d",tableId);
+	  myDatabase.open(parameters.type,parameters.host,parameters.dbName,parameters.user,parameters.pass, connectionName);
+	  QMutex mutex;
+	  mutex.lock();
+	  failed = tables[i]->store(&parameters,&sqlQuery);
+	  mutex.unlock();
+	  //TODO: we should catch exceptions!
+	  //std::cout << "DEBUG: (inside DBInterface::storeData) SQL query:"<<  sqlQuery << " failed =" << failed << std::endl;
+	  
+	  if(!failed)
+	    failed = myDatabase.query(NULL,sqlQuery);
+	  //std::cout << "DEBUG: (inside DBInterface::storeData)  query returned, failed =" << failed << std::endl;
+	  if(sqlQuery != NULL)
+	    delete sqlQuery;
+	  myDatabase.close(connectionName);
+	}
+    }
+  //std::cout << "DEBUG: (inside DBInterface::storeData) returning failed:" << failed << std::endl;
+  return failed;
+}
+
 /*function for retrieving data from Database to table memory*/
 int DBInterface::retrieveData(int id)
 {
@@ -318,6 +381,22 @@ int DBInterface::retDataFrTable(std::vector <field> & fields, int tableId)
   return failed;
 }
 
+/*!function for returning field from a table id*/
+int DBInterface::retFieldFrTable(int index,field & field, int tableId)
+{
+  //std::cout << "DEBUG: (inside DBInterface::retFieldfrTable)" << std::endl;
+  int failed = -1;
+
+  for(int i = 0; i <parameters.numTables;i++)
+    {
+      if (tables[i]->retId() == tableId)
+	{	  
+	  if(!tables[i]->retvField(index,field))
+	    failed = 0;
+	}
+    }  
+  return failed;
+}
 //
 //SETTING DATA FUNCTIONS
 //
@@ -595,6 +674,32 @@ int DBInterface::rTriggerDoneAt(int table)
 
   return failed;
 }
+
+/*!function to mark the reading trigger from a table as done, thread safe*/
+int DBInterface::threaded_rTriggerDoneAt(int table)
+{
+  //std::cout << "DEBUG:(inside DBInterface::rTriggerDoneAt)" << std::endl;
+  int failed = -1;
+  
+  if(triggersLst.size() > 0)
+    {
+      for(std::vector<field*>::iterator it = triggersLst.begin(); it !=triggersLst.end(); ++it)
+	{
+	  if((*it)->forRTable == table)
+	    {
+	      //std::cout << "DEBUG:(inside DBInterface::wTriggerDoneAt) marking:"<< (*it)->name << "  as done!" << std::endl;
+	      QMutex mutex;
+	      mutex.lock();
+	      (*it)->isDone = 1;
+	      mutex.unlock();
+	      failed = 0;
+	    }
+	}
+    }
+
+  return failed;
+}
+
 /*!function for returning a list of tables Write triggered*/
 int DBInterface::retWTabsList(std::vector <int> & tablesList)
 {

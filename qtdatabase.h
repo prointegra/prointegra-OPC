@@ -6,6 +6,8 @@
     TODO: customize / extend this class for your own purposes
 
 ***************************************************************************/
+#ifndef _QTDATABASE_
+#define _QTDATABASE_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,7 +45,9 @@ class qtDatabase
     qtDatabase();
     ~qtDatabase();
     int open(const char *dbtype, const char *hostname, const char *dbname, const char *user, const char *pass);
+    int open(const char *dbtype, const char *hostname, const char *dbname, const char *user, const char *pass, const char *connectionName);
     int close();
+    int close(const char* connName);
     int query(PARAM *p, const char *sqlcommand);
     int populateTable(PARAM *p, int id);
     int retData(PARAM *p, char ****table, int **px, int **py);
@@ -56,3 +60,4 @@ class qtDatabase
     QSqlError    *error;
 };
 
+#endif

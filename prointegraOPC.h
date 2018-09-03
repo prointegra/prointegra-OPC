@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -29,9 +29,10 @@
 #include <time.h>
 
 #include "piDatabase.h"
-#include "piComm.h"
+#include "piSlave.h"
 #include "libgStools.h"
 #include "config.h"
+#include "readThread.h"
 
 #include "commDaemon.h"
 
@@ -89,8 +90,8 @@ class ProintegraOPC
   ////communications
   //number of slaves handlers
   int nSlaves;
-  CommInterface** hSlaves = NULL;
-  CommDaemon* commDaemonManager = NULL;
+  SlaveInterface** hSlaves = NULL;
+  CommDaemon** comms = NULL;
 
 };
 

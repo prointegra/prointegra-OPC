@@ -1,7 +1,9 @@
 #!/bin/bash
-#modify with the gStools library path
-export LD_LIBRARY_PATH=/home/prointegra/lib:$LD_LIBRARY_PATH
-#export LD_LIBRARY_PATH=/home/gentooza/lib:$LD_LIBRARY_PATH
+SCRIPT=$(readlink -f $0)
+SCRIPT_PATH=`dirname $SCRIPT`
+export LD_LIBRARY_PATH=$SCRIPT_PATH/lib/gStools/:$LD_LIBRARY_PATH
+
 #
 #chmod +x ./prointegra-OPC
+#gdb ./prointegra-OPC
 ./prointegra-OPC

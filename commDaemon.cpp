@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016,2017 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -20,62 +20,45 @@
 #include "commDaemon.h"
 
 /*! constructor, creates pipes for every slave*/
-CommDaemon::CommDaemon(std::vector <mbSlaves> slavesParams)
+CommDaemon::CommDaemon(mbSlaves slaveParams)
 {
-  std::cout << "DEBUG: (inside CommDaemon::CommDaemon) " << std::endl;
-  slavesP.swap(slavesParams);
-  daemons.clear();
-  std::cout << "DEBUG: (inside CommDaemon::CommDaemon) vector size: " << slavesP.size() << std::endl;
-  for(int i= 0; i < slavesP.size(); i++)
+  //std::cout << "DEBUG: (inside CommDaemon::CommDaemon) " << std::endl;
+  slaveP = slaveParams;
+  dType = 0;
+  if (!strcmp(slaveP.commType,"MODBUSTCP"))
     {
-      std::cout << "DEBUG: (inside CommDaemon::CommDaemon) checking slave nº: "<< i << std::endl;
-      if (!strcmp(slavesP.at(i).commType,"MODBUSTCP"))
-	{
-	  std::cout << "DEBUG: (inside CommDaemon::CommDaemon) is MODBUS TCP! "<< std::endl;
-	  if (!isDefined(PROT_MODBUS_TCP))
-	    daemons.push_back(PROT_MODBUS_TCP);	    
-	}
-      else
-	std::cout << "ERROR: protocol: " << slavesP.at(i).commType << " NOT DEFINED!!" << std::endl;
+      std::cout << "DEBUG: (inside CommDaemon::CommDaemon) is MODBUS TCP! "<< std::endl;
+      dType=PROT_MODBUS_TCP;
+      iniMBTCP();
     }
-	  std::cout << "DEBUG: (inside CommDaemon::CommDaemon) finished"<< std::endl;
-  return;
+  else
+    std::cout << "ERROR: protocol: " << slaveP.commType << " NOT DEFINED!!" << std::endl;
+//std::cout << "DEBUG: (inside CommDaemon::CommDaemon) finished"<< std::endl;
+ return;
 }
 
 CommDaemon::~CommDaemon()
 {
-  for(int i=nSlaves-1;i>=0;i--)
-    delete nPipes[i];
-  delete nPipes;
   //to IMPROVE
-  system("killall modbus_client");
+  std::string myProcess;
+
+  myProcess = "killall ";
+  myProcess += slaveP.slaveName;
+  system(myProcess.c_str());
+  delete nPipe;
+  
   return;
 }
-/*!function to check if protocol is already saved to configure*/
-int CommDaemon::isDefined(int protocol)
-{
-  std::cout << "DEBUG: (inside CommDaemon::isDefined) " << std::endl;
-  int defined = 0;
-  if(!daemons.empty())
-    {
-      for(int i=0;i < daemons.size();i++)
-	if(protocol == daemons.at(i))
-	  defined = 1;
-    }
-  return defined;
-}
+
 /*!function for setting ini files for daemons, thanks to internal copy of slaves parameters*/
-int CommDaemon::iniDaemons()
+int CommDaemon::iniDaemon()
 {
   std::cout << "DEBUG: (inside CommDaemon::iniDaemons) " << std::endl;
   int failed = -1;
   
-   for(int i=0;i < daemons.size();i++)
-     {
-       if(daemons.at(i) == PROT_MODBUS_TCP)
-	 failed = iniMBTCP();
-     }
-   
+  if(dType == PROT_MODBUS_TCP)
+    failed = iniMBTCP();
+  
   return failed;
 }
 
@@ -87,48 +70,42 @@ int CommDaemon::iniMBTCP()
   char * iniFile = NULL;
   IniConfigurator iniConfig;
    
-  iniFile = new char[strlen("./comm/modbus_client/MBTCP.ini")+5];
-  sprintf(iniFile,"./comm/modbus_client/MBTCP.ini"); 
+  iniFile = new char[strlen("./comm/modbus_client/.mkmodbus")+10 + strlen(slaveP.slaveName)];
+  sprintf(iniFile,"./comm/modbus_client/%s.mkmodbus",slaveP.slaveName); 
   std::cout << "INFO: setting MODBUS TCP/IP client ini file..."<< std::endl; 
-  failed = iniConfig.iniMBTCPCreate(iniFile,slavesP);
+  failed = iniConfig.iniMBTCPCreate(iniFile,slaveP);
 
   delete iniFile;
 
   return failed;
 }
-/*!function for launching all defined daemons
-TODO: we are not checking if daemons are already launched!*/
-int CommDaemon::launchDaemons()
+
+/*!function for launching comm daemon
+*/
+int CommDaemon::launchDaemon()
 {
-  //std::cout << "DEBUG: (inside CommDaemon::launchDaemons)" << std::endl;
+  //std::cout << "DEBUG: (inside CommDaemon::launchDaemon)" << std::endl;
+  
   int failed = -1, result = 0;
   int protocol = 0;
 
-  if(!daemons.empty())
-    {
-      for(int i = 0; i < daemons.size(); i++)
-	{
-	    pthread_t* slaveThread = declareThread(daemons.at(i));
+  pthread_t* slaveThread = declareThread(dType);
    
-	    if(daemons.at(i) == PROT_MODBUS_TCP)
-	      {
-		std::cout << "DEBUG:(inside CommDaemon::launchDaemon) creating thread for:" << daemons.at(i) << std::endl;
-		result = pthread_create(slaveThread, NULL, launchMBUS , (void *) (intptr_t) daemons.at(i));
-		failed = 0;
-		if (result)
-		  {
-		    std::cout << "ERROR:(inside CommDaemon::launchDaemon) unable to create thread!:" << result << std::endl;
-		    failed = -1;
-		  }
-
-	      }
+  if(dType == PROT_MODBUS_TCP)
+    {
+      std::cout << "DEBUG:(inside CommDaemon::launchDaemon) creating thread for:" << dType << std::endl;
+      result = pthread_create(slaveThread, NULL, launchMBUS , (void *) &slaveP);
+      failed = 0;
+      if (result)
+	{
+	  std::cout << "ERROR:(inside CommDaemon::launchDaemon) unable to create thread!:" << result << std::endl;
+	  failed = -1;
 	}
+
     }
-  
+
   return failed;
 }
-
-
 
 int CommDaemon::checkDaemon(int commId)
 {
@@ -143,8 +120,6 @@ int CommDaemon::checkDaemon(int commId)
 
   return failed;
 }
-
-
 
 pthread_t* CommDaemon::declareThread(int nSlave)
 {
@@ -165,50 +140,39 @@ pthread_t* CommDaemon::declareThread(int nSlave)
 
 ////tools
 
-int renameOldLog(int protocol,char** logPath)
+int renameOldLog(char** logPath, const char * name)
 {
   static char *file1,*file2 = NULL;
   int failed = -1;
 
-  file1 = new char[ 40];
-  file2 = new char[40];
+  file1 = new char[110];
+  file2 = new char[110];
 
-  if ( protocol ==PROT_MODBUS_TCP)
-    {
-      sprintf(file1,"./log/MBUSTCP.log");
-      sprintf(file2,"./log/MBUSTCP_old.log");
-      rename(file1, file2);
-      failed = 0;
-    }
-  else
-    {
-      failed = -1;
-    }
+  sprintf(file1,"./log/%s.log",name);
+  sprintf(file2,"./log/%s_old.log",name);
+  rename(file1, file2);
+  failed = 0;
 	
-  
   *logPath = file1;
   delete file2;
   return 0;
 }
 
-int setExecutable(int commId,char **executable)
+int setExecutable(char **executable, const  char * name)
 {
   std::cout << "DEBUG:(inside CommDaemon::setExecutable)"<< std::endl;
   int failed = -1;
   static char *file1 = NULL;
-  std::cout << "DEBUG:(inside CommDaemon::setExecutable) commId:" << commId << std::endl;
-  if(commId == PROT_MODBUS_TCP)
-    {
 
-      file1 = new char[sizeof("./comm/modbus_client/modbus_client ./comm/modbus_client/") + 40];
-      sprintf(file1,"./comm/modbus_client/modbus_client ./comm/modbus_client/MBTCP.ini");
-      failed = 0;
-    }
+  file1 = new char[sizeof("./comm/modbus_client/") + strlen(name) + 40];
+  sprintf(file1,"./comm/modbus_client/%s",name);
+  failed = 0;
+
   *executable = file1;
   return failed;
 }
 
-void* launchMBUS(void * protocol)
+void* launchMBUS(void * parameters)
 {
   std::cout << "DEBUG:(inside CommDaemon::launchMBUS)"<< std::endl;
   char buffer[500];
@@ -221,13 +185,13 @@ void* launchMBUS(void * protocol)
   struct tm * timeInfo;
   int lines = 0;
   const int maxLines = 20000;
-  int type = (intptr_t) protocol;
+  mbSlaves *params = (mbSlaves*) parameters;
   
-  renameOldLog(type,&tmpString);
+  renameOldLog(&tmpString,params->slaveName);
   fout = fopen(tmpString,"w");
   delete tmpString;
 
-  if (!setExecutable(type, &tmpString))
+  if (!setExecutable(&tmpString, params->slaveName))
     {
       std::shared_ptr<FILE> pipe(popen(tmpString, "r"), pclose);
       if (!pipe) throw std::runtime_error("popen() failed!");

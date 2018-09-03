@@ -1,7 +1,7 @@
 /*
  *  Prointegra OPC
  *
- *  Copyright 2016 by it's authors. 
+ *  Copyright 2016-2018 by it's authors. 
  *
  *  Some rights reserved. See COPYING, AUTHORS.
  *  This file may be used under the terms of the GNU General Public
@@ -13,11 +13,11 @@
  *  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*!
-@File piComm.h
+@File piSlave.h
 */
 
-#ifndef _PICOMMUNICATIONS_
-#define _PICOMMUNICATIONS_
+#ifndef _PISLAVE_
+#define _PISLAVE_
 
 #include <iostream>
 #include <stdio.h>
@@ -31,11 +31,11 @@
 
 
 /*! slave interface class*/
-class CommInterface
+class SlaveInterface
 {
  public:
-  CommInterface(){return;};
-  ~CommInterface(){delete rlMODBUS; return;};
+  SlaveInterface(){return;};
+  ~SlaveInterface(){delete rlMODBUS; return;};
 
   int setup(mbSlaves slaveParameters);
   //rlib communications settings
@@ -53,10 +53,12 @@ class CommInterface
   char * retTagName(int tag);
   int retTagValue(int tag);
   int retTagValid(int tag);
+ protected:
+  int calcMemorySize();
  private:
   mbSlaves parameters;
   //daemons
-  rlDataAcquisition*    rlMODBUS = NULL;
+  rlModbusClient*    rlMODBUS = NULL;
 };
 
 
